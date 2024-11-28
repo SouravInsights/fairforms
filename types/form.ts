@@ -175,6 +175,25 @@ export type FormElementProperties =
 
 export type FormElement = FormElementBase & FormElementProperties;
 
+export type FormElementValue =
+  | string // For text, email, website inputs
+  | number // For number input
+  | Date // For date input
+  | File[] // For file upload
+  | string[] // For multiple choice/picture choice with multiple selections
+  | { countryCode: string; number: string } // For phone
+  | {
+      // For address
+      street: string;
+      apartment?: string;
+      city: string;
+      state: string;
+      zipCode: string;
+      country?: string;
+    }
+  | null
+  | undefined;
+
 export type FormSettings = {
   theme: {
     primaryColor: string;
