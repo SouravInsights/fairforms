@@ -53,7 +53,7 @@ export default async function DashboardPage() {
               <Link href={`/dashboard/forms/${form.id}`}>
                 <Button variant="outline">Edit</Button>
               </Link>
-              <Link href={`dashboard/forms/${form.customSlug || form.id}`}>
+              <Link href={`/forms/${form.customSlug || form.id}`}>
                 <Button>View</Button>
               </Link>
             </CardFooter>
