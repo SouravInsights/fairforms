@@ -1,6 +1,17 @@
-import { clerkMiddleware } from "@clerk/nextjs/server";
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-export default clerkMiddleware();
+// Define public routes
+const isPublicRoute = createRouteMatcher([
+  "/", // Landing page
+  "/forms/(.*)/(public|submit)", // Public form access and submission
+  "/api/forms/(.*)/(public|submit)", // Public form API routes
+]);
+
+export default clerkMiddleware(async (auth, request) => {
+  if (!isPublicRoute(request)) {
+    await auth.protect();
+  }
+});
 
 export const config = {
   matcher: [
