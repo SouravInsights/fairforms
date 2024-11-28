@@ -5,12 +5,19 @@ const isPublicRoute = createRouteMatcher([
   "/", // Landing page
   "/forms/(.*)/(public|submit)", // Public form access and submission
   "/api/forms/(.*)/(public|submit)", // Public form API routes
+  "/sign-in*",
+  "/sign-up*",
+  // Add any other public routes your app needs
 ]);
 
 export default clerkMiddleware(async (auth, request) => {
-  if (!isPublicRoute(request)) {
-    await auth.protect();
+  // If it's a public route, allow access
+  if (isPublicRoute(request)) {
+    return;
   }
+
+  // Protect all other routes
+  await auth.protect();
 });
 
 export const config = {
