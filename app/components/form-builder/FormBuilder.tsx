@@ -1,16 +1,18 @@
+import { useEffect, useState } from "react";
 import { DragDropContext, DropResult } from "@hello-pangea/dnd";
 import { useFormContext } from "@/app/context/form-context";
 import { ElementToolbar } from "./ElementToolbar";
 import { Canvas } from "./Canvas";
 import { Properties } from "./Properties";
 import { FormElement, FormElementType } from "@/types/form";
-import { useEffect, useState } from "react";
-import axios from "axios";
 import { useToast } from "@/hooks/use-toast";
+import { Globe, EyeOff } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export function FormBuilder({ formId }: { formId: string }) {
   const { state, dispatch } = useFormContext();
   const [isLoading, setIsLoading] = useState(true);
+  const [isPublished, setIsPublished] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -20,23 +22,42 @@ export function FormBuilder({ formId }: { formId: string }) {
 
         if (formId === "new") {
           // Create a new form
-          const response = await axios.post("/api/forms");
-          const newForm = response.data;
-
-          dispatch({
-            type: "SET_INITIAL_STATE",
-            payload: { elements: newForm.elements },
+          const response = await fetch("/api/forms", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
           });
+
+          const newForm = await response.json();
+          if (response.ok) {
+            dispatch({
+              type: "SET_INITIAL_STATE",
+              payload: { elements: newForm.elements },
+            });
+            setIsPublished(newForm.isPublished);
+            // Redirect to the new form's edit page
+            window.history.replaceState(
+              {},
+              "",
+              `/dashboard/forms/${newForm.id}`
+            );
+          } else {
+            throw new Error("Failed to create new form");
+          }
         } else {
           // Load existing form
-          const response = await axios.get(`/api/forms/${formId}`);
-          const form = response.data;
+          const response = await fetch(`/api/forms/${formId}`);
+          const form = await response.json();
 
-          if (form) {
+          if (response.ok) {
             dispatch({
               type: "SET_INITIAL_STATE",
               payload: { elements: form.elements },
             });
+            setIsPublished(form.isPublished);
+          } else {
+            throw new Error("Failed to load form");
           }
         }
       } catch (error) {
@@ -80,8 +101,14 @@ export function FormBuilder({ formId }: { formId: string }) {
 
       // Save the updated form
       try {
-        await axios.patch(`/api/forms/${formId}`, {
-          elements: [...state.elements, newElement],
+        await fetch(`/api/forms/${formId}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            elements: [...state.elements, newElement],
+          }),
         });
       } catch {
         toast({
@@ -111,8 +138,14 @@ export function FormBuilder({ formId }: { formId: string }) {
 
       // Save the updated form
       try {
-        await axios.patch(`/api/forms/${formId}`, {
-          elements: reorderedElements,
+        await fetch(`/api/forms/${formId}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            elements: reorderedElements,
+          }),
         });
       } catch {
         toast({
@@ -121,6 +154,47 @@ export function FormBuilder({ formId }: { formId: string }) {
           variant: "destructive",
         });
       }
+    }
+  };
+
+  const togglePublish = async () => {
+    // Only allow publishing if we have a real form ID (not 'new')
+    if (formId === "new") {
+      toast({
+        title: "Error",
+        description: "Please save the form first before publishing.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/forms/${formId}/publish`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to toggle publish status");
+      }
+
+      const updatedForm = await response.json();
+      setIsPublished(updatedForm.isPublished);
+
+      toast({
+        title: updatedForm.isPublished ? "Form Published" : "Form Unpublished",
+        description: updatedForm.isPublished
+          ? "Your form is now publicly accessible"
+          : "Your form is now private",
+      });
+    } catch {
+      toast({
+        title: "Error",
+        description: "Failed to update form status",
+        variant: "destructive",
+      });
     }
   };
 
@@ -134,10 +208,36 @@ export function FormBuilder({ formId }: { formId: string }) {
 
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
-      <div className="flex h-screen bg-background">
-        <ElementToolbar className="w-64 border-r" />
-        <Canvas className="flex-1" />
-        {state.activeElementId && <Properties className="w-80 border-l" />}
+      <div className="flex flex-col h-screen bg-background">
+        <div className="border-b">
+          <div className="container flex items-center justify-between py-4">
+            <h1 className="text-xl font-semibold">Form Builder</h1>
+            {formId !== "new" && (
+              <Button
+                onClick={togglePublish}
+                variant={isPublished ? "outline" : "default"}
+              >
+                {isPublished ? (
+                  <>
+                    <EyeOff className="w-4 h-4 mr-2" />
+                    Unpublish
+                  </>
+                ) : (
+                  <>
+                    <Globe className="w-4 h-4 mr-2" />
+                    Publish
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
+        </div>
+
+        <div className="flex flex-1 overflow-hidden">
+          <ElementToolbar className="w-64 border-r" />
+          <Canvas className="flex-1" />
+          {state.activeElementId && <Properties className="w-80 border-l" />}
+        </div>
       </div>
     </DragDropContext>
   );
