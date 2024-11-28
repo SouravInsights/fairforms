@@ -1,4 +1,11 @@
-import { pgTable, serial, text, timestamp, boolean } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  serial,
+  text,
+  timestamp,
+  boolean,
+  json,
+} from "drizzle-orm/pg-core";
 
 export const forms = pgTable("forms", {
   id: serial("id").primaryKey(),
@@ -8,4 +15,5 @@ export const forms = pgTable("forms", {
   isPublished: boolean("is_published").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+  elements: json("elements").$type<FormElement[]>().notNull(),
 });
