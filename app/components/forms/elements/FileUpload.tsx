@@ -26,15 +26,13 @@ interface FileUploadProps {
 }
 
 export function FileUpload({ element, value, onChange }: FileUploadProps) {
-  if (!isFileUploadElement(element)) {
-    return null;
-  }
-
   const { toast } = useToast();
   const [isDragging, setIsDragging] = useState(false);
 
   const validateFile = useCallback(
     (file: File): boolean => {
+      if (!isFileUploadElement(element)) return false;
+
       if (file.size > element.properties.maxSize) {
         toast({
           title: "File too large",
@@ -59,8 +57,12 @@ export function FileUpload({ element, value, onChange }: FileUploadProps) {
 
       return true;
     },
-    [element.properties, toast]
+    [element, toast]
   );
+
+  if (!isFileUploadElement(element)) {
+    return null;
+  }
 
   const handleFileChange = (files: FileList | null) => {
     if (!files) return;
