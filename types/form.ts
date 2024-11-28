@@ -11,4 +11,9 @@ export enum FormElementType {
   LONG_TEXT = "long_text",
   EMAIL = "email",
   MULTIPLE_CHOICE = "multiple_choice",
+  PHONE = "phone",
+  ADDRESS = "address",
+  WEBSITE = "website",
+  DROPDOWN = "dropdown",
+  PICTURE_CHOICE = "picture_choice",
 }
