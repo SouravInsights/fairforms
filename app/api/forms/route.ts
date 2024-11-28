@@ -3,26 +3,26 @@ import { db } from "@/db";
 import { forms } from "@/db/schema";
 import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
-import { FormSettings, CreateFormData } from "@/types/form";
+// import { FormSettings, CreateFormData } from "@/types/form";
 
-const defaultSettings: FormSettings = {
-  theme: {
-    primaryColor: "#0f172a",
-    fontFamily: "Inter",
-    backgroundColor: "#ffffff",
-    questionColor: "#0f172a",
-  },
-  behavior: {
-    showProgressBar: true,
-    enableKeyboardNavigation: true,
-    requireLogin: false,
-    limitResponses: false,
-  },
-  notifications: {
-    enableEmailNotifications: false,
-    notificationEmails: [],
-  },
-};
+// const defaultSettings: FormSettings = {
+//   theme: {
+//     primaryColor: "#0f172a",
+//     fontFamily: "Inter",
+//     backgroundColor: "#ffffff",
+//     questionColor: "#0f172a",
+//   },
+//   behavior: {
+//     showProgressBar: true,
+//     enableKeyboardNavigation: true,
+//     requireLogin: false,
+//     limitResponses: false,
+//   },
+//   notifications: {
+//     enableEmailNotifications: false,
+//     notificationEmails: [],
+//   },
+// };
 
 export async function GET() {
   try {
@@ -55,16 +55,34 @@ export async function POST() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const formData: CreateFormData = {
-      userId,
-      title: "Untitled Form",
-      description: "",
-      elements: [],
-      settings: defaultSettings,
-      isPublished: false,
-    };
-
-    const [form] = await db.insert(forms).values(formData).returning();
+    const [form] = await db
+      .insert(forms)
+      .values({
+        userId,
+        title: "Untitled Form",
+        description: "",
+        elements: [],
+        settings: {
+          theme: {
+            primaryColor: "#0f172a",
+            fontFamily: "Inter",
+            backgroundColor: "#ffffff",
+            questionColor: "#0f172a",
+          },
+          behavior: {
+            showProgressBar: true,
+            enableKeyboardNavigation: true,
+            requireLogin: false,
+            limitResponses: false,
+          },
+          notifications: {
+            enableEmailNotifications: false,
+            notificationEmails: [],
+          },
+        },
+        isPublished: true, // Changed to true for testing
+      })
+      .returning();
 
     return NextResponse.json(form);
   } catch (error) {

@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { FormElement } from "./elements";
+import { Progress } from "@/components/ui/progress";
 
 interface FormViewProps {
   form: Form;
@@ -16,6 +17,8 @@ export function FormView({ form }: FormViewProps) {
   const [responses, setResponses] = useState<Record<string, any>>({});
   const { toast } = useToast();
 
+  const totalElements = form.elements.length;
+  const progress = (currentElementIndex / totalElements) * 100;
   const currentElement = form.elements[currentElementIndex];
   const isLastElement = currentElementIndex === form.elements.length - 1;
 
@@ -36,6 +39,10 @@ export function FormView({ form }: FormViewProps) {
     }
 
     setCurrentElementIndex((prev) => prev + 1);
+  };
+
+  const handlePrevious = () => {
+    setCurrentElementIndex((prev) => prev - 1);
   };
 
   const handleSubmit = async () => {
@@ -75,34 +82,41 @@ export function FormView({ form }: FormViewProps) {
           )}
         </header>
 
-        <main className="space-y-4">
+        {form.settings.behavior.showProgressBar && (
+          <Progress value={progress} className="h-2" />
+        )}
+
+        <main className="space-y-8">
           {currentElement && (
-            <FormElement
-              element={currentElement}
-              value={responses[currentElement.id]}
-              onChange={(value) =>
-                setResponses((prev) => ({
-                  ...prev,
-                  [currentElement.id]: value,
-                }))
-              }
-            />
+            <div className="bg-card rounded-lg p-6 shadow-sm">
+              <FormElement
+                element={currentElement}
+                value={responses[currentElement.id]}
+                onChange={(value) =>
+                  setResponses((prev) => ({
+                    ...prev,
+                    [currentElement.id]: value,
+                  }))
+                }
+              />
+            </div>
           )}
 
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-between">
             {currentElementIndex > 0 && (
-              <Button
-                variant="outline"
-                onClick={() => setCurrentElementIndex((prev) => prev - 1)}
-              >
+              <Button variant="outline" onClick={handlePrevious}>
                 Previous
               </Button>
             )}
 
             {!isLastElement ? (
-              <Button onClick={handleNext}>Next</Button>
+              <Button className="ml-auto" onClick={handleNext}>
+                Next
+              </Button>
             ) : (
-              <Button onClick={handleSubmit}>Submit</Button>
+              <Button className="ml-auto" onClick={handleSubmit}>
+                Submit
+              </Button>
             )}
           </div>
         </main>

@@ -1,27 +1,34 @@
 import { db } from "@/db";
 import { forms } from "@/db/schema";
-import { eq, or } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { eq } from "drizzle-orm";
+
+export const dynamic = "force-dynamic";
+export const dynamicParams = true;
 
 export async function GET(
-  req: Request,
+  request: Request,
   { params }: { params: { formId: string } }
 ) {
   try {
-    // Try to find form by custom slug or id
-    const [form] = await db
-      .select()
-      .from(forms)
-      .where(
-        or(
-          eq(forms.customSlug, params.formId),
-          eq(forms.id, parseInt(params.formId))
-        )
-      );
+    console.log("Public API Route Hit - Form ID:", params.formId);
 
-    if (!form || !form.isPublished) {
+    const formId = parseInt(params.formId);
+    if (isNaN(formId)) {
+      return NextResponse.json({ error: "Invalid form ID" }, { status: 400 });
+    }
+
+    const [form] = await db.select().from(forms).where(eq(forms.id, formId));
+
+    console.log("Form found:", form);
+
+    if (!form) {
+      return NextResponse.json({ error: "Form not found" }, { status: 404 });
+    }
+
+    if (!form.isPublished) {
       return NextResponse.json(
-        { error: "Form not found or not published" },
+        { error: "Form not published" },
         { status: 404 }
       );
     }
