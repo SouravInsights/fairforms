@@ -41,6 +41,124 @@ A self-hosted form builder that doesn't cost a kidney per month. Create beautifu
 
 ## 📁 Project Structure
 
+### Pages Structure
+
+```
+src/app/
+├── /                     # Landing page
+│   └── page.tsx         # Public homepage with auth checks
+├── (auth)/              # Auth-related pages
+│   ├── sign-in/        # Clerk sign-in integration
+│   └── sign-up/        # Clerk sign-up integration
+├── (dashboard)/         # Protected dashboard routes
+│   └── dashboard/
+│       ├── page.tsx    # Forms dashboard
+│       │   # Lists all forms
+│       │   # Quick actions
+│       │   # Form stats
+│       └── forms/
+│           ├── new/    # New form creation
+│           │   └── page.tsx    # Form builder for new forms
+│           └── [formId]/      # Existing form editor
+│               └── page.tsx   # Form builder with saved data
+└── forms/              # Public form routes
+    └── [formId]/      # Public form view
+        ├── page.tsx   # Form display and submission
+        ├── loading.tsx # Loading state
+        └── error.tsx  # Error handling
+```
+
+### API Routes Structure and Documentation
+
+```typescript
+src/app/api/
+└── forms/
+    ├── route.ts                  # Form collection endpoints
+    │   ├── GET: List forms
+    │   │   - Query params:
+    │   │     - page: Pagination
+    │   │     - limit: Items per page
+    │   │     - search: Search forms
+    │   │   - Returns: Paginated form list
+    │   └── POST: Create form
+    │       - Body: Initial form data
+    │       - Returns: Created form
+    │
+    ├── [formId]/
+    │   ├── route.ts             # Individual form operations
+    │   │   ├── GET: Fetch form
+    │   │   │   - Returns: Complete form data
+    │   │   ├── PATCH: Update form
+    │   │   │   - Body: Partial form updates
+    │   │   │   - Returns: Updated form
+    │   │   └── DELETE: Remove form
+    │   │       - Returns: Success status
+    │   │
+    │   ├── publish/
+    │   │   └── route.ts         # Publishing endpoints
+    │   │       └── PATCH: Toggle publish
+    │   │           - Returns: Updated publish status
+    │   │
+    │   └── submit/
+    │       └── route.ts         # Form submission
+    │           └── POST: Submit response
+    │               - Body: Form responses
+    │               - Validates: Required fields
+    │               - Returns: Submission confirmation
+```
+
+### Component Structure and Responsibilities
+
+#### Form Builder Components
+
+```typescript
+src/components/form-builder/
+├── FormBuilder.tsx       # Main container
+│   # Manages drag-drop state
+│   # Handles element CRUD
+│   # Controls form settings
+│
+├── ElementToolbar.tsx    # Element palette
+│   # Lists available elements
+│   # Provides drag sources
+│   # Groups elements by type
+│
+├── Canvas.tsx           # Form layout
+│   # Drop target for elements
+│   # Handles element ordering
+│   # Preview rendering
+│
+└── Properties.tsx       # Element settings
+    # Dynamic property forms
+    # Validation rules
+    # Element-specific options
+```
+
+#### Form Elements
+
+```typescript
+src/components/forms/elements/
+├── base/                # Common functionality
+│   ├── BaseInput.tsx    # Input foundations
+│   └── BaseChoice.tsx   # Choice foundations
+│
+├── inputs/             # Basic inputs
+│   ├── TextInput.tsx   # Short text
+│   ├── TextArea.tsx    # Long text
+│   ├── EmailInput.tsx  # Email
+│   └── PhoneInput.tsx  # Phone
+│
+├── choices/            # Selection elements
+│   ├── MultipleChoice.tsx  # Radio/Checkbox
+│   ├── Dropdown.tsx       # Select
+│   └── PictureChoice.tsx  # Image selection
+│
+└── special/            # Special elements
+    ├── Welcome.tsx     # Welcome screen
+    ├── Statement.tsx   # Info display
+    └── EndScreen.tsx   # Completion screen
+```
+
 ### Pages
 
 ```
