@@ -35,6 +35,17 @@ export type MultipleChoiceProperties = {
   randomizeOrder: boolean;
 };
 
+export type EmailProperties = {
+  placeholder: string;
+  validationRegex?: string;
+};
+
+export type PhoneProperties = {
+  placeholder: string;
+  defaultCountry: string;
+  allowInternational: boolean;
+};
+
 export type FormSettings = {
   theme: {
     primaryColor: string;
