@@ -60,3 +60,21 @@ export type FormSettings = {
     limitResponses: boolean;
   };
 };
+
+export interface ApiResponse<T> {
+  data?: T;
+  error?: string;
+}
+
+export interface Form {
+  id: number;
+  userId: string;
+  title: string;
+  description: string | null;
+  elements: FormElement[];
+  settings: FormSettings;
+  isPublished: boolean;
+  customSlug: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
