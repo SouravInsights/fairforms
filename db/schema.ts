@@ -1,3 +1,4 @@
+import { FormSettings } from "@/types/form";
 import {
   pgTable,
   serial,
@@ -16,4 +17,5 @@ export const forms = pgTable("forms", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   elements: json("elements").$type<FormElement[]>().notNull(),
+  settings: json("settings").$type<FormSettings>().notNull(),
 });
