@@ -2,22 +2,15 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
 // Define public routes
 const isPublicRoute = createRouteMatcher([
-  "/", // Landing page
-  "/forms/(.*)/(public|submit)", // Public form access and submission
-  "/api/forms/(.*)/(public|submit)", // Public form API routes
-  "/sign-in*",
-  "/sign-up*",
-  // Add any other public routes your app needs
+  "/",
+  "/forms/(.*)/(public|submit)",
+  "/api/forms/(.*)/(public|submit)",
 ]);
 
 export default clerkMiddleware(async (auth, request) => {
-  // If it's a public route, allow access
-  if (isPublicRoute(request)) {
-    return;
+  if (!isPublicRoute(request)) {
+    await auth.protect();
   }
-
-  // Protect all other routes
-  await auth.protect();
 });
 
 export const config = {
