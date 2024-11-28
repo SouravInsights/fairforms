@@ -17,3 +17,18 @@ export enum FormElementType {
   DROPDOWN = "dropdown",
   PICTURE_CHOICE = "picture_choice",
 }
+
+export type FormSettings = {
+  theme: {
+    primaryColor: string;
+    fontFamily: string;
+    backgroundColor: string;
+    questionColor: string;
+  };
+  behavior: {
+    showProgressBar: boolean;
+    enableKeyboardNavigation: boolean;
+    requireLogin: boolean;
+    limitResponses: boolean;
+  };
+};
