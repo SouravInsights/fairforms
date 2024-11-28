@@ -18,6 +18,23 @@ export enum FormElementType {
   PICTURE_CHOICE = "picture_choice",
 }
 
+export type TextProperties = {
+  minLength?: number;
+  maxLength?: number;
+  placeholder: string;
+  richText: boolean;
+};
+
+export type MultipleChoiceProperties = {
+  options: Array<{
+    id: string;
+    text: string;
+    imageUrl?: string;
+  }>;
+  allowMultiple: boolean;
+  randomizeOrder: boolean;
+};
+
 export type FormSettings = {
   theme: {
     primaryColor: string;
