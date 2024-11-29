@@ -292,6 +292,126 @@ export default async function HomePage() {
               </div>
             </div>
           </div>
+
+          <footer className="pt-16 pb-8">
+            <div className="relative">
+              {/* Top decorative edge */}
+              <div className="absolute -top-8 left-0 w-full">
+                <div className="absolute inset-0 bg-gradient-to-b from-background via-transparent to-transparent h-16" />
+                <svg
+                  viewBox="0 0 100 10"
+                  className="w-full h-8 fill-background"
+                  preserveAspectRatio="none"
+                >
+                  <path d="M0 10 C 15 0, 35 10, 50 10 C 65 10, 85 0, 100 10 L 100 0 L 0 0 Z" />
+                </svg>
+              </div>
+
+              {/* Main content */}
+              <div className="relative bg-card/50 backdrop-blur-sm border border-primary/10 rounded-lg p-8 group hover:border-primary/20 transition-all duration-500">
+                {/* Animated background gradient */}
+                <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-gradient" />
+
+                {/* Receipt header */}
+                <div className="text-xs font-mono flex items-center justify-between mb-6 opacity-70">
+                  <div className="flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-primary/50 animate-pulse" />
+                    <span className="group-hover:animate-typing">
+                      SIGNATURE.LOG
+                    </span>
+                  </div>
+                  <span className="group-hover:animate-pulse">
+                    {new Date().toLocaleDateString()}
+                  </span>
+                </div>
+
+                {/* Main signature section */}
+                <div className="flex items-center justify-between relative">
+                  <div className="flex items-center gap-4">
+                    {/* Animated coffee cup */}
+                    <div className="relative group/coffee">
+                      <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center transform group-hover/coffee:scale-110 transition-transform duration-300">
+                        <span className="text-xl">☕️</span>
+                        {/* Steam animation */}
+                        <div className="absolute -top-4 left-1/2 opacity-0 group-hover/coffee:opacity-100 transition-opacity duration-300">
+                          {[...Array(3)].map((_, i) => (
+                            <div
+                              key={i}
+                              className="absolute w-1.5 h-6 bottom-0"
+                              style={{
+                                left: `${(i - 1) * 6}px`,
+                                transform: "translateX(-50%)",
+                                animation: "steam 2s infinite",
+                                animationDelay: `${i * 0.3}s`,
+                              }}
+                            >
+                              <div className="w-full h-full bg-gradient-to-t from-primary/20 to-transparent rounded-full" />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      {/* Coffee ripple effect */}
+                      <div className="absolute inset-0 rounded-xl group-hover/coffee:animate-ping bg-primary/5" />
+                    </div>
+
+                    {/* Creator info */}
+                    <div>
+                      <p className="text-sm text-muted-foreground">
+                        Crafted with fairness by
+                      </p>
+                      <a
+                        href="https://souravinsights.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="relative inline-flex items-center group/link"
+                      >
+                        <span className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70 group-hover/link:from-primary/70 group-hover/link:to-primary transition-all duration-300">
+                          SouravInsights
+                        </span>
+                        {/* Hover effects */}
+                        <div className="absolute -top-1 -right-1 opacity-0 group-hover/link:opacity-100 transition-all duration-300 flex gap-1">
+                          {[...Array(3)].map((_, i) => (
+                            <span
+                              key={i}
+                              className="text-xs"
+                              style={{
+                                animation: "sparkle 1.5s infinite",
+                                animationDelay: `${i * 0.2}s`,
+                              }}
+                            >
+                              ✨
+                            </span>
+                          ))}
+                        </div>
+                      </a>
+                    </div>
+                  </div>
+
+                  {/* Decorative QR section */}
+                  <div className="relative group/qr">
+                    <div className="h-16 w-16 bg-card rounded-lg p-2 grid grid-cols-4 gap-1 transform group-hover/qr:rotate-3 transition-transform duration-300">
+                      {[...Array(16)].map((_, i) => (
+                        <div
+                          key={i}
+                          className={`rounded-sm transition-all duration-300 ${
+                            Math.random() > 0.5
+                              ? "bg-primary/20"
+                              : "bg-transparent"
+                          }`}
+                          style={{ transitionDelay: `${i * 30}ms` }}
+                        />
+                      ))}
+                    </div>
+                    {/* Scan line effect */}
+                    <div
+                      className="absolute inset-0 bg-gradient-to-b from-primary/0 via-primary/10 to-primary/0 h-full transform translate-y-full group-hover/qr:translate-y-0 transition-transform duration-1000"
+                      style={{ animation: "scan 2s linear infinite" }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </footer>
         </div>
       </div>
     </div>
