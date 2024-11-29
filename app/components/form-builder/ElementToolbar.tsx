@@ -2,39 +2,16 @@ import { Droppable, Draggable } from "@hello-pangea/dnd";
 import { useFormContext } from "@/app/context/form-context";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { FormElement, FormElementType } from "@/types/form";
+import { FormElement } from "@/types/form";
 import { Separator } from "@/components/ui/separator";
 import { nanoid } from "nanoid";
-
-const ELEMENT_GROUPS = {
-  "Contact Info": [
-    FormElementType.CONTACT_INFO,
-    FormElementType.EMAIL,
-    FormElementType.PHONE,
-    FormElementType.ADDRESS,
-    FormElementType.WEBSITE,
-  ],
-  Choice: [
-    FormElementType.MULTIPLE_CHOICE,
-    FormElementType.DROPDOWN,
-    FormElementType.PICTURE_CHOICE,
-  ],
-  Text: [FormElementType.LONG_TEXT, FormElementType.SHORT_TEXT],
-  Other: [
-    FormElementType.NUMBER,
-    FormElementType.DATE,
-    FormElementType.FILE_UPLOAD,
-    FormElementType.WELCOME_SCREEN,
-    FormElementType.STATEMENT,
-    FormElementType.END_SCREEN,
-    FormElementType.REDIRECT,
-  ],
-} as const;
+import { ELEMENT_GROUPS } from "./ElementConfig";
+import { getDefaultProperties } from "./form-utils";
 
 export function ElementToolbar({ className }: { className?: string }) {
   const { dispatch } = useFormContext();
 
-  const createNewElement = (type: FormElementType) => {
+  const createNewElement = (type: FormElement["type"]) => {
     const baseElement = {
       id: nanoid(),
       type,
@@ -43,18 +20,7 @@ export function ElementToolbar({ className }: { className?: string }) {
       order: Date.now(),
     };
 
-    let properties;
-    switch (type) {
-      case FormElementType.CONTACT_INFO:
-        properties = {
-          placeholders: { firstName: "First Name", lastName: "Last Name" },
-          showMiddleName: false,
-        };
-        break;
-      // Add other cases...
-      default:
-        properties = {};
-    }
+    const properties = getDefaultProperties(type);
 
     dispatch({
       type: "ADD_ELEMENT",
@@ -74,22 +40,26 @@ export function ElementToolbar({ className }: { className?: string }) {
                 {...provided.droppableProps}
                 className="space-y-2"
               >
-                {elements.map((type, index) => (
+                {elements.map(({ type, icon: Icon, label }, index) => (
                   <Draggable
                     key={type}
                     draggableId={`toolbar-${type}`}
                     index={index}
                   >
-                    {(provided) => (
+                    {(provided, snapshot) => (
                       <Button
                         ref={provided.innerRef}
                         {...provided.draggableProps}
                         {...provided.dragHandleProps}
                         variant="ghost"
-                        className="w-full justify-start"
+                        className={cn(
+                          "w-full justify-start",
+                          snapshot.isDragging && "ring-2 ring-primary"
+                        )}
                         onClick={() => createNewElement(type)}
                       >
-                        {type}
+                        <Icon className="h-4 w-4 mr-2" />
+                        {label}
                       </Button>
                     )}
                   </Draggable>
