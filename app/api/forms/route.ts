@@ -2,27 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
 import { forms } from "@/db/schema";
 import { NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
-// import { FormSettings, CreateFormData } from "@/types/form";
-
-// const defaultSettings: FormSettings = {
-//   theme: {
-//     primaryColor: "#0f172a",
-//     fontFamily: "Inter",
-//     backgroundColor: "#ffffff",
-//     questionColor: "#0f172a",
-//   },
-//   behavior: {
-//     showProgressBar: true,
-//     enableKeyboardNavigation: true,
-//     requireLogin: false,
-//     limitResponses: false,
-//   },
-//   notifications: {
-//     enableEmailNotifications: false,
-//     notificationEmails: [],
-//   },
-// };
+import { eq, and } from "drizzle-orm";
 
 export async function GET() {
   try {
@@ -55,6 +35,42 @@ export async function POST() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Check if a draft form already exists for this user
+    const [existingDraft] = await db
+      .select()
+      .from(forms)
+      .where(
+        and(
+          eq(forms.userId, userId),
+          eq(forms.isPublished, false),
+          eq(forms.title, "Untitled Form")
+        )
+      );
+
+    if (existingDraft) {
+      // Return the existing draft instead of creating a new one
+      return NextResponse.json(existingDraft);
+    }
+
+    const defaultSettings = {
+      theme: {
+        primaryColor: "#0f172a",
+        fontFamily: "Inter",
+        backgroundColor: "#ffffff",
+        questionColor: "#0f172a",
+      },
+      behavior: {
+        showProgressBar: true,
+        enableKeyboardNavigation: true,
+        requireLogin: false,
+        limitResponses: false,
+      },
+      notifications: {
+        enableEmailNotifications: false,
+        notificationEmails: [],
+      },
+    };
+
     const [form] = await db
       .insert(forms)
       .values({
@@ -62,25 +78,8 @@ export async function POST() {
         title: "Untitled Form",
         description: "",
         elements: [],
-        settings: {
-          theme: {
-            primaryColor: "#0f172a",
-            fontFamily: "Inter",
-            backgroundColor: "#ffffff",
-            questionColor: "#0f172a",
-          },
-          behavior: {
-            showProgressBar: true,
-            enableKeyboardNavigation: true,
-            requireLogin: false,
-            limitResponses: false,
-          },
-          notifications: {
-            enableEmailNotifications: false,
-            notificationEmails: [],
-          },
-        },
-        isPublished: true, // Changed to true for testing
+        settings: defaultSettings,
+        isPublished: false,
       })
       .returning();
 
