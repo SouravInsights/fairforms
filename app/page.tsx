@@ -282,7 +282,7 @@ export default async function HomePage() {
               <div className="pt-4">
                 <WaitlistDialog>
                   <Button size="lg" className="gap-2">
-                    Create Your Fair Forms
+                    Create Your Fair Form
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                 </WaitlistDialog>
