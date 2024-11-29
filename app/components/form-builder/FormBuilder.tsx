@@ -4,7 +4,7 @@ import { useFormContext } from "@/app/context/form-context";
 import { ElementToolbar } from "./ElementToolbar";
 import { Canvas } from "./Canvas";
 import { Properties } from "./Properties";
-import { FormElement, FormElementType } from "@/types/form";
+import { FormElement, FormElementType, UpdateFormData } from "@/types/form";
 import { useToast } from "@/hooks/use-toast";
 import { Globe, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -37,7 +37,12 @@ export function FormBuilder({ formId }: { formId: string }) {
           if (response.ok) {
             dispatch({
               type: "SET_INITIAL_STATE",
-              payload: { elements: newForm.elements },
+              payload: {
+                elements: newForm.elements,
+                title: newForm.title,
+                description: newForm.description,
+                settings: newForm.settings,
+              },
             });
             setIsPublished(newForm.isPublished);
             // Redirect to the new form's edit page
@@ -79,6 +84,30 @@ export function FormBuilder({ formId }: { formId: string }) {
     loadForm();
   }, [formId, dispatch, toast]);
 
+  const saveFormChanges = async (formData: Partial<UpdateFormData>) => {
+    if (formId === "new") return;
+
+    try {
+      const response = await fetch(`/api/forms/${formId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to save changes");
+      }
+    } catch {
+      toast({
+        title: "Error",
+        description: "Failed to save changes. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleDragEnd = async (result: DropResult) => {
     const { source, destination, draggableId } = result;
 
@@ -98,29 +127,14 @@ export function FormBuilder({ formId }: { formId: string }) {
         properties: defaultProperties,
       } as FormElement;
 
+      const updatedElements = [...state.elements, newElement];
+
       dispatch({
         type: "ADD_ELEMENT",
         payload: newElement,
       });
 
-      // Save the updated form
-      try {
-        await fetch(`/api/forms/${formId}`, {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            elements: [...state.elements, newElement],
-          }),
-        });
-      } catch {
-        toast({
-          title: "Error",
-          description: "Failed to save changes. Please try again.",
-          variant: "destructive",
-        });
-      }
+      await saveFormChanges({ elements: updatedElements });
       return;
     }
 
@@ -140,24 +154,7 @@ export function FormBuilder({ formId }: { formId: string }) {
         payload: reorderedElements,
       });
 
-      // Save the updated form
-      try {
-        await fetch(`/api/forms/${formId}`, {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            elements: reorderedElements,
-          }),
-        });
-      } catch {
-        toast({
-          title: "Error",
-          description: "Failed to save changes. Please try again.",
-          variant: "destructive",
-        });
-      }
+      await saveFormChanges({ elements: reorderedElements });
     }
   };
 

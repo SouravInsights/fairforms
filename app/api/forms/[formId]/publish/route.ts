@@ -20,7 +20,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Invalid form ID" }, { status: 400 });
     }
 
-    // Toggle isPublished
+    // Get current form data
     const [existingForm] = await db
       .select()
       .from(forms)
@@ -37,6 +37,7 @@ export async function PATCH(
     const [updatedForm] = await db
       .update(forms)
       .set({
+        ...existingForm,
         isPublished: !existingForm.isPublished,
         updatedAt: new Date(),
       })
