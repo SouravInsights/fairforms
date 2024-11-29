@@ -16,8 +16,47 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "MyForms - Your Personal Form Creation Tool",
-  description: "A simple and powerful form builder application",
+  title: "FairForms - Because forms should be fair",
+  description:
+    "A fair form builder for everyone. No sneaky upsells, no predatory pricing, just honest, straightforward forms that work.",
+  openGraph: {
+    title: "FairForms - Because forms should be fair",
+    description:
+      "A fair form builder for everyone. No sneaky upsells, no predatory pricing, just honest, straightforward forms that work.",
+    url: "https://fairforms.xyz",
+    siteName: "FairForms",
+    images: [
+      {
+        url: "/og.png",
+        width: 1200,
+        height: 630,
+        alt: "FairForms - A fair form builder for everyone",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "FairForms - Because forms should be fair",
+    description:
+      "A fair form builder for everyone. No sneaky upsells, no predatory pricing, just honest, straightforward forms that work.",
+    images: ["/og.png"],
+  },
+  // Adding basic SEO optimization
+  keywords: [
+    "form builder",
+    "fair pricing",
+    "forms",
+    "surveys",
+    "feedback forms",
+    "typeform alternative",
+  ],
+  authors: [{ name: "SouravInsights" }],
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({
