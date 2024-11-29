@@ -1,10 +1,20 @@
 /* eslint-disable react/no-unescaped-entities */
 import { Button } from "@/components/ui/button";
-import { SignInButton, SignUpButton } from "@clerk/nextjs";
+import { SignInButton } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { PiggyBank, Laugh, Heart, HandCoins } from "lucide-react";
+import {
+  Coffee,
+  Rocket,
+  Star,
+  Sparkles,
+  HandCoins,
+  PiggyBank,
+  Laugh,
+  Heart,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { WaitlistDialog } from "@/app/components/waitlist/WaitlistDialog";
 
 export default async function HomePage() {
   const { userId } = await auth();
@@ -18,32 +28,47 @@ export default async function HomePage() {
       <div className="container mx-auto px-4 py-16 space-y-24">
         {/* Hero Section */}
         <div className="space-y-4 text-center">
-          <Badge variant="secondary" className="mb-4">
-            👋 Hey there, form enthusiast!
+          <Badge variant="secondary" className="mb-4 animate-bounce">
+            🚀 Early Access Now Open!
           </Badge>
-          <h1 className="text-4xl md:text-6xl font-bold">
+          <h1 className="text-4xl md:text-6xl font-bold group">
             Because Typeform was{" "}
-            <span className="relative">
+            <span className="relative inline-block group-hover:rotate-2 transition-transform">
               expensive
               <div className="absolute -top-1 left-0 w-full h-[2px] bg-primary" />
+              <div className="absolute -right-6 -top-6 opacity-0 group-hover:opacity-100 transition-opacity">
+                <span className="text-xs bg-primary/10 rounded-full px-2 py-1 whitespace-nowrap">
+                  like, really expensive
+                </span>
+              </div>
             </span>
           </h1>
+
           <p className="text-xl text-muted-foreground max-w-[600px] mx-auto">
-            A form builder that won't cost you a kidney. Built by a dev who
-            refused to pay enterprise pricing.
+            A form builder for the rest of us. No venture capital. No growth
+            hacking. Just forms that work.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
-            <SignUpButton mode="modal">
-              <Button size="lg" className="gap-2">
-                Start Building <span className="text-sm">(It's Free!)</span>
+            <WaitlistDialog>
+              <Button size="lg" className="gap-2 group">
+                Join Early Access{" "}
+                <Sparkles className="h-4 w-4 group-hover:animate-spin" />
               </Button>
-            </SignUpButton>
+            </WaitlistDialog>
             <SignInButton mode="modal">
               <Button variant="outline" size="lg">
-                Welcome Back
+                Already In? Welcome Back!
               </Button>
             </SignInButton>
+          </div>
+
+          <div className="flex items-center justify-center gap-2 mt-4">
+            <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+            <p className="text-sm text-muted-foreground">
+              Join <span className="font-semibold text-foreground">142</span>{" "}
+              others in early access (the number is fake ofcourse haha)
+            </p>
           </div>
         </div>
 
@@ -97,24 +122,67 @@ export default async function HomePage() {
             </p>
           </div>
         </div>
+        {/* New Timeline Section */}
+        <div className="relative">
+          <div className="absolute left-1/2 -translate-x-1/2 h-full w-[2px] bg-primary/20" />
+          <div className="space-y-12 relative">
+            <h3 className="text-center text-2xl font-semibold mb-8">
+              The Story So Far...
+            </h3>
 
-        {/* Bottom CTA */}
-        <div className="text-center space-y-6 py-12">
+            <div className="ml-[50%] pl-8 relative">
+              <div className="absolute left-0 top-3 w-4 h-4 rounded-full bg-primary -translate-x-[9px]" />
+              <h4 className="font-semibold">The Breaking Point</h4>
+              <p className="text-muted-foreground">
+                Saw Typeform's pricing page. Spilled coffee. Started coding.
+              </p>
+            </div>
+
+            <div className="mr-[50%] pr-8 text-right relative">
+              <div className="absolute right-0 top-3 w-4 h-4 rounded-full bg-primary translate-x-[9px]" />
+              <h4 className="font-semibold">The Development</h4>
+              <p className="text-muted-foreground">
+                3 AM coding sessions. Lots of coffee. Some questionable commit
+                messages.
+              </p>
+            </div>
+
+            <div className="ml-[50%] pl-8 relative">
+              <div className="absolute left-0 top-3 w-4 h-4 rounded-full bg-primary -translate-x-[9px]" />
+              <h4 className="font-semibold">Early Access Launch</h4>
+              <p className="text-muted-foreground">
+                You're looking at it! Join us and let's build something awesome
+                together.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Enhanced Bottom CTA */}
+        <div className="text-center space-y-6 py-12 bg-card rounded-lg p-8">
+          <div className="inline-block animate-bounce">
+            <Coffee className="h-8 w-8 mx-auto text-primary" />
+          </div>
           <h2 className="text-2xl font-semibold">
-            Ready to Join the Revolution?
+            Save Money, Get Forms, Buy Coffee Instead
           </h2>
           <p className="text-muted-foreground max-w-[500px] mx-auto">
-            Create forms that look like they cost $200/month, but keep your
-            money for what really matters. Like coffee. Or pizza.
+            For the price of one month of Typeform, you could buy{" "}
+            <span className="font-semibold">47 cups of coffee</span>. Join us
+            and keep your coffee budget intact.
           </p>
-          <SignUpButton mode="modal">
-            <Button size="lg" className="gap-2">
-              Start Creating Forms{" "}
-              <span className="text-sm">(Still Free!)</span>
+          <WaitlistDialog>
+            <Button size="lg" className="gap-2 group">
+              Get Early Access{" "}
+              <Rocket className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
             </Button>
-          </SignUpButton>
+          </WaitlistDialog>
           <p className="text-sm text-muted-foreground">
-            No credit card required. Ever. Seriously.
+            No credit card required. No sales calls. No nonsense.
+            <br />
+            <span className="text-xs">
+              Just pure, unadulterated form-building joy.
+            </span>
           </p>
         </div>
       </div>

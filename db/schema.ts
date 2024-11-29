@@ -1,4 +1,5 @@
 import { FormElement, FormSettings } from "@/types/form";
+import { relations } from "drizzle-orm";
 import {
   pgTable,
   serial,
@@ -8,6 +9,8 @@ import {
   json,
   integer,
 } from "drizzle-orm/pg-core";
+import { createInsertSchema, createSelectSchema } from "drizzle-zod";
+import { z } from "zod";
 
 export const forms = pgTable("forms", {
   id: serial("id").primaryKey(),
@@ -38,3 +41,26 @@ export const collaborators = pgTable("collaborators", {
   role: text("role").notNull(), // 'editor' | 'viewer'
   addedAt: timestamp("added_at").defaultNow(),
 });
+
+export const waitlistTable = pgTable("waitlist", {
+  id: serial("id").primaryKey(),
+  email: text("email").notNull().unique(),
+  referralCode: text("referral_code").notNull().unique(),
+  position: integer("position").notNull(),
+  referredBy: text("referred_by"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const waitlistRelations = relations(waitlistTable, ({ one }) => ({
+  referrer: one(waitlistTable, {
+    fields: [waitlistTable.referredBy],
+    references: [waitlistTable.referralCode],
+  }),
+}));
+
+// Schemas for validation
+export const insertWaitlistSchema = createInsertSchema(waitlistTable);
+export const selectWaitlistSchema = createSelectSchema(waitlistTable);
+
+export type WaitlistEntry = z.infer<typeof selectWaitlistSchema>;
+export type NewWaitlistEntry = z.infer<typeof insertWaitlistSchema>;
