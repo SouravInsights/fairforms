@@ -6,7 +6,6 @@ import { redirect } from "next/navigation";
 import {
   Coffee,
   Rocket,
-  Star,
   Sparkles,
   HandCoins,
   PiggyBank,
@@ -67,7 +66,7 @@ export default async function HomePage() {
 
           <p className="text-md text-muted-foreground mt-4">
             Join <span className="font-semibold text-foreground">142</span>{" "}
-            others in early access (the number is fake ofcourse haha 😜)
+            others in early access (the number is fake ofcourse haha)
           </p>
         </div>
 
