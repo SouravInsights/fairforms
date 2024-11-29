@@ -33,11 +33,13 @@ export default async function HomePage() {
           </Badge>
           <h1 className="text-4xl md:text-6xl font-bold group">
             Because Typeform was{" "}
-            <span className="relative inline-block group-hover:rotate-2 transition-transform">
+            <span className="relative inline-block">
               expensive
-              <div className="absolute -top-1 left-0 w-full h-[2px] bg-primary" />
-              <div className="absolute -right-6 -top-6 opacity-0 group-hover:opacity-100 transition-opacity">
-                <span className="text-xs bg-primary/10 rounded-full px-2 py-1 whitespace-nowrap">
+              {/* Underline */}
+              <div className="absolute -bottom-2 left-0 w-full h-[2px] bg-primary" />
+              {/* Tooltip */}
+              <div className="absolute -top-8 left-0 w-full text-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                <span className="text-sm bg-background border px-2 py-1 rounded-md shadow-sm">
                   like, really expensive
                 </span>
               </div>
