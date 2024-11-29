@@ -11,7 +11,7 @@ export default function DashboardLayout({
       <header className="border-b">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link href="/dashboard" className="font-bold text-xl">
-            FormBuilder
+            FairForms
           </Link>
           <UserButton afterSignOutUrl="/" />
         </div>
