@@ -34,11 +34,18 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Get data from request body
+    const formData = await request.json();
+
+    // Update the form with the current state and toggle publish
     const [updatedForm] = await db
       .update(forms)
       .set({
-        ...existingForm,
         isPublished: !existingForm.isPublished,
+        elements: formData.elements,
+        title: formData.title || existingForm.title,
+        description: formData.description || existingForm.description,
+        settings: formData.settings || existingForm.settings,
         updatedAt: new Date(),
       })
       .where(eq(forms.id, formId))

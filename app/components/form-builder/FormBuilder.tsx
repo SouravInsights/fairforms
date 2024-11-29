@@ -175,6 +175,13 @@ export function FormBuilder({ formId }: { formId: string }) {
         headers: {
           "Content-Type": "application/json",
         },
+        // Include current state in the request
+        body: JSON.stringify({
+          elements: state.elements,
+          title: state.title,
+          description: state.description,
+          settings: state.settings,
+        }),
       });
 
       if (!response.ok) {
