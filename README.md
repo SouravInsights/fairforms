@@ -1,6 +1,6 @@
-# MyForms
+# FairForms
 
-> MyForms - Because Typeform's pricing made me cry... and when someone special needed an afforadble form builder, I said 'Hey, I could build that for you' 💜 So here we are... 🥲
+> FairForms - Because Typeform's pricing made me cry... and when someone special needed an afforadble form builder, I said 'Hey, I could build that for you' 💜 So here we are... 🥲
 
 A self-hosted form builder that doesn't cost a kidney per month. Create beautiful, conversational forms without breaking the bank.
 
