@@ -9,8 +9,6 @@ import {
   Laugh,
   Heart,
   ArrowRight,
-  X,
-  DollarSign,
   GitCommit,
   Terminal,
 } from "lucide-react";
@@ -49,10 +47,10 @@ export default async function HomePage() {
 
                 <div className="relative">
                   <h1 className="text-4xl md:text-6xl font-bold leading-tight">
-                    Your Typeform
+                    Fair forms for
                     <br />
                     <span className="relative inline-block mt-2">
-                      <span className="relative z-10">Receipt</span>
+                      <span className="relative z-10">everyone</span>
                       <div className="absolute bottom-2 left-0 w-full h-4 bg-primary/20 -rotate-2" />
                     </span>
                   </h1>
@@ -61,32 +59,20 @@ export default async function HomePage() {
                 {/* Receipt items */}
                 <div className="max-w-md mx-auto mt-12 space-y-4 font-mono">
                   <div className="flex justify-between items-center p-2 border-b border-dashed">
-                    <span>Basic Forms</span>
-                    <span className="flex items-center">
-                      <DollarSign className="h-4 w-4" />
-                      <X className="h-4 w-4" />
-                      <span className="line-through">50</span>
-                    </span>
+                    <span>Simple & Transparent</span>
+                    <span className="text-primary">✓</span>
                   </div>
                   <div className="flex justify-between items-center p-2 border-b border-dashed">
-                    <span>Premium Features</span>
-                    <span className="flex items-center">
-                      <DollarSign className="h-4 w-4" />
-                      <X className="h-4 w-4" />
-                      <span className="line-through">100</span>
-                    </span>
+                    <span>No Feature Gates</span>
+                    <span className="text-primary">✓</span>
                   </div>
                   <div className="flex justify-between items-center p-2 border-b border-dashed">
-                    <span>Enterprise Support</span>
-                    <span className="flex items-center">
-                      <DollarSign className="h-4 w-4" />
-                      <X className="h-4 w-4" />
-                      <span className="line-through">250</span>
-                    </span>
+                    <span>Community First</span>
+                    <span className="text-primary">✓</span>
                   </div>
                   <div className="flex justify-between items-center p-2 font-bold text-lg">
-                    <span>Your Total</span>
-                    <span className="text-primary">FREE</span>
+                    <span>Better Forms</span>
+                    <span className="text-primary">✓</span>
                   </div>
                 </div>
 
@@ -98,7 +84,7 @@ export default async function HomePage() {
                         className="relative group overflow-hidden"
                       >
                         <span className="relative z-10 flex items-center gap-2">
-                          Claim Your Free Forms
+                          Join the Fair Side
                           <Sparkles className="h-4 w-4 group-hover:animate-spin" />
                         </span>
                         <div className="absolute inset-0 bg-primary/10 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
@@ -142,9 +128,9 @@ export default async function HomePage() {
 
             <div className="pt-8 space-y-8">
               <div className="text-center">
-                <h2 className="text-2xl font-bold">Why Switch?</h2>
+                <h2 className="text-2xl font-bold">Why We&apos;re Different</h2>
                 <p className="text-sm text-muted-foreground">
-                  Four simple reasons
+                  Four fair reasons
                 </p>
               </div>
 
@@ -152,25 +138,25 @@ export default async function HomePage() {
                 {[
                   {
                     icon: HandCoins,
-                    title: `The "No Upsell" Promise`,
-                    description: `No "Premium" popups every 2 seconds. No "Upgrade to access basic features". Just forms, pure and simple.`,
+                    title: `Fair Pricing Promise`,
+                    description: `No 'Premium' popups, no sneaky upsells, no surprises. Just forms, pure and simple.`,
                   },
                   {
                     icon: PiggyBank,
-                    title: "Budget-Friendly (Like, Free)",
+                    title: "Fair Features",
                     description:
                       "Remember when software was made to help people, not to maximize MRR? Yeah, we're bringing that back.",
                   },
                   {
                     icon: Laugh,
-                    title: "Built Out of Spite",
+                    title: "Built for Fairness",
                     description:
-                      "When the Typeform pricing page made me cry, I didn't just complain. I built this. Take that, enterprise pricing!",
+                      "When other form builders got too greedy, we didn't just complain. We built a fair alternative.",
                   },
                   {
                     icon: Heart,
                     title: "Made with Love (and Caffeine)",
-                    description: `Every feature was built after midnight, fueled by coffee and the dream of never seeing a "Your free trial has ended" email again.`,
+                    description: `Every feature was built after midnight, fueled by coffee and the dream of making forms fair again.`,
                   },
                 ].map((feature, index) => (
                   <div
@@ -211,21 +197,21 @@ export default async function HomePage() {
                 },
                 {
                   hash: "2b9c4a0",
-                  message: "refactor: Rewrote everything at 3AM",
+                  message: "refactor: Making forms fair at 3AM",
                   detail: "Coffee-driven development at its finest",
                   time: "2 months ago",
                 },
                 {
                   hash: "1a3b5c7",
-                  message: "fix: Removed all enterprise pricing logic",
-                  detail: "Because forms should be free",
+                  message: "fix: Removed unfair pricing logic",
+                  detail: "Because forms should be fair",
                   time: "1 month ago",
                 },
                 {
                   hash: "9d8f7e6",
                   message: "release: Launching early access",
                   detail:
-                    "You're looking at it! Join us and let's build something awesome together.",
+                    "You're looking at it! Join us in making forms fair again.",
                   time: "Just now",
                 },
               ].map((commit, index) => (
@@ -258,56 +244,50 @@ export default async function HomePage() {
           <div className="relative bg-card p-8 rounded-lg border border-primary/20">
             <div className="absolute -top-6 -right-6 rotate-12">
               <div className="bg-primary/90 text-white px-8 py-2 rounded-sm transform rotate-45 text-sm font-bold">
-                PAID $0
+                FAIR DEAL
               </div>
             </div>
 
             <div className="text-center space-y-8">
               <div className="space-y-2">
-                <h2 className="text-2xl font-bold">Final Invoice</h2>
+                <h2 className="text-2xl font-bold">Value Report</h2>
                 <p className="text-sm text-muted-foreground">
-                  What you&apos;ll pay vs what you&apos;ll save
+                  What you get with FairForms
                 </p>
               </div>
 
               <div className="max-w-sm mx-auto space-y-4 font-mono">
                 <div className="flex justify-between items-center p-2 border-b border-dashed">
-                  <span>Enterprise Forms</span>
-                  <span className="line-through text-muted-foreground">
-                    $500/mo
-                  </span>
+                  <span>Form Builder Drama</span>
+                  <span className="text-muted-foreground">None</span>
                 </div>
                 <div className="flex justify-between items-center p-2 border-b border-dashed">
-                  <span>Premium Features</span>
-                  <span className="line-through text-muted-foreground">
-                    $200/mo
-                  </span>
+                  <span>Feature Restrictions</span>
+                  <span className="text-muted-foreground">Zero</span>
                 </div>
                 <div className="flex justify-between items-center p-2 border-b border-dashed">
-                  <span>Support Package</span>
-                  <span className="line-through text-muted-foreground">
-                    $100/mo
-                  </span>
+                  <span>Hidden Costs</span>
+                  <span className="text-muted-foreground">Nope</span>
                 </div>
                 <div className="flex justify-between items-center p-2 font-bold">
-                  <span>Your Total</span>
-                  <span className="text-primary text-xl">$0/mo</span>
+                  <span>Peace of Mind</span>
+                  <span className="text-primary text-xl">✓</span>
                 </div>
 
                 <div className="text-sm text-muted-foreground pt-4">
-                  Potential Coffee Budget: 47 cups/mo
+                  More budget for coffee: Always a good thing ☕️
                 </div>
               </div>
 
               <div className="pt-4">
                 <WaitlistDialog>
                   <Button size="lg" className="gap-2">
-                    Create Your Free Forms
+                    Create Your Fair Forms
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                 </WaitlistDialog>
                 <p className="text-xs text-muted-foreground mt-4">
-                  No credit card required. Ever.
+                  No hidden costs. No surprises. Just fair forms.
                 </p>
               </div>
             </div>
