@@ -8,12 +8,16 @@ import { FormElement, FormElementType } from "@/types/form";
 import { useToast } from "@/hooks/use-toast";
 import { Globe, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getDefaultProperties } from "./form-utils";
+import { FormPreview } from "./FormPreview";
+import { useUser } from "@clerk/nextjs";
 
 export function FormBuilder({ formId }: { formId: string }) {
   const { state, dispatch } = useFormContext();
   const [isLoading, setIsLoading] = useState(true);
   const [isPublished, setIsPublished] = useState(false);
   const { toast } = useToast();
+  const { user } = useUser();
 
   useEffect(() => {
     const loadForm = async () => {
@@ -212,24 +216,36 @@ export function FormBuilder({ formId }: { formId: string }) {
         <div className="border-b">
           <div className="container flex items-center justify-between py-4">
             <h1 className="text-xl font-semibold">Form Builder</h1>
-            {formId !== "new" && (
-              <Button
-                onClick={togglePublish}
-                variant={isPublished ? "outline" : "default"}
-              >
-                {isPublished ? (
-                  <>
-                    <EyeOff className="w-4 h-4 mr-2" />
-                    Unpublish
-                  </>
-                ) : (
-                  <>
-                    <Globe className="w-4 h-4 mr-2" />
-                    Publish
-                  </>
-                )}
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              {user && (
+                <FormPreview
+                  elements={state.elements}
+                  formId={formId}
+                  userId={user.id}
+                  title={state.title}
+                  description={state.description}
+                  settings={state.settings}
+                />
+              )}
+              {formId !== "new" && (
+                <Button
+                  onClick={togglePublish}
+                  variant={isPublished ? "outline" : "default"}
+                >
+                  {isPublished ? (
+                    <>
+                      <EyeOff className="w-4 h-4 mr-2" />
+                      Unpublish
+                    </>
+                  ) : (
+                    <>
+                      <Globe className="w-4 h-4 mr-2" />
+                      Publish
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -241,23 +257,4 @@ export function FormBuilder({ formId }: { formId: string }) {
       </div>
     </DragDropContext>
   );
-}
-
-// Helper function to get default properties based on element type
-function getDefaultProperties(type: FormElementType) {
-  switch (type) {
-    case FormElementType.CONTACT_INFO:
-      return {
-        placeholders: { firstName: "First Name", lastName: "Last Name" },
-        showMiddleName: false,
-      };
-    case FormElementType.EMAIL:
-      return {
-        placeholder: "Enter your email",
-        validationRegex: undefined,
-      };
-    // Add cases for all other element types
-    default:
-      return {};
-  }
 }
