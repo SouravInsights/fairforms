@@ -294,7 +294,7 @@ export default async function HomePage() {
           </div>
 
           <footer className="pt-16 pb-8">
-            <div className="relative">
+            <div className="relative group">
               {/* Top decorative edge */}
               <div className="absolute -top-8 left-0 w-full">
                 <div className="absolute inset-0 bg-gradient-to-b from-background via-transparent to-transparent h-16" />
@@ -309,31 +309,31 @@ export default async function HomePage() {
 
               {/* Main content */}
               <div className="relative bg-card/50 backdrop-blur-sm border border-primary/10 rounded-lg p-8 group hover:border-primary/20 transition-all duration-500">
-                {/* Animated background gradient */}
-                <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-gradient" />
+                {/* Background gradient - Mobile subtle persistent, Desktop on hover */}
+                <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 rounded-lg sm:opacity-0 opacity-20 sm:group-hover:opacity-100 transition-opacity duration-500 animate-gradient" />
 
                 {/* Receipt header */}
                 <div className="text-xs font-mono flex items-center justify-between mb-6 opacity-70">
                   <div className="flex items-center gap-2">
                     <span className="h-2 w-2 rounded-full bg-primary/50 animate-pulse" />
-                    <span className="group-hover:animate-typing">
+                    <span className="sm:group-hover:animate-typing">
                       SIGNATURE.LOG
                     </span>
                   </div>
-                  <span className="group-hover:animate-pulse">
+                  <span className="sm:group-hover:animate-pulse">
                     {new Date().toLocaleDateString()}
                   </span>
                 </div>
 
                 {/* Main signature section */}
-                <div className="flex items-center justify-between relative">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     {/* Animated coffee cup */}
                     <div className="relative group/coffee">
-                      <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center transform group-hover/coffee:scale-110 transition-transform duration-300">
+                      <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center transform sm:group-hover/coffee:scale-110 transition-transform duration-300">
                         <span className="text-xl">☕️</span>
                         {/* Steam animation */}
-                        <div className="absolute -top-4 left-1/2 opacity-0 group-hover/coffee:opacity-100 transition-opacity duration-300">
+                        <div className="absolute -top-4 left-1/2 sm:opacity-0 opacity-30 sm:group-hover/coffee:opacity-100 transition-opacity duration-300">
                           {[...Array(3)].map((_, i) => (
                             <div
                               key={i}
@@ -350,8 +350,8 @@ export default async function HomePage() {
                           ))}
                         </div>
                       </div>
-                      {/* Coffee ripple effect */}
-                      <div className="absolute inset-0 rounded-xl group-hover/coffee:animate-ping bg-primary/5" />
+                      {/* Coffee ripple effect - Desktop only */}
+                      <div className="absolute inset-0 rounded-xl hidden sm:block sm:group-hover/coffee:animate-ping bg-primary/5" />
                     </div>
 
                     {/* Creator info */}
@@ -365,11 +365,11 @@ export default async function HomePage() {
                         rel="noopener noreferrer"
                         className="relative inline-flex items-center group/link"
                       >
-                        <span className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70 group-hover/link:from-primary/70 group-hover/link:to-primary transition-all duration-300">
+                        <span className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70 sm:group-hover/link:from-primary/70 sm:group-hover/link:to-primary transition-all duration-300">
                           SouravInsights
                         </span>
-                        {/* Hover effects */}
-                        <div className="absolute -top-1 -right-1 opacity-0 group-hover/link:opacity-100 transition-all duration-300 flex gap-1">
+                        {/* Sparkles - Mobile subtle, Desktop on hover */}
+                        <div className="absolute -top-1 -right-1 sm:opacity-0 opacity-30 sm:group-hover/link:opacity-100 transition-all duration-300 flex gap-1">
                           {[...Array(3)].map((_, i) => (
                             <span
                               key={i}
@@ -389,7 +389,7 @@ export default async function HomePage() {
 
                   {/* Decorative QR section */}
                   <div className="relative group/qr">
-                    <div className="h-16 w-16 bg-card rounded-lg p-2 grid grid-cols-4 gap-1 transform group-hover/qr:rotate-3 transition-transform duration-300">
+                    <div className="h-16 w-16 bg-card rounded-lg p-2 grid grid-cols-4 gap-1 transform sm:group-hover/qr:rotate-3 transition-transform duration-300">
                       {[...Array(16)].map((_, i) => (
                         <div
                           key={i}
@@ -402,9 +402,9 @@ export default async function HomePage() {
                         />
                       ))}
                     </div>
-                    {/* Scan line effect */}
+                    {/* Scan line effect - Mobile subtle, Desktop on hover */}
                     <div
-                      className="absolute inset-0 bg-gradient-to-b from-primary/0 via-primary/10 to-primary/0 h-full transform translate-y-full group-hover/qr:translate-y-0 transition-transform duration-1000"
+                      className="absolute inset-0 bg-gradient-to-b from-primary/0 via-primary/10 to-primary/0 h-full sm:translate-y-full sm:group-hover/qr:translate-y-0 transition-transform duration-1000"
                       style={{ animation: "scan 2s linear infinite" }}
                     />
                   </div>
