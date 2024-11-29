@@ -65,13 +65,10 @@ export default async function HomePage() {
             </SignInButton>
           </div>
 
-          <div className="flex items-center justify-center gap-2 mt-4">
-            <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-            <p className="text-sm text-muted-foreground">
-              Join <span className="font-semibold text-foreground">142</span>{" "}
-              others in early access (the number is fake ofcourse haha)
-            </p>
-          </div>
+          <p className="text-md text-muted-foreground mt-4">
+            Join <span className="font-semibold text-foreground">142</span>{" "}
+            others in early access (the number is fake ofcourse haha 😜)
+          </p>
         </div>
 
         {/* Feature Grid */}
