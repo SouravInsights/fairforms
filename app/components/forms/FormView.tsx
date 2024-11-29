@@ -6,12 +6,15 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { FormElement } from "./elements";
 import { Progress } from "@/components/ui/progress";
+import { cn } from "@/lib/utils";
 
 interface FormViewProps {
   form: Form;
+  isPreview?: boolean;
+  className?: string;
 }
 
-export function FormView({ form }: FormViewProps) {
+export function FormView({ form, isPreview, className }: FormViewProps) {
   const [currentElementIndex, setCurrentElementIndex] = useState(0);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [responses, setResponses] = useState<Record<string, any>>({});
@@ -46,6 +49,14 @@ export function FormView({ form }: FormViewProps) {
   };
 
   const handleSubmit = async () => {
+    if (isPreview) {
+      toast({
+        title: "Preview Mode",
+        description: "Form submission is disabled in preview mode",
+      });
+      return;
+    }
+
     try {
       const response = await fetch(`/api/forms/${form.id}/submit`, {
         method: "POST",
@@ -72,13 +83,37 @@ export function FormView({ form }: FormViewProps) {
     }
   };
 
+  if (totalElements === 0) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px] text-muted-foreground">
+        This form has no elements yet.
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container max-w-3xl mx-auto py-12 space-y-8">
+    <div
+      className={cn(
+        "bg-background",
+        className,
+        isPreview ? "min-h-[400px]" : "min-h-screen"
+      )}
+    >
+      <div
+        className={cn(
+          "container max-w-3xl mx-auto py-12 space-y-8",
+          isPreview && "py-6"
+        )}
+      >
         <header className="text-center space-y-2">
           <h1 className="text-3xl font-bold">{form.title}</h1>
           {form.description && (
             <p className="text-muted-foreground">{form.description}</p>
+          )}
+          {isPreview && (
+            <div className="text-sm px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full inline-block">
+              Preview Mode
+            </div>
           )}
         </header>
 
