@@ -357,7 +357,7 @@ export default async function HomePage() {
                     {/* Creator info */}
                     <div>
                       <p className="text-sm text-muted-foreground">
-                        Crafted with fairness by
+                        Crafted by
                       </p>
                       <a
                         href="https://souravinsights.com"
