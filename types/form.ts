@@ -225,6 +225,9 @@ export interface Form {
   customSlug: string | null;
   createdAt: Date;
   updatedAt: Date;
+  metaTitle?: string | null;
+  metaDescription?: string | null;
+  socialImageUrl?: string | null;
 }
 
 export interface CreateFormData {
@@ -238,11 +241,14 @@ export interface CreateFormData {
 
 export interface UpdateFormData {
   title?: string;
-  description?: string;
+  description?: string | null;
   elements?: FormElement[];
   settings?: FormSettings;
   isPublished?: boolean;
-  customSlug?: string;
+  customSlug?: string | null;
+  metaTitle?: string | null;
+  metaDescription?: string | null;
+  socialImageUrl?: string | null;
 }
 
 export interface ApiResponse<T> {

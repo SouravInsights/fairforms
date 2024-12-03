@@ -26,7 +26,7 @@ type FormAction =
   | { type: "SET_ACTIVE_ELEMENT"; payload: string | null }
   | {
       type: "UPDATE_FORM_DETAILS";
-      payload: { title?: string; description?: string };
+      payload: { title?: string; description?: string | null };
     }
   | { type: "UPDATE_SETTINGS"; payload: Partial<Form["settings"]> };
 
@@ -110,8 +110,10 @@ function formReducer(state: FormState, action: FormAction): FormState {
     case "UPDATE_FORM_DETAILS":
       return {
         ...state,
-        ...(action.payload.title && { title: action.payload.title }),
-        ...(action.payload.description && {
+        ...(action.payload.title !== undefined && {
+          title: action.payload.title,
+        }),
+        ...(action.payload.description !== undefined && {
           description: action.payload.description,
         }),
       };

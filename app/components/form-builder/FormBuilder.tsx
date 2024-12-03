@@ -4,13 +4,19 @@ import { useFormContext } from "@/app/context/form-context";
 import { ElementToolbar } from "./ElementToolbar";
 import { Canvas } from "./Canvas";
 import { Properties } from "./Properties";
-import { FormElement, FormElementType, UpdateFormData } from "@/types/form";
+import {
+  Form,
+  FormElement,
+  FormElementType,
+  UpdateFormData,
+} from "@/types/form";
 import { useToast } from "@/hooks/use-toast";
 import { Globe, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getDefaultProperties } from "./form-utils";
 import { FormPreview } from "./FormPreview";
 import { useUser } from "@clerk/nextjs";
+import { ShareDialog } from "../forms/ShareDialog";
 
 export function FormBuilder({ formId }: { formId: string }) {
   const { state, dispatch } = useFormContext();
@@ -214,6 +220,46 @@ export function FormBuilder({ formId }: { formId: string }) {
     );
   }
 
+  const handleFormUpdate = async (updates: Partial<Form>): Promise<void> => {
+    try {
+      const response = await fetch(`/api/forms/${formId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updates),
+      });
+
+      if (!response.ok) throw new Error("Failed to update form");
+
+      // Update local state if needed
+      if (updates.title !== undefined) {
+        dispatch({
+          type: "UPDATE_FORM_DETAILS",
+          payload: { title: updates.title },
+        });
+      }
+      if (updates.description !== undefined) {
+        dispatch({
+          type: "UPDATE_FORM_DETAILS",
+          payload: { description: updates.description },
+        });
+      }
+
+      toast({
+        title: "Success",
+        description: "Form updated successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update form settings",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
       <div className="flex flex-col h-screen bg-background">
@@ -232,22 +278,42 @@ export function FormBuilder({ formId }: { formId: string }) {
                 />
               )}
               {formId !== "new" && (
-                <Button
-                  onClick={togglePublish}
-                  variant={isPublished ? "outline" : "default"}
-                >
-                  {isPublished ? (
-                    <>
-                      <EyeOff className="w-4 h-4 mr-2" />
-                      Unpublish
-                    </>
-                  ) : (
-                    <>
-                      <Globe className="w-4 h-4 mr-2" />
-                      Publish
-                    </>
-                  )}
-                </Button>
+                <>
+                  <ShareDialog
+                    form={{
+                      id: parseInt(formId),
+                      title: state.title,
+                      description: state.description,
+                      elements: state.elements,
+                      settings: state.settings,
+                      isPublished,
+                      userId: user?.id || "",
+                      createdAt: new Date(),
+                      updatedAt: new Date(),
+                      customSlug: null,
+                      metaTitle: state.title,
+                      metaDescription: state.description,
+                      socialImageUrl: null,
+                    }}
+                    onUpdate={handleFormUpdate}
+                  />
+                  <Button
+                    onClick={togglePublish}
+                    variant={isPublished ? "outline" : "default"}
+                  >
+                    {isPublished ? (
+                      <>
+                        <EyeOff className="w-4 h-4 mr-2" />
+                        Unpublish
+                      </>
+                    ) : (
+                      <>
+                        <Globe className="w-4 h-4 mr-2" />
+                        Publish
+                      </>
+                    )}
+                  </Button>
+                </>
               )}
             </div>
           </div>
