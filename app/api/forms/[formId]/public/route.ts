@@ -1,7 +1,7 @@
 import { db } from "@/db";
 import { forms } from "@/db/schema";
 import { NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
+import { eq, or } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 export const dynamicParams = true;
@@ -11,14 +11,23 @@ export async function GET(
   { params }: { params: { formId: string } }
 ) {
   try {
-    console.log("Public API Route Hit - Form ID:", params.formId);
+    console.log("Public API Route Hit - Form ID/Slug:", params.formId);
 
+    // Try to parse as numeric ID first
     const formId = parseInt(params.formId);
+
+    let query;
     if (isNaN(formId)) {
-      return NextResponse.json({ error: "Invalid form ID" }, { status: 400 });
+      // If not a number, search by slug
+      console.log("Searching by slug:", params.formId);
+      query = eq(forms.customSlug, params.formId);
+    } else {
+      // If numeric, search by ID or matching slug
+      console.log("Searching by ID:", formId);
+      query = or(eq(forms.id, formId), eq(forms.customSlug, params.formId));
     }
 
-    const [form] = await db.select().from(forms).where(eq(forms.id, formId));
+    const [form] = await db.select().from(forms).where(query);
 
     console.log("Form found:", form);
 

@@ -1,4 +1,3 @@
-// src/app/forms/[formId]/page.tsx
 import { Suspense } from "react";
 import { FormView } from "@/app/components/forms/FormView";
 import { notFound } from "next/navigation";
@@ -34,7 +33,11 @@ async function getForm(formId: string): Promise<Form> {
   }
 
   const data = await res.json();
-  return data;
+  return {
+    ...data,
+    createdAt: new Date(data.createdAt),
+    updatedAt: new Date(data.updatedAt),
+  };
 }
 
 export async function generateMetadata({
@@ -75,7 +78,13 @@ export default async function FormPage({ params }: FormPageProps) {
 
   return (
     <div className="min-h-screen bg-background">
-      <Suspense fallback={<div>loading...</div>}>
+      <Suspense
+        fallback={
+          <div className="flex items-center justify-center min-h-screen">
+            Loading...
+          </div>
+        }
+      >
         <FormView form={form} />
       </Suspense>
     </div>
