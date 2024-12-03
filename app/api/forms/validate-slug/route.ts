@@ -13,10 +13,30 @@ export async function POST(request: Request) {
 
     const { slug, currentFormId } = await request.json();
 
+    // Basic validation
+    if (!slug) {
+      return NextResponse.json({ available: true });
+    }
+
     // Validate slug format
     if (!/^[a-z0-9-]+$/.test(slug)) {
       return NextResponse.json(
-        { error: "Invalid slug format" },
+        { error: "URL can only contain letters, numbers, and hyphens" },
+        { status: 400 }
+      );
+    }
+
+    // Check length
+    if (slug.length < 3) {
+      return NextResponse.json(
+        { error: "URL must be at least 3 characters long" },
+        { status: 400 }
+      );
+    }
+
+    if (slug.length > 50) {
+      return NextResponse.json(
+        { error: "URL must be less than 50 characters" },
         { status: 400 }
       );
     }
@@ -34,6 +54,23 @@ export async function POST(request: Request) {
     ) {
       return NextResponse.json(
         { error: "This URL is already taken" },
+        { status: 400 }
+      );
+    }
+
+    // List of reserved words you might want to prevent
+    const reservedSlugs = [
+      "api",
+      "admin",
+      "dashboard",
+      "settings",
+      "login",
+      "signup",
+      "forms",
+    ];
+    if (reservedSlugs.includes(slug.toLowerCase())) {
+      return NextResponse.json(
+        { error: "This URL is reserved" },
         { status: 400 }
       );
     }
