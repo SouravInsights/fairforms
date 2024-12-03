@@ -1,6 +1,6 @@
 "use client";
 
-import { Form } from "@/types/form";
+import { Form, FormElementType } from "@/types/form";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -103,6 +103,10 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
     }
   };
 
+  const showNavigationButtons =
+    currentElement.type !== FormElementType.WELCOME_SCREEN &&
+    currentElement.type !== FormElementType.END_SCREEN;
+
   return (
     <div
       className={cn(
@@ -137,40 +141,52 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
               <FormElement
                 element={currentElement}
                 value={responses[currentElement.id]}
-                onChange={(value) =>
+                onChange={(value) => {
                   setResponses((prev) => ({
                     ...prev,
                     [currentElement.id]: value,
-                  }))
-                }
+                  }));
+
+                  // Automatically advance to next question for Welcome Screen
+                  if (currentElement.type === FormElementType.WELCOME_SCREEN) {
+                    handleNext();
+                  }
+                }}
               />
             </div>
 
-            {/* Navigation buttons in a fixed position */}
-            <div className="mt-8 flex justify-between items-center sticky bottom-0 pb-4 bg-background">
-              {currentElementIndex > 0 && (
-                <Button variant="ghost" size="sm" onClick={handlePrevious}>
-                  Press ↑ for previous
-                </Button>
-              )}
+            {/* Navigation buttons in a fixed position
+             ** Only these buttons for questions
+             */}
+            {showNavigationButtons && (
+              <div className="mt-8 flex justify-between items-center sticky bottom-0 pb-4 bg-background">
+                {currentElementIndex > 0 && (
+                  <Button variant="ghost" size="sm" onClick={handlePrevious}>
+                    Press ↑ for previous
+                  </Button>
+                )}
 
-              {!isLastElement ? (
-                <Button className="ml-auto" onClick={handleNext} size="lg">
-                  Press Enter ↵
-                </Button>
-              ) : (
-                <Button className="ml-auto" onClick={handleSubmit} size="lg">
-                  Submit
-                </Button>
-              )}
-            </div>
+                {!isLastElement ? (
+                  <Button className="ml-auto" onClick={handleNext} size="lg">
+                    Press Enter ↵
+                  </Button>
+                ) : (
+                  <Button className="ml-auto" onClick={handleSubmit} size="lg">
+                    Submit
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
-        <ChevronDown
-          className="absolute bottom-4 left-1/2 transform -translate-x-1/2 opacity-50"
-          size={24}
-        />
+        {/* Only show scroll indicator for questions */}
+        {showNavigationButtons && (
+          <ChevronDown
+            className="absolute bottom-4 left-1/2 transform -translate-x-1/2 opacity-50"
+            size={24}
+          />
+        )}
       </motion.div>
     </div>
   );
