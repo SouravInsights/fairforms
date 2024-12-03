@@ -3,7 +3,7 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 // Define public routes
 const isPublicRoute = createRouteMatcher([
   "/",
-  "/forms/(.*)/(public|submit)",
+  "/forms/(.*)",
   "/api/forms/(.*)/(public|submit)",
   "/api/waitlist(.*)",
 ]);
