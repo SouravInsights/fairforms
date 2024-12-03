@@ -4,6 +4,9 @@ import { notFound } from "next/navigation";
 import { Form } from "@/types/form";
 import { Metadata } from "next";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 interface FormPageProps {
   params: {
     formId: string;
@@ -16,13 +19,18 @@ async function getForm(formId: string): Promise<Form> {
     throw new Error("NEXT_PUBLIC_APP_URL is not defined");
   }
 
-  // Try to fetch form using formId (could be numeric ID or slug)
   const res = await fetch(`${baseUrl}/api/forms/${formId}/public`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
+      "Cache-Control": "no-cache, no-store, must-revalidate",
+      Pragma: "no-cache",
     },
-    next: { revalidate: 0 }, // Disable cache
+    cache: "no-store",
+    next: {
+      revalidate: 0,
+      tags: [`form-${formId}`],
+    },
   });
 
   if (!res.ok) {

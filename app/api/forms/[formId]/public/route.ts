@@ -3,6 +3,7 @@ import { forms } from "@/db/schema";
 import { NextResponse } from "next/server";
 import { eq, or } from "drizzle-orm";
 
+export const revalidate = 0;
 export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
@@ -11,6 +12,10 @@ export async function GET(
   { params }: { params: { formId: string } }
 ) {
   try {
+    // Add cache-control headers
+    const headers = new Headers();
+    headers.set("Cache-Control", "no-store, max-age=0");
+
     console.log("Public API Route Hit - Form ID/Slug:", params.formId);
 
     // Try to parse as numeric ID first
@@ -48,7 +53,7 @@ export async function GET(
       isPublished: Boolean(form.isPublished),
     };
 
-    return NextResponse.json(formWithBooleanPublished);
+    return NextResponse.json(formWithBooleanPublished, { headers });
   } catch (error) {
     console.error("[PUBLIC_FORM_GET]", error);
     return NextResponse.json(
