@@ -103,31 +103,14 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
     }
   };
 
-  const handleWheel = (e: React.WheelEvent) => {
-    if (e.deltaY > 0 && !isLastElement) {
-      handleNext();
-    } else if (e.deltaY < 0 && currentElementIndex > 0) {
-      handlePrevious();
-    }
-  };
-
-  if (totalElements === 0) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px] text-muted-foreground">
-        This form has no elements yet.
-      </div>
-    );
-  }
-
   return (
     <div
       className={cn(
-        "bg-background overflow-hidden touch-none",
+        "bg-background",
         className,
         isPreview ? "min-h-[400px]" : ""
       )}
       style={{ height: isPreview ? "400px" : height }}
-      onWheel={handleWheel}
     >
       {form.settings.behavior.showProgressBar && (
         <Progress
@@ -142,42 +125,52 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
         transition={{ duration: 0.3 }}
-        className="h-full flex flex-col items-center justify-center px-4 md:px-8"
+        className="min-h-full flex flex-col"
         onKeyDown={handleKeyDown}
         tabIndex={0}
       >
-        <div className="w-full max-w-2xl mx-auto">
-          <FormElement
-            element={currentElement}
-            value={responses[currentElement.id]}
-            onChange={(value) =>
-              setResponses((prev) => ({
-                ...prev,
-                [currentElement.id]: value,
-              }))
-            }
-          />
+        {/* Main content with padding and auto scroll */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="container max-w-3xl mx-auto py-12 px-4 md:px-8 min-h-full flex flex-col">
+            {/* Center content vertically */}
+            <div className="flex-1 flex flex-col justify-center">
+              <FormElement
+                element={currentElement}
+                value={responses[currentElement.id]}
+                onChange={(value) =>
+                  setResponses((prev) => ({
+                    ...prev,
+                    [currentElement.id]: value,
+                  }))
+                }
+              />
+            </div>
 
-          <div className="mt-8 flex justify-between items-center">
-            {currentElementIndex > 0 && (
-              <Button variant="ghost" size="sm" onClick={handlePrevious}>
-                Press ↑ for previous
-              </Button>
-            )}
+            {/* Navigation buttons in a fixed position */}
+            <div className="mt-8 flex justify-between items-center sticky bottom-0 pb-4 bg-background">
+              {currentElementIndex > 0 && (
+                <Button variant="ghost" size="sm" onClick={handlePrevious}>
+                  Press ↑ for previous
+                </Button>
+              )}
 
-            {!isLastElement ? (
-              <Button className="ml-auto" onClick={handleNext} size="lg">
-                Press Enter ↵
-              </Button>
-            ) : (
-              <Button className="ml-auto" onClick={handleSubmit} size="lg">
-                Submit
-              </Button>
-            )}
+              {!isLastElement ? (
+                <Button className="ml-auto" onClick={handleNext} size="lg">
+                  Press Enter ↵
+                </Button>
+              ) : (
+                <Button className="ml-auto" onClick={handleSubmit} size="lg">
+                  Submit
+                </Button>
+              )}
+            </div>
           </div>
         </div>
 
-        <ChevronDown className="absolute bottom-4 opacity-50" size={24} />
+        <ChevronDown
+          className="absolute bottom-4 left-1/2 transform -translate-x-1/2 opacity-50"
+          size={24}
+        />
       </motion.div>
     </div>
   );
