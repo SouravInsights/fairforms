@@ -76,10 +76,10 @@ export const ELEMENT_GROUPS = {
       label: "Short Text",
     },
   ],
-  Other: [
+  Input: [
     {
       type: FormElementType.NUMBER,
-      icon: Hash, // Changed from Numbers to Hash
+      icon: Hash,
       label: "Number",
     },
     {
@@ -92,20 +92,24 @@ export const ELEMENT_GROUPS = {
       icon: Upload,
       label: "File Upload",
     },
+  ],
+  Screens: [
     {
       type: FormElementType.WELCOME_SCREEN,
-      icon: Waves, // Changed from Wave to Waves
+      icon: Waves,
       label: "Welcome Screen",
-    },
-    {
-      type: FormElementType.STATEMENT,
-      icon: MessageSquare,
-      label: "Statement",
     },
     {
       type: FormElementType.END_SCREEN,
       icon: Flag,
       label: "End Screen",
+    },
+  ],
+  Layout: [
+    {
+      type: FormElementType.STATEMENT,
+      icon: MessageSquare,
+      label: "Statement",
     },
     {
       type: FormElementType.REDIRECT,
@@ -114,3 +118,13 @@ export const ELEMENT_GROUPS = {
     },
   ],
 } as const;
+
+// helper to check if an element type is a screen or layout element
+export const isSpecialElement = (type: FormElementType): boolean => {
+  return [
+    FormElementType.WELCOME_SCREEN,
+    FormElementType.END_SCREEN,
+    FormElementType.STATEMENT,
+    FormElementType.REDIRECT,
+  ].includes(type);
+};
