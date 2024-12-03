@@ -3,7 +3,8 @@ import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { FormElement } from "@/types/form";
+import { FormElement, FormElementType } from "@/types/form";
+import { MultipleChoiceProperties } from "./properties/MultipleChoiceProperties";
 
 export function Properties({ className }: { className?: string }) {
   const { state, dispatch } = useFormContext();
@@ -26,6 +27,15 @@ export function Properties({ className }: { className?: string }) {
     });
   };
 
+  const renderElementSpecificProperties = () => {
+    switch (activeElement.type) {
+      case FormElementType.MULTIPLE_CHOICE:
+        return <MultipleChoiceProperties element={activeElement} />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className={cn("p-4 space-y-4", className)}>
       <div className="space-y-2">
@@ -42,7 +52,7 @@ export function Properties({ className }: { className?: string }) {
         />
         <Label>Required</Label>
       </div>
-      {/* I'll add more property fields based on element type */}
+      {renderElementSpecificProperties()}
     </div>
   );
 }
