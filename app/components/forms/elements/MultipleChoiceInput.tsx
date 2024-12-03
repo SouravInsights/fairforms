@@ -1,6 +1,6 @@
 import { FormElement, FormElementType } from "@/types/form";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { motion } from "motion/react";
+import { cn } from "@/lib/utils";
 
 function isMultipleChoiceElement(
   element: FormElement
@@ -36,19 +36,39 @@ export function MultipleChoiceInput({
   }
 
   return (
-    <div className="space-y-3">
-      <Label>
+    <div className="space-y-8">
+      <motion.h2
+        className="text-3xl font-medium"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
         {element.question}
-        {element.required && <span className="text-red-500 ml-1">*</span>}
-      </Label>
-      <RadioGroup value={value as string} onValueChange={onChange}>
-        {element.properties.options.map((option) => (
-          <div key={option.id} className="flex items-center space-x-2">
-            <RadioGroupItem value={option.id} id={option.id} />
-            <Label htmlFor={option.id}>{option.text}</Label>
-          </div>
+        {element.required && <span className="text-primary ml-1">*</span>}
+      </motion.h2>
+
+      <div className="space-y-3 mt-8">
+        {element.properties.options.map((option, index) => (
+          <motion.div
+            key={option.id}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: index * 0.1 }}
+          >
+            <button
+              onClick={() => onChange(option.id)}
+              className={cn(
+                "w-full text-left p-4 rounded-lg border-2 transition-all",
+                "hover:border-primary/50",
+                value === option.id
+                  ? "border-primary bg-primary/5"
+                  : "border-muted"
+              )}
+            >
+              <span className="text-lg">{option.text}</span>
+            </button>
+          </motion.div>
         ))}
-      </RadioGroup>
+      </div>
     </div>
   );
 }

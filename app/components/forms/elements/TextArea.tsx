@@ -1,5 +1,5 @@
 import { FormElement, FormElementType } from "@/types/form";
-import { Label } from "@/components/ui/label";
+import { motion } from "motion/react";
 
 function isTextAreaElement(element: FormElement): element is FormElement & {
   type: FormElementType.LONG_TEXT;
@@ -25,27 +25,45 @@ export function TextArea({ element, value, onChange }: TextAreaProps) {
   }
 
   return (
-    <div className="space-y-2">
-      <Label>
+    <div className="space-y-8">
+      <motion.h2
+        className="text-3xl font-medium"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
         {element.question}
-        {element.required && <span className="text-red-500 ml-1">*</span>}
-      </Label>
-      <textarea
-        className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-        value={value || ""}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={element.properties.placeholder}
-        minLength={element.properties.minLength}
-        maxLength={element.properties.maxLength}
-      />
-      {(element.properties.minLength || element.properties.maxLength) && (
-        <p className="text-sm text-muted-foreground">
-          {value?.length || 0}
-          {element.properties.maxLength &&
-            ` / ${element.properties.maxLength}`}{" "}
-          characters
-        </p>
-      )}
+        {element.required && <span className="text-primary ml-1">*</span>}
+      </motion.h2>
+
+      <motion.div
+        className="space-y-4"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+      >
+        <textarea
+          className="w-full min-h-[200px] rounded-lg border border-input bg-background p-4 text-lg ring-offset-background placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
+          value={value || ""}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={element.properties.placeholder}
+          minLength={element.properties.minLength}
+          maxLength={element.properties.maxLength}
+        />
+
+        {(element.properties.minLength || element.properties.maxLength) && (
+          <motion.p
+            className="text-sm text-muted-foreground text-right"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+          >
+            {value?.length || 0}
+            {element.properties.maxLength &&
+              ` / ${element.properties.maxLength}`}{" "}
+            characters
+          </motion.p>
+        )}
+      </motion.div>
     </div>
   );
 }

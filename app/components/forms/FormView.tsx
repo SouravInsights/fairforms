@@ -1,12 +1,14 @@
 "use client";
 
 import { Form } from "@/types/form";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { FormElement } from "./elements";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import { ChevronDown } from "lucide-react";
+import { motion } from "motion/react";
 
 interface FormViewProps {
   form: Form;
@@ -18,7 +20,17 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
   const [currentElementIndex, setCurrentElementIndex] = useState(0);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [responses, setResponses] = useState<Record<string, any>>({});
+  const [height, setHeight] = useState("100vh");
   const { toast } = useToast();
+
+  useEffect(() => {
+    const updateHeight = () => {
+      setHeight(`${window.innerHeight}px`);
+    };
+    updateHeight();
+    window.addEventListener("resize", updateHeight);
+    return () => window.removeEventListener("resize", updateHeight);
+  }, []);
 
   const totalElements = form.elements.length;
   const progress = (currentElementIndex / totalElements) * 100;
@@ -83,6 +95,22 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !isLastElement) {
+      handleNext();
+    } else if (e.key === "ArrowUp" && currentElementIndex > 0) {
+      handlePrevious();
+    }
+  };
+
+  const handleWheel = (e: React.WheelEvent) => {
+    if (e.deltaY > 0 && !isLastElement) {
+      handleNext();
+    } else if (e.deltaY < 0 && currentElementIndex > 0) {
+      handlePrevious();
+    }
+  };
+
   if (totalElements === 0) {
     return (
       <div className="flex items-center justify-center min-h-[400px] text-muted-foreground">
@@ -94,68 +122,63 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
   return (
     <div
       className={cn(
-        "bg-background",
+        "bg-background overflow-hidden touch-none",
         className,
-        isPreview ? "min-h-[400px]" : "min-h-screen"
+        isPreview ? "min-h-[400px]" : ""
       )}
+      style={{ height: isPreview ? "400px" : height }}
+      onWheel={handleWheel}
     >
-      <div
-        className={cn(
-          "container max-w-3xl mx-auto py-12 space-y-8",
-          isPreview && "py-6"
-        )}
+      {form.settings.behavior.showProgressBar && (
+        <Progress
+          value={progress}
+          className="fixed top-0 left-0 right-0 h-1 z-50"
+        />
+      )}
+
+      <motion.div
+        key={currentElementIndex}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        transition={{ duration: 0.3 }}
+        className="h-full flex flex-col items-center justify-center px-4 md:px-8"
+        onKeyDown={handleKeyDown}
+        tabIndex={0}
       >
-        <header className="text-center space-y-2">
-          <h1 className="text-3xl font-bold">{form.title}</h1>
-          {form.description && (
-            <p className="text-muted-foreground">{form.description}</p>
-          )}
-          {isPreview && (
-            <div className="text-sm px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full inline-block">
-              Preview Mode
-            </div>
-          )}
-        </header>
+        <div className="w-full max-w-2xl mx-auto">
+          <FormElement
+            element={currentElement}
+            value={responses[currentElement.id]}
+            onChange={(value) =>
+              setResponses((prev) => ({
+                ...prev,
+                [currentElement.id]: value,
+              }))
+            }
+          />
 
-        {form.settings.behavior.showProgressBar && (
-          <Progress value={progress} className="h-2" />
-        )}
-
-        <main className="space-y-8">
-          {currentElement && (
-            <div className="bg-card rounded-lg p-6 shadow-sm">
-              <FormElement
-                element={currentElement}
-                value={responses[currentElement.id]}
-                onChange={(value) =>
-                  setResponses((prev) => ({
-                    ...prev,
-                    [currentElement.id]: value,
-                  }))
-                }
-              />
-            </div>
-          )}
-
-          <div className="flex justify-between">
+          <div className="mt-8 flex justify-between items-center">
             {currentElementIndex > 0 && (
-              <Button variant="outline" onClick={handlePrevious}>
-                Previous
+              <Button variant="ghost" size="sm" onClick={handlePrevious}>
+                Press ↑ for previous
               </Button>
             )}
 
             {!isLastElement ? (
-              <Button className="ml-auto" onClick={handleNext}>
-                Next
+              <Button className="ml-auto" onClick={handleNext} size="lg">
+                Press Enter ↵
               </Button>
             ) : (
-              <Button className="ml-auto" onClick={handleSubmit}>
+              <Button className="ml-auto" onClick={handleSubmit} size="lg">
                 Submit
               </Button>
             )}
           </div>
-        </main>
-      </div>
+        </div>
+
+        <ChevronDown className="absolute bottom-4 opacity-50" size={24} />
+      </motion.div>
     </div>
   );
 }
