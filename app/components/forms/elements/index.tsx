@@ -16,6 +16,9 @@ import { TextArea } from "./TextArea";
 import { NumberInput } from "./NumberInput";
 import { DateInput } from "./DateInput";
 import { FileUpload } from "./FileUpload";
+import { WelcomeScreen } from "./WelcomeScreen";
+import { EndScreen } from "./EndScreen";
+import { ContactInfo } from "./ContactInfo";
 
 interface FormElementProps {
   element: FormElement;
@@ -132,6 +135,25 @@ export function FormElement({ element, value, onChange }: FormElementProps) {
       );
     case FormElementType.STATEMENT:
       return <Statement element={element} />;
+
+    case FormElementType.WELCOME_SCREEN:
+      return <WelcomeScreen element={element} onChange={onChange} />;
+    case FormElementType.END_SCREEN:
+      return <EndScreen element={element} onChange={onChange} />;
+    case FormElementType.CONTACT_INFO:
+      return (
+        <ContactInfo
+          element={element}
+          value={
+            value as {
+              firstName: string;
+              lastName: string;
+              middleName?: string;
+            }
+          }
+          onChange={onChange}
+        />
+      );
     default:
       return null;
   }

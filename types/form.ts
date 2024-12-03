@@ -191,6 +191,13 @@ export type FormElementValue =
       zipCode: string;
       country?: string;
     }
+  | {
+      // For contact info
+      firstName: string;
+      lastName: string;
+      middleName?: string;
+    }
+  | boolean
   | null
   | undefined;
 
