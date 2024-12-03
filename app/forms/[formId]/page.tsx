@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { FormView } from "@/app/components/forms/FormView";
 import { notFound } from "next/navigation";
 import { Form } from "@/types/form";
-// import FormLoading from './loading';
+import { Metadata } from "next";
 
 interface FormPageProps {
   params: {
@@ -17,7 +17,7 @@ async function getForm(formId: string): Promise<Form> {
     throw new Error("NEXT_PUBLIC_APP_URL is not defined");
   }
 
-  // Update to use the /public endpoint
+  // Try to fetch form using formId (could be numeric ID or slug)
   const res = await fetch(`${baseUrl}/api/forms/${formId}/public`, {
     method: "GET",
     headers: {
@@ -35,6 +35,35 @@ async function getForm(formId: string): Promise<Form> {
 
   const data = await res.json();
   return data;
+}
+
+export async function generateMetadata({
+  params,
+}: FormPageProps): Promise<Metadata> {
+  try {
+    const form = await getForm(params.formId);
+
+    return {
+      title: form.metaTitle || form.title,
+      description: form.metaDescription || form.description || undefined,
+      openGraph: {
+        title: form.metaTitle || form.title,
+        description: form.metaDescription || form.description || undefined,
+        images: form.socialImageUrl ? [form.socialImageUrl] : undefined,
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: form.metaTitle || form.title,
+        description: form.metaDescription || form.description || undefined,
+        images: form.socialImageUrl ? [form.socialImageUrl] : undefined,
+      },
+    };
+  } catch {
+    return {
+      title: "Form",
+      description: "View and submit form",
+    };
+  }
 }
 
 export default async function FormPage({ params }: FormPageProps) {
