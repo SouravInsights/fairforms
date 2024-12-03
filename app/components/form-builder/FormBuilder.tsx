@@ -17,6 +17,15 @@ import { getDefaultProperties } from "./form-utils";
 import { FormPreview } from "./FormPreview";
 import { useUser } from "@clerk/nextjs";
 import { ShareDialog } from "../forms/ShareDialog";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { ChevronRight, Home } from "lucide-react";
+import { EditFormDialog } from "./EditFormDialog";
 
 export function FormBuilder({ formId }: { formId: string }) {
   const { state, dispatch } = useFormContext();
@@ -68,7 +77,12 @@ export function FormBuilder({ formId }: { formId: string }) {
           if (response.ok) {
             dispatch({
               type: "SET_INITIAL_STATE",
-              payload: { elements: form.elements },
+              payload: {
+                elements: form.elements,
+                title: form.title,
+                description: form.description,
+                settings: form.settings,
+              },
             });
             setIsPublished(form.isPublished);
           } else {
@@ -265,7 +279,30 @@ export function FormBuilder({ formId }: { formId: string }) {
       <div className="flex flex-col h-screen bg-background">
         <div className="border-b">
           <div className="container flex items-center justify-between py-4">
-            <h1 className="text-xl font-semibold">Form Builder</h1>
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <Home className="h-4 w-4" />
+                  <BreadcrumbLink href="/dashboard">My Forms</BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator>
+                  <ChevronRight className="h-4 w-4" />
+                </BreadcrumbSeparator>
+                <BreadcrumbItem>
+                  <EditFormDialog
+                    title={state.title}
+                    description={state.description}
+                    onSave={(updates) => {
+                      dispatch({
+                        type: "UPDATE_FORM_DETAILS",
+                        payload: updates,
+                      });
+                      saveFormChanges(updates);
+                    }}
+                  />
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
             <div className="flex items-center gap-2">
               {user && (
                 <FormPreview
