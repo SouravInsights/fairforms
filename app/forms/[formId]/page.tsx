@@ -25,6 +25,7 @@ async function getForm(formId: string): Promise<Form> {
       "Content-Type": "application/json",
       "Cache-Control": "no-cache, no-store, must-revalidate",
       Pragma: "no-cache",
+      Expires: "0",
     },
     cache: "no-store",
     next: {
@@ -55,6 +56,7 @@ export async function generateMetadata({
     const form = await getForm(params.formId);
     const title = form.metaTitle || "";
     const description = form.metaDescription || form.description || undefined;
+    const timestamp = Date.now();
     const images = form.socialImageUrl
       ? [
           {
@@ -95,6 +97,10 @@ export async function generateMetadata({
         "max-image-preview": "large",
         "max-snippet": -1,
         "max-video-preview": -1,
+      },
+      other: {
+        "og:image:cache-bust": timestamp.toString(),
+        "twitter:image:cache-bust": timestamp.toString(),
       },
     };
   } catch {

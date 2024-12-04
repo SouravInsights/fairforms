@@ -12,8 +12,11 @@ export async function GET(
   { params }: { params: { formId: string } }
 ) {
   try {
-    const headers = new Headers();
-    headers.set("Cache-Control", "no-store, max-age=0");
+    const headers = new Headers({
+      "Cache-Control": "no-cache, no-store, must-revalidate",
+      Pragma: "no-cache",
+      Expires: "0",
+    });
 
     const formId = parseInt(params.formId);
     const query = isNaN(formId)
