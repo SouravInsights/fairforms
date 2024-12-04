@@ -1,13 +1,13 @@
 "use client";
 
-import { Form, FormElementType } from "@/types/form";
+import { Form, FormElementType, FormElementValue } from "@/types/form";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { FormElement } from "./elements";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
-import { ChevronDown, Loader2, CheckCircle2 } from "lucide-react";
+import { ChevronLeft, Loader2, CheckCircle2 } from "lucide-react";
 import { motion } from "motion/react";
 
 interface FormViewProps {
@@ -18,20 +18,33 @@ interface FormViewProps {
 
 export function FormView({ form, isPreview, className }: FormViewProps) {
   const [currentElementIndex, setCurrentElementIndex] = useState(0);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [responses, setResponses] = useState<Record<string, any>>({});
+  const [responses, setResponses] = useState<Record<string, FormElementValue>>(
+    {}
+  );
   const [height, setHeight] = useState("100vh");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     const updateHeight = () => {
       setHeight(`${window.innerHeight}px`);
     };
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
     updateHeight();
+    checkMobile();
+
     window.addEventListener("resize", updateHeight);
-    return () => window.removeEventListener("resize", updateHeight);
+    window.addEventListener("resize", checkMobile);
+
+    return () => {
+      window.removeEventListener("resize", updateHeight);
+      window.removeEventListener("resize", checkMobile);
+    };
   }, []);
 
   const totalElements = form.elements.length;
@@ -41,7 +54,6 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
 
   const handleNext = () => {
     if (!currentElement.required && !responses[currentElement.id]) {
-      // If question is not required and no answer, we can skip
       setCurrentElementIndex((prev) => prev + 1);
       return;
     }
@@ -86,20 +98,16 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
         throw new Error("Failed to submit form");
       }
 
-      // Show success animation
       setIsSuccess(true);
 
-      // After success animation, show end screen if exists
       const hasEndScreen = form.elements.some(
         (element) => element.type === FormElementType.END_SCREEN
       );
 
       if (hasEndScreen) {
-        // Find the end screen index
         const endScreenIndex = form.elements.findIndex(
           (element) => element.type === FormElementType.END_SCREEN
         );
-        // Wait for success animation
         setTimeout(() => {
           setIsSuccess(false);
           setCurrentElementIndex(endScreenIndex);
@@ -111,10 +119,15 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
         description: "Failed to submit form. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      if (!form.elements.some((el) => el.type === FormElementType.END_SCREEN)) {
+        setTimeout(() => {
+          setIsSubmitting(false);
+        }, 2000);
+      }
     }
   };
 
-  // Loading and Success screens
   const renderLoadingOrSuccess = () => {
     if (isSubmitting && !isSuccess) {
       return (
@@ -191,6 +204,22 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
     currentElement.type !== FormElementType.WELCOME_SCREEN &&
     currentElement.type !== FormElementType.END_SCREEN;
 
+  const handleValueChange = (value: FormElementValue) => {
+    setResponses((prev) => ({
+      ...prev,
+      [currentElement.id]: value,
+    }));
+
+    // Auto-advance for Welcome Screen and single-choice selection
+    if (
+      currentElement.type === FormElementType.WELCOME_SCREEN ||
+      (currentElement.type === FormElementType.MULTIPLE_CHOICE &&
+        !currentElement.properties.allowMultiple)
+    ) {
+      handleNext();
+    }
+  };
+
   return (
     <div
       className={cn(
@@ -219,68 +248,63 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
         onKeyDown={handleKeyDown}
         tabIndex={0}
       >
-        {/* Scrollable content area with padding bottom for chevron */}
-        <div className="flex-1 overflow-y-auto pb-20">
-          <div className="container max-w-3xl mx-auto py-12 px-4 md:px-8 min-h-full">
-            <div className="flex flex-col justify-center h-full">
+        <div className="flex-1 overflow-y-auto">
+          <div className="container max-w-3xl mx-auto py-12 px-4 md:px-8">
+            <div className="flex flex-col justify-center min-h-full pb-24">
               <FormElement
                 element={currentElement}
                 value={responses[currentElement.id]}
-                onChange={(value) => {
-                  setResponses((prev) => ({
-                    ...prev,
-                    [currentElement.id]: value,
-                  }));
-
-                  if (currentElement.type === FormElementType.WELCOME_SCREEN) {
-                    handleNext();
-                  }
-                }}
+                onChange={handleValueChange}
               />
             </div>
           </div>
         </div>
 
-        {/* Fixed footer with navigation and chevron */}
         {showNavigationButtons && (
           <div className="absolute bottom-0 left-0 right-0 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <div className="container max-w-3xl mx-auto px-4 md:px-8">
-              <div className="flex justify-between items-center py-4">
+              <div className="flex items-center py-4 gap-4">
                 {currentElementIndex > 0 && (
-                  <Button variant="ghost" size="sm" onClick={handlePrevious}>
-                    Press ↑ for previous
-                  </Button>
+                  <>
+                    {/* Mobile back button */}
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      onClick={handlePrevious}
+                      className="md:hidden"
+                    >
+                      <ChevronLeft className="h-5 w-5" />
+                    </Button>
+
+                    {/* Desktop back button */}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handlePrevious}
+                      className="hidden md:inline-flex"
+                    >
+                      Press ↑ for previous
+                    </Button>
+                  </>
                 )}
 
                 {!isLastElement ? (
-                  <Button className="ml-auto" onClick={handleNext} size="lg">
-                    Press Enter ↵
+                  <Button
+                    className="flex-1 md:flex-none md:ml-auto"
+                    onClick={handleNext}
+                    size="lg"
+                  >
+                    {isMobile ? "OK" : "Press Enter ↵"}
                   </Button>
                 ) : (
-                  <Button className="ml-auto" onClick={handleSubmit} size="lg">
+                  <Button
+                    className="flex-1 md:flex-none md:ml-auto"
+                    onClick={handleSubmit}
+                    size="lg"
+                  >
                     Submit
                   </Button>
                 )}
-              </div>
-
-              {/* Chevron with backdrop */}
-              <div className="absolute -top-12 left-0 right-0 h-12 flex items-center justify-center">
-                <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
-                <motion.div
-                  className="relative"
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{
-                    opacity: [0.3, 0.7, 0.3],
-                    y: [-5, 0, -5],
-                  }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }}
-                >
-                  <ChevronDown className="text-foreground" size={24} />
-                </motion.div>
               </div>
             </div>
           </div>
