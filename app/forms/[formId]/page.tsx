@@ -115,14 +115,6 @@ export async function generateMetadata({
   }
 }
 
-export function headers() {
-  return {
-    "Cache-Control": "no-cache, no-store, max-age=0, must-revalidate",
-    Expires: "-1",
-    Pragma: "no-cache",
-  };
-}
-
 export default async function FormPage({ params }: FormPageProps) {
   const form = await getForm(params.formId);
 
