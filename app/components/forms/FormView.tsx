@@ -215,15 +215,14 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
         transition={{ duration: 0.3 }}
-        className="min-h-full flex flex-col"
+        className="h-full flex flex-col"
         onKeyDown={handleKeyDown}
         tabIndex={0}
       >
-        {/* Main content with padding and auto scroll */}
-        <div className="flex-1 overflow-y-auto">
-          <div className="container max-w-3xl mx-auto py-12 px-4 md:px-8 min-h-full flex flex-col">
-            {/* Center content vertically */}
-            <div className="flex-1 flex flex-col justify-center">
+        {/* Scrollable content area with padding bottom for chevron */}
+        <div className="flex-1 overflow-y-auto pb-20">
+          <div className="container max-w-3xl mx-auto py-12 px-4 md:px-8 min-h-full">
+            <div className="flex flex-col justify-center h-full">
               <FormElement
                 element={currentElement}
                 value={responses[currentElement.id]}
@@ -233,19 +232,20 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
                     [currentElement.id]: value,
                   }));
 
-                  // Automatically advance to next question for Welcome Screen
                   if (currentElement.type === FormElementType.WELCOME_SCREEN) {
                     handleNext();
                   }
                 }}
               />
             </div>
+          </div>
+        </div>
 
-            {/* Navigation buttons in a fixed position
-             ** Only these buttons for questions
-             */}
-            {showNavigationButtons && (
-              <div className="mt-8 flex justify-between items-center sticky bottom-0 pb-4 bg-background">
+        {/* Fixed footer with navigation and chevron */}
+        {showNavigationButtons && (
+          <div className="absolute bottom-0 left-0 right-0 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+            <div className="container max-w-3xl mx-auto px-4 md:px-8">
+              <div className="flex justify-between items-center py-4">
                 {currentElementIndex > 0 && (
                   <Button variant="ghost" size="sm" onClick={handlePrevious}>
                     Press ↑ for previous
@@ -262,16 +262,28 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
                   </Button>
                 )}
               </div>
-            )}
-          </div>
-        </div>
 
-        {/* Only show scroll indicator for questions */}
-        {showNavigationButtons && (
-          <ChevronDown
-            className="absolute bottom-4 left-1/2 transform -translate-x-1/2 opacity-50"
-            size={24}
-          />
+              {/* Chevron with backdrop */}
+              <div className="absolute -top-12 left-0 right-0 h-12 flex items-center justify-center">
+                <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
+                <motion.div
+                  className="relative"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{
+                    opacity: [0.3, 0.7, 0.3],
+                    y: [-5, 0, -5],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                >
+                  <ChevronDown className="text-foreground" size={24} />
+                </motion.div>
+              </div>
+            </div>
+          </div>
         )}
       </motion.div>
     </div>
