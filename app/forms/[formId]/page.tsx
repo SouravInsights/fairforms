@@ -53,26 +53,58 @@ export async function generateMetadata({
 }: FormPageProps): Promise<Metadata> {
   try {
     const form = await getForm(params.formId);
+    const title = form.metaTitle || "";
+    const description = form.metaDescription || form.description || undefined;
+    const images = form.socialImageUrl
+      ? [
+          {
+            url: form.socialImageUrl,
+            width: 1200,
+            height: 630,
+            alt: title,
+          },
+        ]
+      : undefined;
 
     return {
-      title: form.metaTitle || form.title,
-      description: form.metaDescription || form.description || undefined,
+      title,
+      description,
       openGraph: {
-        title: form.metaTitle || form.title,
-        description: form.metaDescription || form.description || undefined,
-        images: form.socialImageUrl ? [form.socialImageUrl] : undefined,
+        title,
+        description,
+        images,
+        type: "website",
+        url: `${process.env.NEXT_PUBLIC_APP_URL}/forms/${params.formId}`,
       },
       twitter: {
         card: "summary_large_image",
-        title: form.metaTitle || form.title,
-        description: form.metaDescription || form.description || undefined,
+        title,
+        description,
         images: form.socialImageUrl ? [form.socialImageUrl] : undefined,
+        creator: "@username", // will be updated later
+      },
+
+      alternates: {
+        canonical: `${process.env.NEXT_PUBLIC_APP_URL}/forms/${
+          form.customSlug || params.formId
+        }`,
+      },
+      robots: {
+        index: form.isPublished,
+        follow: form.isPublished,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+        "max-video-preview": -1,
       },
     };
   } catch {
     return {
       title: "Form",
       description: "View and submit form",
+      robots: {
+        index: false,
+        follow: false,
+      },
     };
   }
 }

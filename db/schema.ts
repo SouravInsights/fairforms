@@ -23,6 +23,9 @@ export const forms = pgTable("forms", {
   customSlug: text("custom_slug").unique(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+  metaTitle: text("meta_title"),
+  metaDescription: text("meta_description"),
+  socialImageUrl: text("social_image_url"),
 });
 
 export const responses = pgTable("responses", {

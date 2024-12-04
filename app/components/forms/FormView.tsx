@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { FormElement } from "./elements";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Loader2, CheckCircle2 } from "lucide-react";
 import { motion } from "motion/react";
 
 interface FormViewProps {
@@ -21,6 +21,8 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [responses, setResponses] = useState<Record<string, any>>({});
   const [height, setHeight] = useState("100vh");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -69,6 +71,8 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
       return;
     }
 
+    setIsSubmitting(true);
+
     try {
       const response = await fetch(`/api/forms/${form.id}/submit`, {
         method: "POST",
@@ -82,10 +86,25 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
         throw new Error("Failed to submit form");
       }
 
-      toast({
-        title: "Success!",
-        description: "Your response has been recorded.",
-      });
+      // Show success animation
+      setIsSuccess(true);
+
+      // After success animation, show end screen if exists
+      const hasEndScreen = form.elements.some(
+        (element) => element.type === FormElementType.END_SCREEN
+      );
+
+      if (hasEndScreen) {
+        // Find the end screen index
+        const endScreenIndex = form.elements.findIndex(
+          (element) => element.type === FormElementType.END_SCREEN
+        );
+        // Wait for success animation
+        setTimeout(() => {
+          setIsSuccess(false);
+          setCurrentElementIndex(endScreenIndex);
+        }, 2000);
+      }
     } catch {
       toast({
         title: "Error",
@@ -93,6 +112,71 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
         variant: "destructive",
       });
     }
+  };
+
+  // Loading and Success screens
+  const renderLoadingOrSuccess = () => {
+    if (isSubmitting && !isSuccess) {
+      return (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center"
+        >
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="text-center"
+          >
+            <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
+            <h3 className="text-2xl font-semibold">
+              Submitting your response...
+            </h3>
+          </motion.div>
+        </motion.div>
+      );
+    }
+
+    if (isSuccess) {
+      return (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center"
+        >
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{
+              scale: [0.8, 1.2, 1],
+              opacity: 1,
+            }}
+            transition={{
+              duration: 0.5,
+              times: [0, 0.2, 1],
+            }}
+            className="text-center"
+          >
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{
+                type: "spring",
+                stiffness: 200,
+                damping: 10,
+              }}
+            >
+              <CheckCircle2 className="h-16 w-16 text-primary mx-auto mb-4" />
+            </motion.div>
+            <h3 className="text-2xl font-semibold">Response submitted!</h3>
+            <p className="text-muted-foreground mt-2">
+              Thank you for your time.
+            </p>
+          </motion.div>
+        </motion.div>
+      );
+    }
+
+    return null;
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -122,6 +206,8 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
           className="fixed top-0 left-0 right-0 h-1 z-50"
         />
       )}
+
+      {renderLoadingOrSuccess()}
 
       <motion.div
         key={currentElementIndex}

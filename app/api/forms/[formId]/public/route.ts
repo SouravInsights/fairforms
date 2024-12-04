@@ -12,29 +12,31 @@ export async function GET(
   { params }: { params: { formId: string } }
 ) {
   try {
-    // Add cache-control headers
     const headers = new Headers();
     headers.set("Cache-Control", "no-store, max-age=0");
 
-    console.log("Public API Route Hit - Form ID/Slug:", params.formId);
-
-    // Try to parse as numeric ID first
     const formId = parseInt(params.formId);
+    const query = isNaN(formId)
+      ? eq(forms.customSlug, params.formId)
+      : or(eq(forms.id, formId), eq(forms.customSlug, params.formId));
 
-    let query;
-    if (isNaN(formId)) {
-      // If not a number, search by slug
-      console.log("Searching by slug:", params.formId);
-      query = eq(forms.customSlug, params.formId);
-    } else {
-      // If numeric, search by ID or matching slug
-      console.log("Searching by ID:", formId);
-      query = or(eq(forms.id, formId), eq(forms.customSlug, params.formId));
-    }
-
-    const [form] = await db.select().from(forms).where(query);
-
-    console.log("Form found:", form);
+    const [form] = await db
+      .select({
+        id: forms.id,
+        title: forms.title,
+        description: forms.description,
+        elements: forms.elements,
+        settings: forms.settings,
+        isPublished: forms.isPublished,
+        customSlug: forms.customSlug,
+        createdAt: forms.createdAt,
+        updatedAt: forms.updatedAt,
+        metaTitle: forms.metaTitle,
+        metaDescription: forms.metaDescription,
+        socialImageUrl: forms.socialImageUrl,
+      })
+      .from(forms)
+      .where(query);
 
     if (!form) {
       return NextResponse.json({ error: "Form not found" }, { status: 404 });
@@ -47,7 +49,6 @@ export async function GET(
       );
     }
 
-    // Cast isPublished to boolean to match our Form type
     const formWithBooleanPublished = {
       ...form,
       isPublished: Boolean(form.isPublished),

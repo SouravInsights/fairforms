@@ -29,6 +29,13 @@ export function ShareDialog({ form, onUpdate }: ShareDialogProps) {
   const [slugError, setSlugError] = useState<string | null>("");
   const [customSlug, setCustomSlug] = useState(form.customSlug || "");
   const [isValidating, setIsValidating] = useState(false);
+  const [seoData, setSeoData] = useState({
+    metaTitle: form.metaTitle || form.title,
+    metaDescription: form.metaDescription || form.description || "",
+    socialImageUrl: form.socialImageUrl || "",
+  });
+  const [isSeoUpdating, setIsSeoUpdating] = useState(false);
+
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
 
   // Fetch form data when dialog opens
@@ -161,6 +168,39 @@ export function ShareDialog({ form, onUpdate }: ShareDialogProps) {
     }
   };
 
+  const handleSeoChange = (field: keyof typeof seoData, value: string) => {
+    setSeoData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleSeoUpdate = async () => {
+    if (isSeoUpdating) return;
+
+    try {
+      setIsSeoUpdating(true);
+      await onUpdate({
+        metaTitle: seoData.metaTitle,
+        metaDescription: seoData.metaDescription,
+        socialImageUrl: seoData.socialImageUrl,
+      });
+
+      toast({
+        title: "Success",
+        description: "SEO settings updated successfully",
+      });
+    } catch {
+      toast({
+        title: "Error",
+        description: "Failed to update SEO settings",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSeoUpdating(false);
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
@@ -266,7 +306,8 @@ export function ShareDialog({ form, onUpdate }: ShareDialogProps) {
                 <Label>Meta Title</Label>
                 <Input
                   placeholder="Enter page title"
-                  defaultValue={form.metaTitle || form.title}
+                  value={seoData.metaTitle}
+                  onChange={(e) => handleSeoChange("metaTitle", e.target.value)}
                 />
               </div>
 
@@ -274,7 +315,10 @@ export function ShareDialog({ form, onUpdate }: ShareDialogProps) {
                 <Label>Meta Description</Label>
                 <Input
                   placeholder="Enter page description"
-                  defaultValue={form.metaDescription || form.description || ""}
+                  value={seoData.metaDescription}
+                  onChange={(e) =>
+                    handleSeoChange("metaDescription", e.target.value)
+                  }
                 />
               </div>
 
@@ -283,13 +327,24 @@ export function ShareDialog({ form, onUpdate }: ShareDialogProps) {
                 <div className="flex gap-2">
                   <Input
                     placeholder="Upload or enter image URL"
-                    defaultValue={form.socialImageUrl || ""}
+                    value={seoData.socialImageUrl}
+                    onChange={(e) =>
+                      handleSeoChange("socialImageUrl", e.target.value)
+                    }
                   />
                   <Button variant="secondary">
                     <ImageIcon className="w-4 h-4" />
                   </Button>
                 </div>
               </div>
+
+              <Button
+                className="w-full"
+                onClick={handleSeoUpdate}
+                disabled={isSeoUpdating}
+              >
+                {isSeoUpdating ? "Saving..." : "Save SEO Settings"}
+              </Button>
             </div>
           </TabsContent>
 
