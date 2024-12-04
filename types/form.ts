@@ -29,6 +29,7 @@ export type FormElementBase = {
   id: string;
   type: FormElementType;
   question: string;
+  description?: string;
   required: boolean;
   order: number;
 };

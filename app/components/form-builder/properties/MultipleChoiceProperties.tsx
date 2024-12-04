@@ -12,6 +12,8 @@ import {
   Droppable,
   DropResult,
 } from "@hello-pangea/dnd";
+import { useCallback } from "react";
+import { Textarea } from "@/components/ui/textarea";
 
 interface MultipleChoicePropertiesProps {
   element: FormElement & { type: FormElementType.MULTIPLE_CHOICE };
@@ -22,23 +24,36 @@ export function MultipleChoiceProperties({
 }: MultipleChoicePropertiesProps) {
   const { dispatch } = useFormContext();
 
-  const updateElementProperties = (
-    updates: Partial<typeof element.properties>
-  ) => {
-    dispatch({
-      type: "UPDATE_ELEMENT",
-      payload: {
-        id: element.id,
-        updates: {
-          type: element.type,
-          properties: {
-            ...element.properties,
-            ...updates,
+  const updateElement = useCallback(
+    (updates: Partial<Omit<FormElement, "type" | "properties">>) => {
+      dispatch({
+        type: "UPDATE_ELEMENT",
+        payload: {
+          id: element.id,
+          updates,
+        },
+      });
+    },
+    [dispatch, element.id]
+  );
+
+  const updateElementProperties = useCallback(
+    (updates: Partial<typeof element.properties>) => {
+      dispatch({
+        type: "UPDATE_ELEMENT",
+        payload: {
+          id: element.id,
+          updates: {
+            properties: {
+              ...element.properties,
+              ...updates,
+            },
           },
         },
-      },
-    });
-  };
+      });
+    },
+    [dispatch, element]
+  );
 
   const addOption = () => {
     const newOption = {
@@ -77,6 +92,16 @@ export function MultipleChoiceProperties({
 
   return (
     <div className="space-y-6 border-t pt-4">
+      <div className="space-y-2">
+        <Label>Description (optional)</Label>
+        <Textarea
+          value={element.description || ""}
+          onChange={(e) => updateElement({ description: e.target.value })}
+          placeholder="Add description to provide additional context"
+          rows={3}
+        />
+      </div>
+
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <Label>Options</Label>

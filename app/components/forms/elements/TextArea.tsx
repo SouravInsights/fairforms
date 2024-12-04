@@ -26,14 +26,27 @@ export function TextArea({ element, value, onChange }: TextAreaProps) {
 
   return (
     <div className="space-y-8">
-      <motion.h2
-        className="text-3xl font-medium"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
-        {element.question}
-        {element.required && <span className="text-primary ml-1">*</span>}
-      </motion.h2>
+      <div className="space-y-2">
+        <motion.h2
+          className="text-3xl font-medium"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          {element.question}
+          {element.required && <span className="text-primary ml-1">*</span>}
+        </motion.h2>
+
+        {element.description && (
+          <motion.p
+            className="text-lg text-muted-foreground"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.1 }}
+          >
+            {element.description}
+          </motion.p>
+        )}
+      </div>
 
       <motion.div
         className="space-y-4"

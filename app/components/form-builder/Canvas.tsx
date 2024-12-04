@@ -53,6 +53,11 @@ export function Canvas({ className }: { className?: string }) {
           {element.type}
         </div>
         <div>{element.question}</div>
+        {element.description && (
+          <div className="text-sm text-muted-foreground">
+            {element.description}
+          </div>
+        )}
       </>
     );
   };

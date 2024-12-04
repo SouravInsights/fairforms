@@ -3,6 +3,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { FormElement, FormElementType } from "@/types/form";
 import { useFormContext } from "@/app/context/form-context";
+import { Textarea } from "@/components/ui/textarea";
+import { useCallback } from "react";
 
 interface TextPropertiesProps {
   element: FormElement & {
@@ -13,26 +15,50 @@ interface TextPropertiesProps {
 export function TextProperties({ element }: TextPropertiesProps) {
   const { dispatch } = useFormContext();
 
-  const updateElementProperties = (
-    updates: Partial<typeof element.properties>
-  ) => {
-    dispatch({
-      type: "UPDATE_ELEMENT",
-      payload: {
-        id: element.id,
-        updates: {
-          type: element.type,
-          properties: {
-            ...element.properties,
-            ...updates,
+  const updateElement = useCallback(
+    (updates: Partial<Omit<FormElement, "type" | "properties">>) => {
+      dispatch({
+        type: "UPDATE_ELEMENT",
+        payload: {
+          id: element.id,
+          updates,
+        },
+      });
+    },
+    [dispatch, element.id]
+  );
+
+  const updateElementProperties = useCallback(
+    (updates: Partial<typeof element.properties>) => {
+      dispatch({
+        type: "UPDATE_ELEMENT",
+        payload: {
+          id: element.id,
+          updates: {
+            properties: {
+              ...element.properties,
+              ...updates,
+            },
           },
         },
-      },
-    });
-  };
+      });
+    },
+    [dispatch, element]
+  );
 
   return (
     <div className="space-y-6 border-t pt-4">
+      <div className="space-y-2">
+        <Label>Description (optional)</Label>
+        <Textarea
+          value={element.description || ""}
+          onChange={(e) => updateElement({ description: e.target.value })}
+          placeholder="Add a description to provide more context"
+          className="resize-none"
+          rows={3}
+        />
+      </div>
+
       <div className="space-y-2">
         <Label>Placeholder Text</Label>
         <Input
