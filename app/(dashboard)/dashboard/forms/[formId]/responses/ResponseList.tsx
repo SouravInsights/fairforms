@@ -25,28 +25,32 @@ export function ResponseList({ responses, form }: ResponseListProps) {
         FormElementType.STATEMENT,
       ].includes(el.type)
   );
-
   return (
-    <div className="border rounded-lg">
+    <div className="border rounded-lg overflow-auto">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[200px]">Submitted</TableHead>
+            <TableHead className="min-w-[150px]">Submitted</TableHead>
             {displayableElements.map((element) => (
-              <TableHead key={element.id}>{element.question}</TableHead>
+              <TableHead key={element.id} className="min-w-[200px] max-w-[300px] truncate">
+                {element.question}
+              </TableHead>
             ))}
           </TableRow>
         </TableHeader>
         <TableBody>
           {responses.map((response) => (
             <TableRow key={response.id}>
-              <TableCell>
+              <TableCell className="min-w-[150px]">
                 {formatDistanceToNow(new Date(response.submittedAt), {
                   addSuffix: true,
                 })}
               </TableCell>
               {displayableElements.map((element) => (
-                <TableCell key={element.id}>
+                <TableCell
+                  key={element.id}
+                  className="min-w-[200px] max-w-[300px] truncate"
+                >
                   {formatResponseValue(element, response.answers[element.id])}
                 </TableCell>
               ))}
