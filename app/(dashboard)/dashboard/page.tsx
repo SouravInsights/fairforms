@@ -15,12 +15,19 @@ import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@clerk/nextjs";
 import { Form } from "@/types/form";
 
+interface FormWithStats extends Form {
+  _count?: {
+    responses: number;
+  };
+}
+
 export default function DashboardPage() {
   const router = useRouter();
   const { toast } = useToast();
   const { user, isLoaded } = useUser();
   const [isCreating, setIsCreating] = useState(false);
-  const [forms, setForms] = useState<Form[]>([]);
+  const [forms, setForms] = useState<FormWithStats[]>([]);
+
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -114,6 +121,11 @@ export default function DashboardPage() {
             <CardFooter className="flex justify-end gap-2">
               <Link href={`/dashboard/forms/${form.id}`}>
                 <Button variant="outline">Edit</Button>
+              </Link>
+              <Link href={`/dashboard/forms/${form.id}/responses`}>
+                <Button variant="outline" size="sm">
+                  Responses
+                </Button>
               </Link>
               <Link href={`/forms/${form.customSlug || form.id}`}>
                 <Button>View</Button>

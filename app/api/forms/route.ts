@@ -1,8 +1,8 @@
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
-import { forms } from "@/db/schema";
+import { forms, responses } from "@/db/schema";
 import { NextResponse } from "next/server";
-import { eq, and } from "drizzle-orm";
+import { eq, desc, sql, and } from "drizzle-orm";
 
 export async function GET() {
   try {
@@ -13,13 +13,49 @@ export async function GET() {
     }
 
     const userForms = await db
-      .select()
+      .select({
+        id: forms.id,
+        userId: forms.userId,
+        title: forms.title,
+        description: forms.description,
+        elements: forms.elements,
+        settings: forms.settings,
+        isPublished: forms.isPublished,
+        customSlug: forms.customSlug,
+        createdAt: forms.createdAt,
+        updatedAt: forms.updatedAt,
+        metaTitle: forms.metaTitle,
+        metaDescription: forms.metaDescription,
+        socialImageUrl: forms.socialImageUrl,
+      })
       .from(forms)
-      .where(eq(forms.userId, userId));
+      .where(eq(forms.userId, userId))
+      .orderBy(desc(forms.createdAt));
 
-    return NextResponse.json(userForms);
+    // Get response counts separately
+    const formsWithCounts = await Promise.all(
+      userForms.map(async (form) => {
+        const [count] = await db
+          .select({ count: sql<number>`count(*)` })
+          .from(responses)
+          .where(eq(responses.formId, form.id));
+
+        return {
+          ...form,
+          responseCount: Number(count?.count || 0),
+        };
+      })
+    );
+
+    return NextResponse.json(formsWithCounts);
   } catch (error) {
-    console.error("[FORMS_GET]", error);
+    // Add detailed error logging
+    console.error("[FORMS_GET] Detailed error:", {
+      message: error instanceof Error ? error.message : "Unknown error",
+      stack: error instanceof Error ? error.stack : undefined,
+      error,
+    });
+
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 }
