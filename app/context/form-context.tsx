@@ -204,3 +204,97 @@ export function useFormContext() {
   }
   return context;
 }
+
+/**
+ * A basic explanation of the entire state flow in our Form Builder an example:
+ *
+ * Initial Form State:
+ * {
+ *   title: "Untitled Form",
+ *   description: null,
+ *   elements: [],
+ *   activeElementId: null,
+ *   isPreviewMode: false,
+ *   settings: { ... }
+ * }
+ *
+ * Now imagine a user is building a survey. Here's what happens:
+ *
+ * 1. User clicks "Add Multiple Choice Question":
+ *    dispatch({
+ *      type: "ADD_ELEMENT",
+ *      payload: {
+ *        id: "mc-123",
+ *        type: "multiple_choice",
+ *        question: "New multiple choice question",
+ *        required: false,
+ *        properties: {
+ *          options: [{ id: "opt1", text: "Option 1" }],
+ *          allowMultiple: false,
+ *          randomizeOrder: false
+ *        }
+ *      }
+ *    })
+ *
+ * 2. User clicks the question to edit it:
+ *    dispatch({
+ *      type: "SET_ACTIVE_ELEMENT",
+ *      payload: "mc-123"
+ *    })
+ *
+ * 3. User updates the question text:
+ *    dispatch({
+ *      type: "UPDATE_ELEMENT",
+ *      payload: {
+ *        id: "mc-123",
+ *        updates: {
+ *          question: "What's your favorite color?"
+ *        }
+ *      }
+ *    })
+ *
+ * 4. User adds more options:
+ *    dispatch({
+ *      type: "UPDATE_ELEMENT",
+ *      payload: {
+ *        id: "mc-123",
+ *        updates: {
+ *          properties: {
+ *            options: [
+ *              { id: "opt1", text: "Red" },
+ *              { id: "opt2", text: "Blue" },
+ *              { id: "opt3", text: "Green" }
+ *            ]
+ *          }
+ *        }
+ *      }
+ *    })
+ *
+ * 5. User drags questions to reorder them:
+ *    dispatch({
+ *      type: "REORDER_ELEMENTS",
+ *      payload: [updatedElementsArray]
+ *    })
+ *
+ * 6. User updates form title:
+ *    dispatch({
+ *      type: "UPDATE_FORM_DETAILS",
+ *      payload: {
+ *        title: "Color Preference Survey"
+ *      }
+ *    })
+ *
+ * At each step:
+ * 1. Action is dispatched from a component
+ * 2. formReducer receives current state and the action
+ * 3. Based on action.type, appropriate case in switch statement runs
+ * 4. New state is created (never mutating the old state)
+ * 5. Components using useFormContext() re-render with new state
+ *
+ * Common Patterns:
+ * - Adding items: [...array, newItem]
+ * - Updating items: array.map(item => item.id === id ? {...item, ...updates} : item)
+ * - Removing items: array.filter(item => item.id !== id)
+ * - Reordering: Just replace the entire array
+ * - Updating nested objects: {...object, nested: {...object.nested, ...updates}}
+ */
