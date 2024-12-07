@@ -220,7 +220,7 @@ export function Web3Settings({ settings, onUpdate }: Web3SettingsProps) {
 
               {settings.rewards.enabled && (
                 <div className="space-y-4">
-                  <div className="space-y-2">
+                  {/* <div className="space-y-2">
                     <Label>Chain</Label>
                     <Select
                       value={settings.rewards.chainId.toString()}
@@ -259,7 +259,7 @@ export function Web3Settings({ settings, onUpdate }: Web3SettingsProps) {
                         })
                       }
                     />
-                  </div>
+                  </div> */}
 
                   <div className="space-y-2">
                     <Label>Reward Amount (FORM tokens)</Label>
