@@ -22,8 +22,10 @@ export function ContactInfo({ element, value, onChange }: ContactInfoProps) {
 
   return (
     <div className="space-y-4">
-      <Label>{element.question}</Label>
-      <div className="grid grid-cols-2 gap-4">
+      <Label className="text-xl md:text-2xl font-medium leading-tight">
+        {element.question}
+      </Label>
+      <div className="grid grid-rows-2 gap-4">
         <div>
           <Input
             placeholder={element.properties.placeholders.firstName}
