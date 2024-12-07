@@ -115,11 +115,15 @@ export function Web3Settings({ settings, onUpdate }: Web3SettingsProps) {
                       }
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select chain" />
+                        <SelectValue
+                          placeholder="Select chain"
+                          defaultValue="84532"
+                        />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="1">Ethereum</SelectItem>
-                        <SelectItem value="11155111">Sepolia</SelectItem>
+                        <SelectItem value="11155111">ETH Sepolia</SelectItem>
+                        <SelectItem value="84532">Base Sepolia</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
