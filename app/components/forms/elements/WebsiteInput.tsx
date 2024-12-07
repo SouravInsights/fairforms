@@ -25,7 +25,7 @@ export function WebsiteInput({ element, value, onChange }: WebsiteInputProps) {
 
   return (
     <div className="space-y-2">
-      <Label className="text-xl md:text-2xl font-medium leading-tight">
+      <Label>
         {element.question}
         {element.required && <span className="text-red-500 ml-1">*</span>}
       </Label>
