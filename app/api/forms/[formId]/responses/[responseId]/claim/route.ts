@@ -97,43 +97,53 @@ export async function POST(
 
     // Add server account as form operator if not already
     try {
-      // Check if account is already an operator
-      const isOperator = await publicClient.readContract({
-        address: contractAddress as `0x${string}`,
-        abi: FormRewardsABI,
-        functionName: "formOperators",
-        args: [account.address],
+      // Get the current nonce for the account
+      const nonce = await publicClient.getTransactionCount({
+        address: account.address,
       });
 
-      if (!isOperator) {
-        console.log("Adding account as form operator...");
-        // Add as operator
-        const { request: operatorRequest } =
-          await publicClient.simulateContract({
-            address: contractAddress as `0x${string}`,
-            abi: FormRewardsABI,
-            functionName: "addFormOperator",
-            args: [account.address],
-            account: account.address,
-          });
+      // Prepare and sign the operator transaction
+      const { request } = await publicClient.simulateContract({
+        address: contractAddress as `0x${string}`,
+        abi: FormRewardsABI,
+        functionName: "addFormOperator",
+        args: [account.address],
+        account: account.address,
+      });
 
-        const operatorTx = await walletClient.writeContract(operatorRequest);
-        await publicClient.waitForTransactionReceipt({ hash: operatorTx });
-        console.log("Successfully added as operator");
+      // Add nonce and gas parameters
+      const preparedRequest = {
+        ...request,
+        nonce,
+        chainId: baseSepolia.id,
+      };
 
-        // Set reward limit
-        const { request: limitRequest } = await publicClient.simulateContract({
-          address: contractAddress as `0x${string}`,
-          abi: FormRewardsABI,
-          functionName: "setFormRewardLimit",
-          args: [account.address, parseEther("1000")],
-          account: account.address,
-        });
+      // Sign and send the transaction
+      const hash = await walletClient.writeContract(preparedRequest);
+      console.log("Operator transaction hash:", hash);
 
-        const limitTx = await walletClient.writeContract(limitRequest);
-        await publicClient.waitForTransactionReceipt({ hash: limitTx });
-        console.log("Successfully set reward limit");
-      }
+      // Wait for confirmation
+      const receipt = await publicClient.waitForTransactionReceipt({ hash });
+      console.log("Operator transaction receipt:", receipt);
+
+      // Now set the reward limit
+      const limitNonce = nonce + 1;
+      const { request: limitRequest } = await publicClient.simulateContract({
+        address: contractAddress as `0x${string}`,
+        abi: FormRewardsABI,
+        functionName: "setFormRewardLimit",
+        args: [account.address, parseEther("1000")],
+        account: account.address,
+      });
+
+      const preparedLimitRequest = {
+        ...limitRequest,
+        nonce: limitNonce,
+        chainId: baseSepolia.id,
+      };
+
+      const limitHash = await walletClient.writeContract(preparedLimitRequest);
+      await publicClient.waitForTransactionReceipt({ hash: limitHash });
     } catch (error) {
       console.error("Error setting up operator:", error);
       return NextResponse.json(
@@ -158,7 +168,17 @@ export async function POST(
         account: account.address,
       });
 
-      const hash = await walletClient.writeContract(request);
+      const rewardNonce = await publicClient.getTransactionCount({
+        address: account.address,
+      });
+
+      const preparedRewardRequest = {
+        ...request,
+        nonce: rewardNonce,
+        chainId: baseSepolia.id,
+      };
+
+      const hash = await walletClient.writeContract(preparedRewardRequest);
       console.log("Reward transaction hash:", hash);
 
       // Wait for transaction
