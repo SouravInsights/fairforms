@@ -61,15 +61,20 @@ export function Web3Dialog({ form, onUpdate }: Web3DialogProps) {
           Web3 Settings {isConnected && "✓"}
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
+      <DialogContent className="max-h-[80vh] overflow-hidden flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>Web3 Settings</DialogTitle>
           <DialogDescription>
             Configure token gating and rewards for your form
           </DialogDescription>
         </DialogHeader>
 
-        <Web3Settings settings={currentWeb3Settings} onUpdate={handleUpdate} />
+        <div className="flex-1 overflow-y-auto">
+          <Web3Settings
+            settings={currentWeb3Settings}
+            onUpdate={handleUpdate}
+          />
+        </div>
       </DialogContent>
     </Dialog>
   );

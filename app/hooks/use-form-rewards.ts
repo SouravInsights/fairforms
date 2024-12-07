@@ -1,34 +1,35 @@
-import { useWriteContract } from "wagmi";
-import { erc20Abi } from "viem";
+import { useWriteContract, useReadContract } from "wagmi";
 import { FormSettings } from "@/types/form";
+import { FORM_TOKEN_ADDRESS, formTokenAbi } from "@/lib/web3/contracts";
 
 type RewardSettings = NonNullable<FormSettings["web3"]>["rewards"];
-
-// Helper to ensure address is properly formatted
-function ensureHexAddress(
-  address: string | undefined
-): `0x${string}` | undefined {
-  if (!address) return undefined;
-  return address.startsWith("0x")
-    ? (address as `0x${string}`)
-    : (`0x${address}` as `0x${string}`);
-}
 
 export function useFormRewards(settings: RewardSettings | undefined) {
   const { writeContractAsync, isPending, isError } = useWriteContract();
 
-  const sendReward = async (to: `0x${string}`, amount: bigint) => {
-    if (!settings?.enabled || !settings?.tokenAddress) return;
+  // Check if the form is authorized to send rewards
+  const { data: isOperator } = useReadContract({
+    address: FORM_TOKEN_ADDRESS,
+    abi: formTokenAbi,
+    functionName: "formOperators",
+    args: [settings?.tokenAddress as `0x${string}`],
+  });
 
-    const tokenAddress = ensureHexAddress(settings.tokenAddress);
-    if (!tokenAddress) {
-      throw new Error("Invalid token address");
-    }
+  // Get reward limit for the form
+  const { data: rewardLimit } = useReadContract({
+    address: FORM_TOKEN_ADDRESS,
+    abi: formTokenAbi,
+    functionName: "formRewardLimits",
+    args: [settings?.tokenAddress as `0x${string}`],
+  });
+
+  const sendReward = async (to: `0x${string}`, amount: bigint) => {
+    if (!settings?.enabled || !isOperator) return;
 
     return writeContractAsync({
-      address: tokenAddress,
-      abi: erc20Abi,
-      functionName: "transfer",
+      address: FORM_TOKEN_ADDRESS,
+      abi: formTokenAbi,
+      functionName: "sendReward",
       args: [to, amount],
     });
   };
@@ -37,5 +38,7 @@ export function useFormRewards(settings: RewardSettings | undefined) {
     sendReward,
     isPending,
     isError,
+    isOperator,
+    rewardLimit,
   };
 }
