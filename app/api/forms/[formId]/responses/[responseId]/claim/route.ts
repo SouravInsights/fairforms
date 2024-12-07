@@ -19,7 +19,7 @@ const publicClient = createPublicClient({
 });
 
 const account = privateKeyToAccount(
-  process.env.PRIVATE_KEY.startsWith("0x")
+  process.env.PRIVATE_KEY?.startsWith("0x")
     ? (process.env.PRIVATE_KEY as `0x${string}`)
     : (`0x${process.env.PRIVATE_KEY}` as `0x${string}`)
 );
@@ -85,65 +85,106 @@ export async function POST(
       );
     }
 
-    // Ensure the form address is an operator
+    const rewardAmount = form.settings.web3.rewards.rewardAmount;
+    if (!rewardAmount) {
+      return NextResponse.json(
+        { error: "No reward amount configured" },
+        { status: 400 }
+      );
+    }
+
+    // Add server account as form operator if not already
     try {
-      const { request: operatorRequest } = await publicClient.simulateContract({
+      // Check if account is already an operator
+      const isOperator = await publicClient.readContract({
         address: contractAddress as `0x${string}`,
         abi: FormRewardsABI,
-        functionName: "addFormOperator",
+        functionName: "formOperators",
         args: [account.address],
-        account: account.address,
       });
 
-      await walletClient.writeContract(operatorRequest);
-      console.log("Added form as operator");
+      if (!isOperator) {
+        console.log("Adding account as form operator...");
+        // Add as operator
+        const { request: operatorRequest } =
+          await publicClient.simulateContract({
+            address: contractAddress as `0x${string}`,
+            abi: FormRewardsABI,
+            functionName: "addFormOperator",
+            args: [account.address],
+            account: account.address,
+          });
 
-      // Set reward limit
-      const { request: limitRequest } = await publicClient.simulateContract({
-        address: contractAddress as `0x${string}`,
-        abi: FormRewardsABI,
-        functionName: "setFormRewardLimit",
-        args: [account.address, parseEther("1000")], // Adjust limit as needed
-        account: account.address,
-      });
+        const operatorTx = await walletClient.writeContract(operatorRequest);
+        await publicClient.waitForTransactionReceipt({ hash: operatorTx });
+        console.log("Successfully added as operator");
 
-      await walletClient.writeContract(limitRequest);
-      console.log("Set reward limit");
+        // Set reward limit
+        const { request: limitRequest } = await publicClient.simulateContract({
+          address: contractAddress as `0x${string}`,
+          abi: FormRewardsABI,
+          functionName: "setFormRewardLimit",
+          args: [account.address, parseEther("1000")],
+          account: account.address,
+        });
+
+        const limitTx = await walletClient.writeContract(limitRequest);
+        await publicClient.waitForTransactionReceipt({ hash: limitTx });
+        console.log("Successfully set reward limit");
+      }
     } catch (error) {
-      console.log("Form might already be an operator:", error);
+      console.error("Error setting up operator:", error);
+      return NextResponse.json(
+        {
+          error: "Failed to set up reward operator",
+          details: error instanceof Error ? error.message : "Unknown error",
+        },
+        { status: 500 }
+      );
     }
 
     // Send reward using sendReward
-    const { request } = await publicClient.simulateContract({
-      address: contractAddress as `0x${string}`,
-      abi: FormRewardsABI,
-      functionName: "sendReward",
-      args: [
-        response.walletAddress as `0x${string}`,
-        parseEther(form.settings.web3.rewards.rewardAmount || "0"),
-      ],
-      account: account.address,
-    });
+    try {
+      const { request } = await publicClient.simulateContract({
+        address: contractAddress as `0x${string}`,
+        abi: FormRewardsABI,
+        functionName: "sendReward",
+        args: [
+          response.walletAddress as `0x${string}`,
+          parseEther(rewardAmount),
+        ],
+        account: account.address,
+      });
 
-    const hash = await walletClient.writeContract(request);
-    console.log("Reward transaction hash:", hash);
+      const hash = await walletClient.writeContract(request);
+      console.log("Reward transaction hash:", hash);
 
-    // Wait for transaction
-    const receipt = await publicClient.waitForTransactionReceipt({ hash });
-    console.log("Transaction receipt:", receipt);
+      // Wait for transaction
+      const receipt = await publicClient.waitForTransactionReceipt({ hash });
+      console.log("Transaction receipt:", receipt);
 
-    // Update response with transaction details
-    const [updatedResponse] = await db
-      .update(responses)
-      .set({
-        rewardClaimed: true,
-        transactionHash: receipt.transactionHash,
-        chainId: baseSepolia.id,
-      })
-      .where(eq(responses.id, parseInt(params.responseId)))
-      .returning();
+      // Update response with transaction details
+      const [updatedResponse] = await db
+        .update(responses)
+        .set({
+          rewardClaimed: true,
+          transactionHash: receipt.transactionHash,
+          chainId: baseSepolia.id,
+        })
+        .where(eq(responses.id, parseInt(params.responseId)))
+        .returning();
 
-    return NextResponse.json(updatedResponse);
+      return NextResponse.json(updatedResponse);
+    } catch (error) {
+      console.error("Failed to send reward:", error);
+      return NextResponse.json(
+        {
+          error: "Failed to send reward",
+          details: error instanceof Error ? error.message : "Unknown error",
+        },
+        { status: 500 }
+      );
+    }
   } catch (error) {
     console.error("[CLAIM_REWARD]", error);
     return NextResponse.json(

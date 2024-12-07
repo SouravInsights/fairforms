@@ -258,9 +258,12 @@ export function Web3Settings({ settings, onUpdate }: Web3SettingsProps) {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Reward Amount</Label>
+                    <Label>Reward Amount (FORM tokens)</Label>
                     <Input
-                      placeholder="Amount in wei"
+                      type="number"
+                      min="0"
+                      step="1"
+                      placeholder="e.g., 10"
                       value={settings.rewards.rewardAmount || ""}
                       onChange={(e) =>
                         onUpdate({
@@ -272,6 +275,9 @@ export function Web3Settings({ settings, onUpdate }: Web3SettingsProps) {
                         })
                       }
                     />
+                    <p className="text-sm text-muted-foreground">
+                      Amount of FORM tokens to reward for each submission
+                    </p>
                   </div>
                 </div>
               )}
