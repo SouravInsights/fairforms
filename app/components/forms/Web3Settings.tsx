@@ -14,6 +14,7 @@ import { Separator } from "@/components/ui/separator";
 import { useAccount, useConnect } from "wagmi";
 import { injected } from "wagmi/connectors";
 import { Button } from "@/components/ui/button";
+import { useDebouncedCallback } from "use-debounce";
 
 interface Web3SettingsProps {
   settings: FormSettings["web3"];
@@ -24,6 +25,13 @@ export function Web3Settings({ settings, onUpdate }: Web3SettingsProps) {
   const { address, isConnected } = useAccount();
   console.log("isConnected from Web3Settings:", isConnected);
   const { connect } = useConnect();
+  const debouncedUpdate = useDebouncedCallback(
+    (updatedSettings: NonNullable<FormSettings["web3"]>) => {
+      onUpdate(updatedSettings);
+    },
+    500 
+  );
+
 
   console.log("Web3Settings rendered with:", settings);
 
