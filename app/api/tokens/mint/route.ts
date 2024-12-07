@@ -2,7 +2,7 @@ import { FormRewardsABI } from "@/lib/contracts/abi";
 import { NextResponse } from "next/server";
 import { createWalletClient, http, parseEther } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { sepolia } from "viem/chains";
+import { baseSepolia } from "viem/chains";
 
 const FORM_TOKEN_ADDRESS = "0xE7E20A1d8c78BEa0bD75E539E9a616E2C1C8943F";
 
@@ -18,7 +18,7 @@ const account = privateKeyToAccount(
 
 const walletClient = createWalletClient({
   account,
-  chain: sepolia,
+  chain: baseSepolia,
   transport: http(),
 });
 

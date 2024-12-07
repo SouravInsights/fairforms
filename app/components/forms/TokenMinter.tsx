@@ -5,6 +5,8 @@ import { useAccount } from "wagmi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { useChainId, useSwitchChain } from "wagmi";
+import { baseSepolia } from "viem/chains";
 
 export function TokenMinter() {
   const { address } = useAccount();
@@ -12,11 +14,20 @@ export function TokenMinter() {
   const [amount, setAmount] = useState("10");
   const [isLoading, setIsLoading] = useState(false);
 
+  const chainId = useChainId();
+  const { switchChain } = useSwitchChain();
+
   const getTokens = async () => {
     if (!address) return;
 
     try {
       setIsLoading(true);
+
+      // Check network
+      if (chainId !== baseSepolia.id) {
+        switchChain({ chainId: baseSepolia.id });
+      }
+
       const response = await fetch("/api/tokens/mint", {
         method: "POST",
         headers: {

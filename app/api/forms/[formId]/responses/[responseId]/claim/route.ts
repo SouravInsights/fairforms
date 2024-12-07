@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { createPublicClient, createWalletClient, http, parseEther } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { sepolia } from "viem/chains";
+import { baseSepolia } from "viem/chains";
 import { FormRewardsABI } from "@/lib/contracts/abi";
 
 // Ensure private key exists
@@ -14,7 +14,7 @@ if (!process.env.PRIVATE_KEY) {
 
 // Initialize Viem clients
 const publicClient = createPublicClient({
-  chain: sepolia,
+  chain: baseSepolia,
   transport: http(),
 });
 
@@ -26,7 +26,7 @@ const account = privateKeyToAccount(
 
 const walletClient = createWalletClient({
   account,
-  chain: sepolia,
+  chain: baseSepolia,
   transport: http(),
 });
 
@@ -85,31 +85,48 @@ export async function POST(
       );
     }
 
-    const rewardAmount = form.settings.web3.rewards.rewardAmount;
-    if (!rewardAmount) {
-      return NextResponse.json(
-        { error: "No reward amount configured" },
-        { status: 400 }
-      );
+    // Ensure the form address is an operator
+    try {
+      const { request: operatorRequest } = await publicClient.simulateContract({
+        address: contractAddress as `0x${string}`,
+        abi: FormRewardsABI,
+        functionName: "addFormOperator",
+        args: [account.address],
+        account: account.address,
+      });
+
+      await walletClient.writeContract(operatorRequest);
+      console.log("Added form as operator");
+
+      // Set reward limit
+      const { request: limitRequest } = await publicClient.simulateContract({
+        address: contractAddress as `0x${string}`,
+        abi: FormRewardsABI,
+        functionName: "setFormRewardLimit",
+        args: [account.address, parseEther("1000")], // Adjust limit as needed
+        account: account.address,
+      });
+
+      await walletClient.writeContract(limitRequest);
+      console.log("Set reward limit");
+    } catch (error) {
+      console.log("Form might already be an operator:", error);
     }
 
-    console.log("Distributing reward:", {
-      contractAddress,
-      recipient: response.walletAddress,
-      amount: rewardAmount,
-    });
-
-    // Send reward transaction
+    // Send reward using sendReward
     const { request } = await publicClient.simulateContract({
       address: contractAddress as `0x${string}`,
       abi: FormRewardsABI,
-      functionName: "distributeReward",
-      args: [response.walletAddress as `0x${string}`, parseEther(rewardAmount)],
+      functionName: "sendReward",
+      args: [
+        response.walletAddress as `0x${string}`,
+        parseEther(form.settings.web3.rewards.rewardAmount || "0"),
+      ],
       account: account.address,
     });
 
     const hash = await walletClient.writeContract(request);
-    console.log("Transaction hash:", hash);
+    console.log("Reward transaction hash:", hash);
 
     // Wait for transaction
     const receipt = await publicClient.waitForTransactionReceipt({ hash });
@@ -121,6 +138,7 @@ export async function POST(
       .set({
         rewardClaimed: true,
         transactionHash: receipt.transactionHash,
+        chainId: baseSepolia.id,
       })
       .where(eq(responses.id, parseInt(params.responseId)))
       .returning();

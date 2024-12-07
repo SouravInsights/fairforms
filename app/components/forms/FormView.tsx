@@ -11,10 +11,11 @@ import { ChevronLeft, Loader2, CheckCircle2 } from "lucide-react";
 import { motion } from "motion/react";
 import { useTokenGate } from "@/app/hooks/use-token-gate";
 import { useClaimReward } from "@/app/hooks/use-claim-reward";
-import { useConnect } from "wagmi";
+import { useChainId, useConnect, useSwitchChain } from "wagmi";
 import { injected } from "wagmi/connectors";
 import { Web3Gate } from "./Web3Gate";
 import { FormSubmissionFeedback } from "./FormSubmissionFeedback";
+import { baseSepolia } from "viem/chains";
 
 interface FormViewProps {
   form: Form;
@@ -37,6 +38,8 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
     form.settings.web3?.tokenGating
   );
   const { claimReward } = useClaimReward();
+  const chainId = useChainId();
+  const { switchChain } = useSwitchChain();
   const [isRewardPending, setIsRewardPending] = useState(false);
 
   useEffect(() => {
@@ -123,6 +126,21 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
       return;
     }
 
+    // Check chain if web3 is enabled
+    if (form.settings.web3?.enabled && chainId !== baseSepolia.id) {
+      try {
+        switchChain({ chainId: baseSepolia.id });
+        return; // Return early as switchChain will trigger a re-render
+      } catch {
+        toast({
+          title: "Network Error",
+          description: "Please switch to Base Sepolia to submit this form",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -153,7 +171,15 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
       ) {
         setIsRewardPending(true);
         try {
-          await claimReward(form.id.toString(), data.id.toString());
+          const claimResult = await claimReward(
+            form.id.toString(),
+            data.id.toString()
+          );
+          toast({
+            title: "Success",
+            description: `Form submitted and reward claimed! View transaction: 
+            ${getExplorerLink(claimResult.transactionHash)}`,
+          });
         } catch (error) {
           console.error("Failed to claim reward:", error);
           // Don't set isSuccess to false, as the form submission was still successful
@@ -383,9 +409,12 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
                     disabled={isSubmitting || isRewardPending}
                   >
                     {isRewardPending
-                      ? "Processing..."
+                      ? "Processing Reward..."
                       : isSubmitting
                       ? "Submitting..."
+                      : chainId !== baseSepolia.id &&
+                        form.settings.web3?.rewards.enabled
+                      ? "Switch Network & Submit"
                       : "Submit"}
                   </Button>
                 )}
@@ -397,3 +426,8 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
     </div>
   );
 }
+
+// Helper function to get explorer link
+const getExplorerLink = (txHash: string) => {
+  return `https://sepolia.basescan.org/tx/${txHash}`;
+};
