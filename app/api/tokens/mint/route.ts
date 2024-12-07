@@ -4,7 +4,7 @@ import { createWalletClient, http, parseEther } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { baseSepolia } from "viem/chains";
 
-const FORM_TOKEN_ADDRESS = "0xE7E20A1d8c78BEa0bD75E539E9a616E2C1C8943F";
+const FORM_TOKEN_ADDRESS = "0x050918768C502d9D14D624FF543625df1696Df63";
 
 if (!process.env.PRIVATE_KEY) {
   throw new Error("PRIVATE_KEY environment variable is not set");
