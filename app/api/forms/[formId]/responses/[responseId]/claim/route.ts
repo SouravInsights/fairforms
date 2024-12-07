@@ -12,10 +12,12 @@ if (!process.env.PRIVATE_KEY) {
   throw new Error("PRIVATE_KEY environment variable is not set");
 }
 
+const RPC_URL = process.env.BASE_SEPOLIA_URL;
+
 // Initialize Viem clients
 const publicClient = createPublicClient({
   chain: baseSepolia,
-  transport: http(),
+  transport: http(RPC_URL),
 });
 
 const account = privateKeyToAccount(
@@ -27,7 +29,7 @@ const account = privateKeyToAccount(
 const walletClient = createWalletClient({
   account,
   chain: baseSepolia,
-  transport: http(),
+  transport: http(RPC_URL),
 });
 
 export async function POST(
