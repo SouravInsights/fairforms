@@ -310,7 +310,7 @@ export async function POST(
 ) {
   try {
     const formId = parseInt(params.formId);
-    const { responses: formResponses } = await req.json();
+    const { responses: formResponses, walletAddress } = await req.json();
 
     const [form] = await db.select().from(forms).where(eq(forms.id, formId));
 
@@ -318,6 +318,14 @@ export async function POST(
       return NextResponse.json(
         { error: "Form not found or not published" },
         { status: 404 }
+      );
+    }
+
+    // Check if web3 is required but wallet address is missing
+    if (form.settings.web3?.enabled && !walletAddress) {
+      return NextResponse.json(
+        { error: "Wallet address required" },
+        { status: 400 }
       );
     }
 
@@ -332,12 +340,19 @@ export async function POST(
       submittedAt: new Date().toISOString(),
     };
 
+    // Create response with optional web3 fields
     const [response] = await db
       .insert(responses)
       .values({
         formId,
         answers: submissionData,
         submittedAt: new Date(),
+        // Add web3 fields if wallet is connected
+        ...(walletAddress && {
+          walletAddress,
+          chainId: form.settings.web3?.rewards.chainId,
+          rewardClaimed: false,
+        }),
       })
       .returning();
 
