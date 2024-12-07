@@ -9,6 +9,13 @@ import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { ChevronLeft, Loader2, CheckCircle2 } from "lucide-react";
 import { motion } from "motion/react";
+import { useTokenGate } from "@/app/hooks/use-token-gate";
+import { useClaimReward } from "@/app/hooks/use-claim-reward";
+import { useChainId, useConnect, useSwitchChain } from "wagmi";
+import { injected } from "wagmi/connectors";
+import { Web3Gate } from "./Web3Gate";
+import { FormSubmissionFeedback } from "./FormSubmissionFeedback";
+import { baseSepolia } from "viem/chains";
 
 interface FormViewProps {
   form: Form;
@@ -26,6 +33,14 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
   const [isSuccess, setIsSuccess] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const { toast } = useToast();
+  const { connect } = useConnect();
+  const { hasAccess, isConnected, address } = useTokenGate(
+    form.settings.web3?.tokenGating
+  );
+  const { claimReward } = useClaimReward();
+  const chainId = useChainId();
+  const { switchChain } = useSwitchChain();
+  const [isRewardPending, setIsRewardPending] = useState(false);
 
   useEffect(() => {
     const updateHeight = () => {
@@ -74,6 +89,24 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
     setCurrentElementIndex((prev) => prev - 1);
   };
 
+  const showRewardSuccess = Boolean(
+    form.settings.web3?.enabled && form.settings.web3.rewards.enabled
+  );
+
+  // Token gate check
+  if (form.settings.web3?.enabled && form.settings.web3.tokenGating.enabled) {
+    if (!isConnected || !hasAccess) {
+      return (
+        <Web3Gate
+          isConnected={isConnected}
+          hasAccess={hasAccess}
+          minTokenBalance={form.settings.web3.tokenGating.minTokenBalance}
+          onConnect={() => connect({ connector: injected() })}
+        />
+      );
+    }
+  }
+
   const handleSubmit = async () => {
     if (isPreview) {
       toast({
@@ -81,6 +114,31 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
         description: "Form submission is disabled in preview mode",
       });
       return;
+    }
+
+    // Connect wallet if needed for rewards
+    if (
+      form.settings.web3?.enabled &&
+      form.settings.web3.rewards.enabled &&
+      !isConnected
+    ) {
+      connect({ connector: injected() });
+      return;
+    }
+
+    // Check chain if web3 is enabled
+    if (form.settings.web3?.enabled && chainId !== baseSepolia.id) {
+      try {
+        switchChain({ chainId: baseSepolia.id });
+        return; // Return early as switchChain will trigger a re-render
+      } catch {
+        toast({
+          title: "Network Error",
+          description: "Please switch to Base Sepolia to submit this form",
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     setIsSubmitting(true);
@@ -91,14 +149,50 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ responses }),
+        body: JSON.stringify({
+          responses,
+          walletAddress: address,
+        }),
       });
 
       if (!response.ok) {
         throw new Error("Failed to submit form");
       }
 
+      const data = await response.json();
       setIsSuccess(true);
+
+      // If rewards are enabled and we have a submission ID, claim the reward
+      if (
+        form.settings.web3?.enabled &&
+        form.settings.web3.rewards.enabled &&
+        data.id &&
+        address
+      ) {
+        setIsRewardPending(true);
+        try {
+          const claimResult = await claimReward(
+            form.id.toString(),
+            data.id.toString()
+          );
+          toast({
+            title: "Success",
+            description: `Form submitted and reward claimed! View transaction: 
+            ${getExplorerLink(claimResult.transactionHash)}`,
+          });
+        } catch (error) {
+          console.error("Failed to claim reward:", error);
+          // Don't set isSuccess to false, as the form submission was still successful
+          toast({
+            title: "Warning",
+            description:
+              "Form submitted but failed to claim reward. You can try claiming later.",
+            variant: "destructive",
+          });
+        } finally {
+          setIsRewardPending(false);
+        }
+      }
 
       const hasEndScreen = form.elements.some(
         (element) => element.type === FormElementType.END_SCREEN
@@ -143,7 +237,9 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
           >
             <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
             <h3 className="text-2xl font-semibold">
-              Submitting your response...
+              {isRewardPending
+                ? "Processing reward..."
+                : "Submitting your response..."}
             </h3>
           </motion.div>
         </motion.div>
@@ -182,7 +278,9 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
             </motion.div>
             <h3 className="text-2xl font-semibold">Response submitted!</h3>
             <p className="text-muted-foreground mt-2">
-              Thank you for your time.
+              {form.settings.web3?.rewards.enabled
+                ? "Your reward is being processed..."
+                : "Thank you for your time."}
             </p>
           </motion.div>
         </motion.div>
@@ -237,6 +335,13 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
       )}
 
       {renderLoadingOrSuccess()}
+
+      <FormSubmissionFeedback
+        isSubmitting={isSubmitting}
+        isSuccess={isSuccess}
+        isRewardPending={isRewardPending}
+        showRewardSuccess={showRewardSuccess}
+      />
 
       <motion.div
         key={currentElementIndex}
@@ -298,11 +403,19 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
                   </Button>
                 ) : (
                   <Button
-                    className="flex-1 md:flex-none md:ml-auto"
+                    className="ml-auto"
                     onClick={handleSubmit}
                     size="lg"
+                    disabled={isSubmitting || isRewardPending}
                   >
-                    Submit
+                    {isRewardPending
+                      ? "Processing Reward..."
+                      : isSubmitting
+                      ? "Submitting..."
+                      : chainId !== baseSepolia.id &&
+                        form.settings.web3?.rewards.enabled
+                      ? "Switch Network & Submit"
+                      : "Submit"}
                   </Button>
                 )}
               </div>
@@ -313,3 +426,8 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
     </div>
   );
 }
+
+// Helper function to get explorer link
+const getExplorerLink = (txHash: string) => {
+  return `https://sepolia.basescan.org/tx/${txHash}`;
+};

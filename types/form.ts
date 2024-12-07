@@ -220,6 +220,22 @@ export type FormSettings = {
     enableEmailNotifications: boolean;
     notificationEmails: string[];
   };
+  web3: {
+    enabled: boolean;
+    tokenGating: {
+      enabled: boolean;
+      chainId: number;
+      contractAddress?: string;
+      minTokenBalance?: number;
+      tokenType: "ERC20" | "ERC721";
+    };
+    rewards: {
+      enabled: boolean;
+      tokenAddress?: string;
+      rewardAmount?: string;
+      chainId: number;
+    };
+  };
 };
 
 export interface Form {

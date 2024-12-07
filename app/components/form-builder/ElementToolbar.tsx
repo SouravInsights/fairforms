@@ -8,6 +8,7 @@ import { nanoid } from "nanoid";
 import { ELEMENT_GROUPS, isSpecialElement } from "./ElementConfig";
 import { getDefaultProperties } from "./form-utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { getDefaultQuestion } from "./default-questions";
 
 export function ElementToolbar({ className }: { className?: string }) {
   const { dispatch } = useFormContext();
@@ -22,7 +23,7 @@ export function ElementToolbar({ className }: { className?: string }) {
       required: false,
       order: Date.now(),
       // Only add question for non-special elements
-      ...(isSpecialElement(type) ? {} : { question: `New ${type} question` }),
+      ...(isSpecialElement(type) ? {} : { question: getDefaultQuestion(type) }),
     };
 
     dispatch({
