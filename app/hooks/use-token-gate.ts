@@ -7,22 +7,28 @@ type TokenGateSettings = NonNullable<FormSettings["web3"]>["tokenGating"];
 export function useTokenGate(settings: TokenGateSettings | undefined) {
   const { address, isConnected } = useAccount();
 
-  const { data: balance } = useReadContract({
+  const { data: balance = 0 } = useReadContract({
     address: settings?.contractAddress as `0x${string}`,
-    // Only support ERC20 and ERC721 for simplicity
     abi: settings?.tokenType === "ERC20" ? erc20Abi : erc721Abi,
     functionName: "balanceOf",
-    args: [address as `0x${string}`],
+    args: address ? [address] : undefined,
     query: {
-      enabled: Boolean(settings?.enabled && isConnected && address),
+      enabled: Boolean(
+        settings?.enabled && isConnected && address && settings?.contractAddress
+      ),
     },
   });
 
+  const hasAccess = Boolean(
+    !settings?.enabled ||
+      (balance !== undefined &&
+        Number(balance) >= (settings?.minTokenBalance || 0))
+  );
+
   return {
-    hasAccess:
-      !settings?.enabled ||
-      (balance && Number(balance) >= (settings?.minTokenBalance || 0)),
+    hasAccess,
     isConnected,
     address,
+    balance: Number(balance),
   };
 }

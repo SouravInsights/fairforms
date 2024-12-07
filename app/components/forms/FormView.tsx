@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { ChevronLeft, Loader2, CheckCircle2 } from "lucide-react";
 import { motion } from "motion/react";
 import { useTokenGate } from "@/app/hooks/use-token-gate";
-import { useFormRewards } from "@/app/hooks/use-form-rewards";
+import { useClaimReward } from "@/app/hooks/use-claim-reward";
 import { useConnect } from "wagmi";
 import { injected } from "wagmi/connectors";
 import { Web3Gate } from "./Web3Gate";
@@ -36,9 +36,8 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
   const { hasAccess, isConnected, address } = useTokenGate(
     form.settings.web3?.tokenGating
   );
-  const { sendReward, isPending: isRewardPending } = useFormRewards(
-    form.settings.web3?.rewards
-  );
+  const { claimReward } = useClaimReward();
+  const [isRewardPending, setIsRewardPending] = useState(false);
 
   useEffect(() => {
     const updateHeight = () => {
@@ -93,14 +92,16 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
 
   // Token gate check
   if (form.settings.web3?.enabled && form.settings.web3.tokenGating.enabled) {
-    return (
-      <Web3Gate
-        isConnected={isConnected}
-        hasAccess={hasAccess}
-        minTokenBalance={form.settings.web3.tokenGating.minTokenBalance}
-        onConnect={() => connect({ connector: injected() })}
-      />
-    );
+    if (!isConnected || !hasAccess) {
+      return (
+        <Web3Gate
+          isConnected={isConnected}
+          hasAccess={hasAccess}
+          minTokenBalance={form.settings.web3.tokenGating.minTokenBalance}
+          onConnect={() => connect({ connector: injected() })}
+        />
+      );
+    }
   }
 
   const handleSubmit = async () => {
@@ -140,20 +141,32 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
         throw new Error("Failed to submit form");
       }
 
-      // Send reward if enabled
+      const data = await response.json();
+      setIsSuccess(true);
+
+      // If rewards are enabled and we have a submission ID, claim the reward
       if (
         form.settings.web3?.enabled &&
         form.settings.web3.rewards.enabled &&
-        address &&
-        form.settings.web3.rewards.rewardAmount
+        data.id &&
+        address
       ) {
-        await sendReward(
-          address,
-          BigInt(form.settings.web3.rewards.rewardAmount)
-        );
+        setIsRewardPending(true);
+        try {
+          await claimReward(form.id.toString(), data.id.toString());
+        } catch (error) {
+          console.error("Failed to claim reward:", error);
+          // Don't set isSuccess to false, as the form submission was still successful
+          toast({
+            title: "Warning",
+            description:
+              "Form submitted but failed to claim reward. You can try claiming later.",
+            variant: "destructive",
+          });
+        } finally {
+          setIsRewardPending(false);
+        }
       }
-
-      setIsSuccess(true);
 
       const hasEndScreen = form.elements.some(
         (element) => element.type === FormElementType.END_SCREEN
@@ -198,7 +211,9 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
           >
             <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
             <h3 className="text-2xl font-semibold">
-              Submitting your response...
+              {isRewardPending
+                ? "Processing reward..."
+                : "Submitting your response..."}
             </h3>
           </motion.div>
         </motion.div>
@@ -237,7 +252,9 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
             </motion.div>
             <h3 className="text-2xl font-semibold">Response submitted!</h3>
             <p className="text-muted-foreground mt-2">
-              Thank you for your time.
+              {form.settings.web3?.rewards.enabled
+                ? "Your reward is being processed..."
+                : "Thank you for your time."}
             </p>
           </motion.div>
         </motion.div>
@@ -363,9 +380,13 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
                     className="ml-auto"
                     onClick={handleSubmit}
                     size="lg"
-                    disabled={isRewardPending}
+                    disabled={isSubmitting || isRewardPending}
                   >
-                    {isRewardPending ? "Sending Reward..." : "Submit"}
+                    {isRewardPending
+                      ? "Processing..."
+                      : isSubmitting
+                      ? "Submitting..."
+                      : "Submit"}
                   </Button>
                 )}
               </div>
