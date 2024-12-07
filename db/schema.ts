@@ -35,6 +35,11 @@ export const responses = pgTable("responses", {
     .notNull(),
   answers: json("answers").notNull(),
   submittedAt: timestamp("submitted_at").defaultNow().notNull(),
+  // Add web3 fields
+  walletAddress: text("wallet_address"),
+  transactionHash: text("transaction_hash"),
+  rewardClaimed: boolean("reward_claimed").default(false),
+  chainId: integer("chain_id"),
 });
 
 export const collaborators = pgTable("collaborators", {

@@ -29,6 +29,13 @@
       "when": 1733271416696,
       "tag": "0003_supreme_thor_girl",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1733521175201,
+      "tag": "0004_high_baron_strucker",
+      "breakpoints": true
     }
   ]
 }

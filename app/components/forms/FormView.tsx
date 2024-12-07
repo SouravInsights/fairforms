@@ -9,6 +9,12 @@ import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { ChevronLeft, Loader2, CheckCircle2 } from "lucide-react";
 import { motion } from "motion/react";
+import { useTokenGate } from "@/app/hooks/use-token-gate";
+import { useFormRewards } from "@/app/hooks/use-form-rewards";
+import { useConnect } from "wagmi";
+import { injected } from "wagmi/connectors";
+import { Web3Gate } from "./Web3Gate";
+import { FormSubmissionFeedback } from "./FormSubmissionFeedback";
 
 interface FormViewProps {
   form: Form;
@@ -26,6 +32,13 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
   const [isSuccess, setIsSuccess] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const { toast } = useToast();
+  const { connect } = useConnect();
+  const { hasAccess, isConnected, address } = useTokenGate(
+    form.settings.web3?.tokenGating
+  );
+  const { sendReward, isPending: isRewardPending } = useFormRewards(
+    form.settings.web3?.rewards
+  );
 
   useEffect(() => {
     const updateHeight = () => {
@@ -74,12 +87,38 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
     setCurrentElementIndex((prev) => prev - 1);
   };
 
+  const showRewardSuccess = Boolean(
+    form.settings.web3?.enabled && form.settings.web3.rewards.enabled
+  );
+
+  // Token gate check
+  if (form.settings.web3?.enabled && form.settings.web3.tokenGating.enabled) {
+    return (
+      <Web3Gate
+        isConnected={isConnected}
+        hasAccess={hasAccess}
+        minTokenBalance={form.settings.web3.tokenGating.minTokenBalance}
+        onConnect={() => connect({ connector: injected() })}
+      />
+    );
+  }
+
   const handleSubmit = async () => {
     if (isPreview) {
       toast({
         title: "Preview Mode",
         description: "Form submission is disabled in preview mode",
       });
+      return;
+    }
+
+    // Connect wallet if needed for rewards
+    if (
+      form.settings.web3?.enabled &&
+      form.settings.web3.rewards.enabled &&
+      !isConnected
+    ) {
+      connect({ connector: injected() });
       return;
     }
 
@@ -91,11 +130,27 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ responses }),
+        body: JSON.stringify({
+          responses,
+          walletAddress: address,
+        }),
       });
 
       if (!response.ok) {
         throw new Error("Failed to submit form");
+      }
+
+      // Send reward if enabled
+      if (
+        form.settings.web3?.enabled &&
+        form.settings.web3.rewards.enabled &&
+        address &&
+        form.settings.web3.rewards.rewardAmount
+      ) {
+        await sendReward(
+          address,
+          BigInt(form.settings.web3.rewards.rewardAmount)
+        );
       }
 
       setIsSuccess(true);
@@ -238,6 +293,13 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
 
       {renderLoadingOrSuccess()}
 
+      <FormSubmissionFeedback
+        isSubmitting={isSubmitting}
+        isSuccess={isSuccess}
+        isRewardPending={isRewardPending}
+        showRewardSuccess={showRewardSuccess}
+      />
+
       <motion.div
         key={currentElementIndex}
         initial={{ opacity: 0, y: 20 }}
@@ -298,11 +360,12 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
                   </Button>
                 ) : (
                   <Button
-                    className="flex-1 md:flex-none md:ml-auto"
+                    className="ml-auto"
                     onClick={handleSubmit}
                     size="lg"
+                    disabled={isRewardPending}
                   >
-                    Submit
+                    {isRewardPending ? "Sending Reward..." : "Submit"}
                   </Button>
                 )}
               </div>

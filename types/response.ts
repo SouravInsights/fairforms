@@ -32,6 +32,12 @@ export interface EnrichedResponse extends FormResponse {
   enrichedAnswers: EnrichedAnswer[];
 }
 
+export interface Web3Response extends FormResponse {
+  walletAddress: string;
+  transactionHash?: string;
+  rewardClaimed: boolean;
+}
+
 export interface EnrichedAnswer {
   elementId: string;
   question: string;

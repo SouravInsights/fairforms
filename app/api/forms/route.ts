@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { forms, responses } from "@/db/schema";
 import { NextResponse } from "next/server";
 import { eq, desc, sql, and } from "drizzle-orm";
+import { FormSettings } from "@/types/form";
 
 export async function GET() {
   try {
@@ -88,7 +89,7 @@ export async function POST() {
       return NextResponse.json(existingDraft);
     }
 
-    const defaultSettings = {
+    const defaultSettings: FormSettings = {
       theme: {
         primaryColor: "#0f172a",
         fontFamily: "Inter",
@@ -105,6 +106,19 @@ export async function POST() {
         enableEmailNotifications: false,
         notificationEmails: [],
       },
+      web3: {
+        enabled: false,
+        tokenGating: {
+          enabled: false,
+          chainId: 1,
+          tokenType: "ERC20",
+        },
+        rewards: {
+          enabled: false,
+          chainId: 1,
+        },
+      },
+      
     };
 
     const [form] = await db
