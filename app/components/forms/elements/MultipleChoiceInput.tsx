@@ -74,7 +74,7 @@ export function MultipleChoiceInput({
     <div className="space-y-8">
       <div className="space-y-2">
         <motion.h2
-          className="text-xl font-medium leading-tight"
+          className="text-xl md:text-2xl font-medium leading-tight "
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}

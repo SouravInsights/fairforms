@@ -137,11 +137,6 @@ export default async function HomePage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {[
                   {
-                    icon: HandCoins,
-                    title: `Fair Pricing Promise`,
-                    description: `No 'Premium' popups, no sneaky upsells, no surprises. Just forms, pure and simple.`,
-                  },
-                  {
                     icon: PiggyBank,
                     title: "Fair Features",
                     description:
@@ -149,9 +144,14 @@ export default async function HomePage() {
                   },
                   {
                     icon: Laugh,
-                    title: "Built for Fairness",
+                    title: "Make your forms smart",
                     description:
-                      "When other form builders got too greedy, we didn't just complain. We built a fair alternative.",
+                      "Web3 enabled features lets you do more with your forms like token gating and rewarding your users.",
+                  },
+                  {
+                    icon: HandCoins,
+                    title: "Fair Pricing Promise",
+                    description: `No 'Premium' popups, no sneaky upsells, and no surprises. Just forms, with crypto payments, pure and simple!`,
                   },
                   {
                     icon: Heart,
@@ -170,7 +170,7 @@ export default async function HomePage() {
                       <div>
                         <h3 className="font-bold">{feature.title}</h3>
                         <p className="text-sm text-muted-foreground mt-2">
-                          {feature.description}
+                          x{feature.description}
                         </p>
                       </div>
                     </div>
@@ -329,36 +329,34 @@ export default async function HomePage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     {/* Animated coffee cup */}
-<div className="relative group/coffee cursor-pointer">
-  <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center transform sm:group-hover/coffee:scale-110 transition-transform duration-300">
-    <span className="text-xl">☕️</span>
-    {/* Thought bubble - Desktop: hover, Mobile: active/focus */}
-    <span 
-      className="absolute -top-3 -right-2 opacity-0 sm:group-hover/coffee:opacity-100 active:opacity-100 focus:opacity-100 transition-opacity duration-300"
-    >
-      💭
-    </span>
-    {/* Steam animation */}
-    <div className="absolute -top-4 left-1/2 sm:opacity-0 opacity-30 sm:group-hover/coffee:opacity-100 transition-opacity duration-300">
-      {[...Array(3)].map((_, i) => (
-        <div
-          key={i}
-          className="absolute w-1.5 h-6 bottom-0"
-          style={{
-            left: `${(i - 1) * 6}px`,
-            transform: 'translateX(-50%)',
-            animation: 'steam 2s infinite',
-            animationDelay: `${i * 0.3}s`,
-          }}
-        >
-          <div className="w-full h-full bg-gradient-to-t from-primary/20 to-transparent rounded-full" />
-        </div>
-      ))}
-    </div>
-  </div>
-  {/* Coffee ripple effect - Desktop only */}
-  <div className="absolute inset-0 rounded-xl hidden sm:block sm:group-hover/coffee:animate-ping bg-primary/5" />
-</div>
+                    <div className="relative group/coffee cursor-pointer">
+                      <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center transform sm:group-hover/coffee:scale-110 transition-transform duration-300">
+                        <span className="text-xl">☕️</span>
+                        {/* Thought bubble - Desktop: hover, Mobile: active/focus */}
+                        <span className="absolute -top-3 -right-2 opacity-0 sm:group-hover/coffee:opacity-100 active:opacity-100 focus:opacity-100 transition-opacity duration-300">
+                          💭
+                        </span>
+                        {/* Steam animation */}
+                        <div className="absolute -top-4 left-1/2 sm:opacity-0 opacity-30 sm:group-hover/coffee:opacity-100 transition-opacity duration-300">
+                          {[...Array(3)].map((_, i) => (
+                            <div
+                              key={i}
+                              className="absolute w-1.5 h-6 bottom-0"
+                              style={{
+                                left: `${(i - 1) * 6}px`,
+                                transform: "translateX(-50%)",
+                                animation: "steam 2s infinite",
+                                animationDelay: `${i * 0.3}s`,
+                              }}
+                            >
+                              <div className="w-full h-full bg-gradient-to-t from-primary/20 to-transparent rounded-full" />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      {/* Coffee ripple effect - Desktop only */}
+                      <div className="absolute inset-0 rounded-xl hidden sm:block sm:group-hover/coffee:animate-ping bg-primary/5" />
+                    </div>
 
                     {/* Creator info */}
                     <div>
