@@ -28,7 +28,7 @@ export function TextArea({ element, value, onChange }: TextAreaProps) {
     <div className="space-y-8">
       <div className="space-y-2">
         <motion.h2
-          className="text-3xl font-medium"
+          className="text-xl md:text-2xl font-medium leading-tight"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >

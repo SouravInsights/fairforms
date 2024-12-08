@@ -39,7 +39,7 @@ export function DropdownInput({
 
   return (
     <div className="space-y-2">
-      <Label>
+      <Label className="text-xl md:text-2xl font-medium leading-tight ">
         {element.question}
         {element.required && <span className="text-red-500 ml-1">*</span>}
       </Label>
