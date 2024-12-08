@@ -14,12 +14,20 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@clerk/nextjs";
 import { Form } from "@/types/form";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
 
 interface FormWithStats extends Form {
   _count?: {
     responses: number;
   };
 }
+const templates = [
+  { icon: "✍️", description: "Custom" },
+  { icon: "🤠", description: "DAO Membership Application Form" },
+  { icon: "🧩", description: "Product Feedback Form" },
+  { icon: "🤝", description: "Booth Survey" },
+];
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -27,8 +35,8 @@ export default function DashboardPage() {
   const { user, isLoaded } = useUser();
   const [isCreating, setIsCreating] = useState(false);
   const [forms, setForms] = useState<FormWithStats[]>([]);
-
   const [isLoading, setIsLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     const loadForms = async () => {
@@ -57,7 +65,7 @@ export default function DashboardPage() {
     }
   }, [user, isLoaded, toast]);
 
-  const handleCreateForm = async () => {
+  const handleCreateForm = async (template: string) => {
     if (isCreating) return;
 
     try {
@@ -67,6 +75,7 @@ export default function DashboardPage() {
         headers: {
           "Content-Type": "application/json",
         },
+        body: JSON.stringify({ template }),
       });
 
       const newForm = await response.json();
@@ -83,6 +92,7 @@ export default function DashboardPage() {
       });
     } finally {
       setIsCreating(false);
+      setIsModalOpen(false);
     }
   };
 
@@ -104,7 +114,7 @@ export default function DashboardPage() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">My Forms</h1>
-        <Button onClick={handleCreateForm} disabled={isCreating}>
+        <Button onClick={() => setIsModalOpen(true)} disabled={isCreating}>
           {isCreating ? "Creating..." : "Create New Form"}
         </Button>
       </div>
@@ -143,13 +153,37 @@ export default function DashboardPage() {
               </CardDescription>
             </CardHeader>
             <CardFooter className="justify-center">
-              <Button onClick={handleCreateForm} disabled={isCreating}>
+              <Button onClick={() => setIsModalOpen(true)} disabled={isCreating}>
                 Create Form
               </Button>
             </CardFooter>
           </Card>
         )}
       </div>
+
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Select a Template</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-4">
+            {templates.map((template) => (
+             <Card
+               key={template.description}
+               className="cursor-pointer"
+               onClick={() => handleCreateForm(template.description)}
+                >
+              <CardHeader className="flex flex-col items-center justify-center h-full">
+               <CardTitle className="text-4xl">{template.icon}</CardTitle>
+                 <CardDescription className="text-center">
+                       {template.description}
+                </CardDescription>
+                </CardHeader>
+              </Card>
+               ))}
+            </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
