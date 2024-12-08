@@ -32,6 +32,18 @@ export function useTokenGate(
     },
   });
 
+  const { data: tokenBalance } = useReadContract({
+    address: tokenGating?.contractAddress as `0x${string}`,
+    abi: FORM_REWARDS_ABI,
+    functionName: "balanceOf",
+    args: tokenGating?.enabled && address ? [address] : undefined,
+    query: {
+      enabled: Boolean(
+        tokenGating?.enabled && address && tokenGating.contractAddress
+      ),
+    },
+  });
+
   useEffect(() => {
     setIsLoading(true);
 
@@ -49,10 +61,18 @@ export function useTokenGate(
       return;
     }
 
-    // Set access based on contract response
-    setHasAccess(Boolean(canAccess));
+    // Check canAccess and token balance
+    const userBalance = tokenBalance
+      ? BigInt(tokenBalance.toString())
+      : BigInt(0);
+    console.log("userBalance:", userBalance);
+    const minBalance = BigInt(tokenGating.minTokenBalance || 0);
+    console.log("minBalance:", minBalance);
+    const meetsBalanceRequirement = userBalance >= minBalance;
+
+    setHasAccess(Boolean(canAccess) && meetsBalanceRequirement);
     setIsLoading(false);
-  }, [canAccess, tokenGating, isConnected]);
+  }, [canAccess, tokenBalance, tokenGating, isConnected]);
 
   return {
     hasAccess,
