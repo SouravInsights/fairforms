@@ -27,7 +27,7 @@ export function RewardClaim({ rewards, formId, responseId }: RewardClaimProps) {
         title: "Success!",
         description: "Your reward has been claimed.",
       });
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to claim reward. Please try again.",

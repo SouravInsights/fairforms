@@ -1,7 +1,7 @@
 "use client";
 
 import { Form, FormElementType, FormElementValue } from "@/types/form";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useTokenGate } from "@/app/hooks/use-token-gate";
 import { useFormRewards } from "@/app/hooks/use-form-rewards";
@@ -17,12 +17,9 @@ interface FormViewProps {
   className?: string;
 }
 
-interface TokenMetadata {
-  symbol: string;
-  decimals: number;
-}
-
 export function FormView({ form, isPreview, className }: FormViewProps) {
+  const minTokenBalance = form.settings.web3.tokenGating.minTokenBalance;
+  console.log("minTokenBalance:", minTokenBalance);
   const [currentElementIndex, setCurrentElementIndex] = useState(0);
   const [responses, setResponses] = useState<Record<string, FormElementValue>>(
     {}
@@ -33,12 +30,12 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
   const [isMobile, setIsMobile] = useState(false);
   const { toast } = useToast();
   const { connect } = useConnect();
-  const { hasAccess, isConnected, address, isLoading, balance } = useTokenGate(
+  const { hasAccess, isConnected, address } = useTokenGate(
     form.settings.web3?.tokenGating
   );
   const [submissionId, setSubmissionId] = useState<number | null>(null);
 
-  const { claimReward, isClaimingReward, canClaim, isReady } = useFormRewards({
+  const { claimReward, isReady } = useFormRewards({
     rewards: form.settings.web3?.rewards || { enabled: false, chainId: 1 },
     formId: form.id,
     responseId: submissionId || 0,
@@ -286,7 +283,7 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
   return formContent;
 }
 
-// Helper function to get explorer link
-const getExplorerLink = (txHash: string) => {
-  return `https://sepolia.basescan.org/tx/${txHash}`;
-};
+// // Helper function to get explorer link
+// const getExplorerLink = (txHash: string) => {
+//   return `https://sepolia.basescan.org/tx/${txHash}`;
+// };

@@ -8,7 +8,6 @@ interface UseTokenGateResult {
   isLoading: boolean;
   isConnected: boolean;
   address?: `0x${string}`;
-  balance?: bigint;
 }
 
 export function useTokenGate(
