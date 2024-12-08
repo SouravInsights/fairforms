@@ -107,12 +107,12 @@ export function FormContent({
           <div className="flex flex-col w-full md:w-[400px] justify-between bg-gray-100 p-6">
             {/* Header */}
             <div className="justify-center content-center h-[80%]">
-              <div className="pb-4">
+              {/*<div className="pb-4">
                 <LogoIcon width={120} height={20} />
-              </div>
+              </div>*/}
               <div>
                 <h1 className="text-2xl font-medium mb-1 flex items-center gap-2 ">
-                  Your Survey Form
+                  {form.title}
                 </h1>
                 <p className="text-base font-normal ">
                   Please take a moment to fill out this form.
