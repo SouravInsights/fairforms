@@ -2,20 +2,14 @@
 
 import { Form, FormElementType, FormElementValue } from "@/types/form";
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { FormElement } from "./elements";
-import { Progress } from "@/components/ui/progress";
-import { cn } from "@/lib/utils";
-import { ChevronLeft, Loader2, CheckCircle2 } from "lucide-react";
-import { motion } from "motion/react";
 import { useTokenGate } from "@/app/hooks/use-token-gate";
 import { useClaimReward } from "@/app/hooks/use-claim-reward";
 import { useChainId, useConnect, useSwitchChain } from "wagmi";
 import { injected } from "wagmi/connectors";
 import { Web3Gate } from "./Web3Gate";
-import { FormSubmissionFeedback } from "./FormSubmissionFeedback";
 import { baseSepolia } from "viem/chains";
+import { FormContent } from "./FormContent";
 
 interface FormViewProps {
   form: Form;
@@ -63,7 +57,6 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
   }, []);
 
   const totalElements = form.elements.length;
-  const progress = (currentElementIndex / totalElements) * 100;
   const currentElement = form.elements[currentElementIndex];
   const isLastElement = currentElementIndex === form.elements.length - 1;
 
@@ -92,20 +85,6 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
   const showRewardSuccess = Boolean(
     form.settings.web3?.enabled && form.settings.web3.rewards.enabled
   );
-
-  // Token gate check
-  if (form.settings.web3?.enabled && form.settings.web3.tokenGating.enabled) {
-    if (!isConnected || !hasAccess) {
-      return (
-        <Web3Gate
-          isConnected={isConnected}
-          hasAccess={hasAccess}
-          minTokenBalance={form.settings.web3.tokenGating.minTokenBalance}
-          onConnect={() => connect({ connector: injected() })}
-        />
-      );
-    }
-  }
 
   const handleSubmit = async () => {
     if (isPreview) {
@@ -222,74 +201,6 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
     }
   };
 
-  const renderLoadingOrSuccess = () => {
-    if (isSubmitting && !isSuccess) {
-      return (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center"
-        >
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="text-center"
-          >
-            <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
-            <h3 className="text-2xl font-semibold">
-              {isRewardPending
-                ? "Processing reward..."
-                : "Submitting your response..."}
-            </h3>
-          </motion.div>
-        </motion.div>
-      );
-    }
-
-    if (isSuccess) {
-      return (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center"
-        >
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{
-              scale: [0.8, 1.2, 1],
-              opacity: 1,
-            }}
-            transition={{
-              duration: 0.5,
-              times: [0, 0.2, 1],
-            }}
-            className="text-center"
-          >
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{
-                type: "spring",
-                stiffness: 200,
-                damping: 10,
-              }}
-            >
-              <CheckCircle2 className="h-16 w-16 text-primary mx-auto mb-4" />
-            </motion.div>
-            <h3 className="text-2xl font-semibold">Response submitted!</h3>
-            <p className="text-muted-foreground mt-2">
-              {form.settings.web3?.rewards.enabled
-                ? "Your reward is being processed..."
-                : "Thank you for your time."}
-            </p>
-          </motion.div>
-        </motion.div>
-      );
-    }
-
-    return null;
-  };
-
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !isLastElement) {
       handleNext();
@@ -297,10 +208,6 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
       handlePrevious();
     }
   };
-
-  const showNavigationButtons =
-    currentElement.type !== FormElementType.WELCOME_SCREEN &&
-    currentElement.type !== FormElementType.END_SCREEN;
 
   const handleValueChange = (value: FormElementValue) => {
     setResponses((prev) => ({
@@ -318,113 +225,54 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
     }
   };
 
-  return (
-    <div
-      className={cn(
-        "bg-background",
-        className,
-        isPreview ? "min-h-[400px]" : ""
-      )}
-      style={{ height: isPreview ? "400px" : height }}
-    >
-      {form.settings.behavior.showProgressBar && (
-        <Progress
-          value={progress}
-          className="fixed top-0 left-0 right-0 h-1 z-50"
-        />
-      )}
+  // Add a debug log to help us trace the issue
+  console.log("Gate Status:", {
+    isWeb3Enabled: form.settings.web3?.enabled,
+    isTokenGatingEnabled: form.settings.web3?.tokenGating.enabled,
+    isConnected,
+    hasAccess,
+    minRequired: form.settings.web3?.tokenGating.minTokenBalance,
+  });
 
-      {renderLoadingOrSuccess()}
-
-      <FormSubmissionFeedback
-        isSubmitting={isSubmitting}
-        isSuccess={isSuccess}
-        isRewardPending={isRewardPending}
-        showRewardSuccess={showRewardSuccess}
-      />
-
-      <motion.div
-        key={currentElementIndex}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -20 }}
-        transition={{ duration: 0.3 }}
-        className="h-full flex flex-col"
-        onKeyDown={handleKeyDown}
-        tabIndex={0}
-      >
-        <div className="flex-1 overflow-y-auto">
-          <div className="container max-w-3xl mx-auto py-12 px-4 md:px-8">
-            <div className="flex flex-col justify-center min-h-full pb-24">
-              <FormElement
-                element={currentElement}
-                value={responses[currentElement.id]}
-                onChange={handleValueChange}
-              />
-            </div>
-          </div>
-        </div>
-
-        {showNavigationButtons && (
-          <div className="absolute bottom-0 left-0 right-0 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <div className="container max-w-3xl mx-auto px-4 md:px-8">
-              <div className="flex items-center py-4 gap-4">
-                {currentElementIndex > 0 && (
-                  <>
-                    {/* Mobile back button */}
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      onClick={handlePrevious}
-                      className="md:hidden"
-                    >
-                      <ChevronLeft className="h-5 w-5" />
-                    </Button>
-
-                    {/* Desktop back button */}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handlePrevious}
-                      className="hidden md:inline-flex"
-                    >
-                      Press ↑ for previous
-                    </Button>
-                  </>
-                )}
-
-                {!isLastElement ? (
-                  <Button
-                    className="flex-1 md:flex-none md:ml-auto"
-                    onClick={handleNext}
-                    size="lg"
-                  >
-                    {isMobile ? "OK" : "Press Enter ↵"}
-                  </Button>
-                ) : (
-                  <Button
-                    className="ml-auto"
-                    onClick={handleSubmit}
-                    size="lg"
-                    disabled={isSubmitting || isRewardPending}
-                  >
-                    {isRewardPending
-                      ? "Processing Reward..."
-                      : isSubmitting
-                      ? "Submitting..."
-                      : chainId !== baseSepolia.id &&
-                        form.settings.web3?.rewards.enabled
-                      ? "Switch Network & Submit"
-                      : "Submit"}
-                  </Button>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-      </motion.div>
-    </div>
+  const formContent = (
+    <FormContent
+      form={form}
+      isPreview={isPreview}
+      className={className}
+      currentElementIndex={currentElementIndex}
+      totalElements={totalElements}
+      currentElement={currentElement}
+      responses={responses}
+      isSubmitting={isSubmitting}
+      isSuccess={isSuccess}
+      isRewardPending={isRewardPending}
+      showRewardSuccess={showRewardSuccess}
+      height={height}
+      isMobile={isMobile}
+      chainId={chainId}
+      handleNext={handleNext}
+      handlePrevious={handlePrevious}
+      handleSubmit={handleSubmit}
+      handleKeyDown={handleKeyDown}
+      handleValueChange={handleValueChange}
+    />
   );
+
+  // Token gate check
+  if (form.settings.web3?.enabled && form.settings.web3.tokenGating.enabled) {
+    return (
+      <Web3Gate
+        isConnected={isConnected}
+        hasAccess={hasAccess}
+        minTokenBalance={form.settings.web3.tokenGating.minTokenBalance}
+        onConnect={() => connect({ connector: injected() })}
+      >
+        {formContent}
+      </Web3Gate>
+    );
+  }
+
+  return formContent;
 }
 
 // Helper function to get explorer link

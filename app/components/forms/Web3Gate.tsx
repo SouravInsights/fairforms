@@ -8,6 +8,7 @@ interface Web3GateProps {
   minTokenBalance?: number;
   onConnect: () => void;
   isLoading?: boolean;
+  children: React.ReactNode;
 }
 
 export function Web3Gate({
@@ -16,6 +17,7 @@ export function Web3Gate({
   minTokenBalance = 0,
   onConnect,
   isLoading = false,
+  children,
 }: Web3GateProps) {
   const isDevelopment = true;
 
@@ -57,7 +59,7 @@ export function Web3Gate({
         </p>
 
         {/* Show minter in development */}
-        {(isDevelopment || process.env.NEXT_PUBLIC_CHAIN_ID === "11155111") && (
+        {isDevelopment && (
           <div className="mt-8">
             <p className="text-sm text-muted-foreground mb-2">
               Get Test Tokens
@@ -69,5 +71,5 @@ export function Web3Gate({
     );
   }
 
-  return null;
+  return children;
 }
