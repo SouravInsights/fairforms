@@ -1,23 +1,15 @@
-import { FormRewardsABI } from "@/lib/contracts/abi";
+import { FORM_REWARDS_ABI } from "@/lib/contracts/abi";
 import { NextResponse } from "next/server";
-import { createWalletClient, http, parseEther } from "viem";
+import { createWalletClient, http } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { baseSepolia } from "viem/chains";
 
-const FORM_TOKEN_ADDRESS = "0x050918768C502d9D14D624FF543625df1696Df63";
-
-if (!process.env.PRIVATE_KEY) {
-  throw new Error("PRIVATE_KEY environment variable is not set");
+if (!process.env.PRIVATE_KEY || !process.env.FORM_REWARDS_ADDRESS) {
+  throw new Error("Missing environment variables");
 }
 
-const account = privateKeyToAccount(
-  process.env.PRIVATE_KEY.startsWith("0x")
-    ? (process.env.PRIVATE_KEY as `0x${string}`)
-    : (`0x${process.env.PRIVATE_KEY}` as `0x${string}`)
-);
-
-const walletClient = createWalletClient({
-  account,
+const client = createWalletClient({
+  account: privateKeyToAccount(process.env.PRIVATE_KEY as `0x${string}`),
   chain: baseSepolia,
   transport: http(),
 });
@@ -33,12 +25,11 @@ export async function POST(req: Request) {
       );
     }
 
-    // Transfer tokens from owner to user
-    const hash = await walletClient.writeContract({
-      address: FORM_TOKEN_ADDRESS,
-      abi: FormRewardsABI,
+    const hash = await client.writeContract({
+      address: process.env.FORM_REWARDS_ADDRESS as `0x${string}`,
+      abi: FORM_REWARDS_ABI,
       functionName: "transfer",
-      args: [address as `0x${string}`, parseEther(amount.toString())],
+      args: [address as `0x${string}`, BigInt(amount) * BigInt(1e18)],
     });
 
     return NextResponse.json({ hash });

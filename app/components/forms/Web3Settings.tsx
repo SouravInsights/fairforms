@@ -72,6 +72,7 @@ export function Web3Settings({ settings, onUpdate }: Web3SettingsProps) {
         <>
           <Separator />
 
+          {/* Token Gating */}
           <Card>
             <CardHeader>
               <CardTitle>Token Gating</CardTitle>
@@ -98,62 +99,10 @@ export function Web3Settings({ settings, onUpdate }: Web3SettingsProps) {
                 />
               </div>
 
-              {settings.tokenGating.enabled && (
+              {settings?.tokenGating.enabled && (
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label>Chain</Label>
-                    <Select
-                      value={settings.tokenGating.chainId.toString()}
-                      onValueChange={(value) =>
-                        onUpdate({
-                          ...settings,
-                          tokenGating: {
-                            ...settings.tokenGating,
-                            chainId: parseInt(value),
-                          },
-                        })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue
-                          placeholder="Select chain"
-                          defaultValue="84532"
-                        />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="1">Ethereum</SelectItem>
-                        <SelectItem value="11155111">ETH Sepolia</SelectItem>
-                        <SelectItem value="84532">Base Sepolia</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Token Type</Label>
-                    <Select
-                      value={settings.tokenGating.tokenType}
-                      onValueChange={(value) =>
-                        onUpdate({
-                          ...settings,
-                          tokenGating: {
-                            ...settings.tokenGating,
-                            tokenType: value as "ERC20" | "ERC721",
-                          },
-                        })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select token type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="ERC20">ERC20</SelectItem>
-                        <SelectItem value="ERC721">NFT (ERC721)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Token Contract Address</Label>
+                    <Label>Contract Address</Label>
                     <Input
                       placeholder="0x..."
                       value={settings.tokenGating.contractAddress || ""}
@@ -174,7 +123,6 @@ export function Web3Settings({ settings, onUpdate }: Web3SettingsProps) {
                     <Input
                       type="number"
                       min="0"
-                      placeholder="1"
                       value={settings.tokenGating.minTokenBalance || ""}
                       onChange={(e) =>
                         onUpdate({
@@ -192,6 +140,7 @@ export function Web3Settings({ settings, onUpdate }: Web3SettingsProps) {
             </CardContent>
           </Card>
 
+          {/* Rewards Card */}
           <Card>
             <CardHeader>
               <CardTitle>Rewards</CardTitle>
@@ -205,69 +154,26 @@ export function Web3Settings({ settings, onUpdate }: Web3SettingsProps) {
                   </p>
                 </div>
                 <Switch
-                  checked={settings.rewards.enabled}
-                  onCheckedChange={(enabled) =>
+                  checked={settings?.rewards.enabled}
+                  onCheckedChange={(checked) =>
                     onUpdate({
                       ...settings,
                       rewards: {
                         ...settings.rewards,
-                        enabled,
+                        enabled: checked,
                       },
                     })
                   }
                 />
               </div>
 
-              {settings.rewards.enabled && (
+              {settings?.rewards.enabled && (
                 <div className="space-y-4">
-                  {/* <div className="space-y-2">
-                    <Label>Chain</Label>
-                    <Select
-                      value={settings.rewards.chainId.toString()}
-                      onValueChange={(value) =>
-                        onUpdate({
-                          ...settings,
-                          rewards: {
-                            ...settings.rewards,
-                            chainId: parseInt(value),
-                          },
-                        })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select chain" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="1">Ethereum</SelectItem>
-                        <SelectItem value="11155111">Sepolia</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
                   <div className="space-y-2">
-                    <Label>Token Contract Address</Label>
-                    <Input
-                      placeholder="0x..."
-                      value={settings.rewards.tokenAddress || ""}
-                      onChange={(e) =>
-                        onUpdate({
-                          ...settings,
-                          rewards: {
-                            ...settings.rewards,
-                            tokenAddress: e.target.value,
-                          },
-                        })
-                      }
-                    />
-                  </div> */}
-
-                  <div className="space-y-2">
-                    <Label>Reward Amount (FORM tokens)</Label>
+                    <Label>Reward Amount (in tokens)</Label>
                     <Input
                       type="number"
                       min="0"
-                      step="1"
-                      placeholder="e.g., 10"
                       value={settings.rewards.rewardAmount || ""}
                       onChange={(e) =>
                         onUpdate({
@@ -279,9 +185,6 @@ export function Web3Settings({ settings, onUpdate }: Web3SettingsProps) {
                         })
                       }
                     />
-                    <p className="text-sm text-muted-foreground">
-                      Amount of FORM tokens to reward for each submission
-                    </p>
                   </div>
                 </div>
               )}

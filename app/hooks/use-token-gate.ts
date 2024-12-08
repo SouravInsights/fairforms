@@ -1,45 +1,64 @@
-import { useAccount, useChainId, useReadContract, useSwitchChain } from "wagmi";
-import { erc20Abi, erc721Abi } from "viem";
+import { useAccount, useReadContract } from "wagmi";
 import { FormSettings } from "@/types/form";
-import { useEffect } from "react";
-import { baseSepolia } from "viem/chains";
+import { FORM_REWARDS_ABI } from "@/lib/contracts/abi";
+import { useState, useEffect } from "react";
 
-type TokenGateSettings = NonNullable<FormSettings["web3"]>["tokenGating"];
+interface UseTokenGateResult {
+  hasAccess: boolean;
+  isLoading: boolean;
+  isConnected: boolean;
+  address?: `0x${string}`;
+  balance?: bigint;
+}
 
-export function useTokenGate(settings: TokenGateSettings | undefined) {
+export function useTokenGate(
+  tokenGating?: FormSettings["web3"]["tokenGating"]
+): UseTokenGateResult {
   const { address, isConnected } = useAccount();
-  const chainId = useChainId();
-  const { switchChain } = useSwitchChain();
+  const [hasAccess, setHasAccess] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Check if we're on the right network
-  useEffect(() => {
-    if (settings?.enabled && chainId !== baseSepolia.id) {
-      switchChain({ chainId: baseSepolia.id });
-    }
-  }, [settings?.enabled, chainId, switchChain]);
-
-  const { data: balance = 0 } = useReadContract({
-    address: settings?.contractAddress as `0x${string}`,
-    abi: settings?.tokenType === "ERC20" ? erc20Abi : erc721Abi,
-    functionName: "balanceOf",
-    args: address ? [address] : undefined,
+  const { data: canAccess } = useReadContract({
+    address: tokenGating?.contractAddress as `0x${string}`,
+    abi: FORM_REWARDS_ABI,
+    functionName: "canAccessForm",
+    args:
+      tokenGating?.enabled && address
+        ? [address, BigInt(tokenGating.minTokenBalance || 0)]
+        : undefined,
     query: {
       enabled: Boolean(
-        settings?.enabled && isConnected && address && settings?.contractAddress
+        tokenGating?.enabled && address && tokenGating.contractAddress
       ),
     },
   });
 
-  const hasAccess = Boolean(
-    !settings?.enabled ||
-      (balance !== undefined &&
-        Number(balance) >= (settings?.minTokenBalance || 0))
-  );
+  useEffect(() => {
+    setIsLoading(true);
+
+    // If token gating is not enabled, grant access
+    if (!tokenGating?.enabled) {
+      setHasAccess(true);
+      setIsLoading(false);
+      return;
+    }
+
+    // No access if not connected
+    if (!isConnected) {
+      setHasAccess(false);
+      setIsLoading(false);
+      return;
+    }
+
+    // Set access based on contract response
+    setHasAccess(Boolean(canAccess));
+    setIsLoading(false);
+  }, [canAccess, tokenGating, isConnected]);
 
   return {
     hasAccess,
+    isLoading,
     isConnected,
     address,
-    balance: Number(balance),
   };
 }

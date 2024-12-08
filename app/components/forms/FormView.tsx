@@ -1,13 +1,13 @@
 "use client";
 
 import { Form, FormElementType, FormElementValue } from "@/types/form";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useTokenGate } from "@/app/hooks/use-token-gate";
-import { useClaimReward } from "@/app/hooks/use-claim-reward";
+import { useFormRewards } from "@/app/hooks/use-form-rewards";
 import { useChainId, useConnect, useSwitchChain } from "wagmi";
 import { injected } from "wagmi/connectors";
-import { Web3Gate } from "./Web3Gate";
+import { TokenGateCheck } from "./TokenGateCheck";
 import { baseSepolia } from "viem/chains";
 import { FormContent } from "./FormContent";
 
@@ -15,6 +15,11 @@ interface FormViewProps {
   form: Form;
   isPreview?: boolean;
   className?: string;
+}
+
+interface TokenMetadata {
+  symbol: string;
+  decimals: number;
 }
 
 export function FormView({ form, isPreview, className }: FormViewProps) {
@@ -28,10 +33,17 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
   const [isMobile, setIsMobile] = useState(false);
   const { toast } = useToast();
   const { connect } = useConnect();
-  const { hasAccess, isConnected, address } = useTokenGate(
+  const { hasAccess, isConnected, address, isLoading, balance } = useTokenGate(
     form.settings.web3?.tokenGating
   );
-  const { claimReward } = useClaimReward();
+  const [submissionId, setSubmissionId] = useState<number | null>(null);
+
+  const { claimReward, isClaimingReward, canClaim, isReady } = useFormRewards({
+    rewards: form.settings.web3?.rewards || { enabled: false, chainId: 1 },
+    formId: form.id,
+    responseId: submissionId || 0,
+  });
+
   const chainId = useChainId();
   const { switchChain } = useSwitchChain();
   const [isRewardPending, setIsRewardPending] = useState(false);
@@ -139,6 +151,8 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
       }
 
       const data = await response.json();
+      setSubmissionId(data.id);
+
       setIsSuccess(true);
 
       // If rewards are enabled and we have a submission ID, claim the reward
@@ -146,18 +160,14 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
         form.settings.web3?.enabled &&
         form.settings.web3.rewards.enabled &&
         data.id &&
-        address
+        isReady
       ) {
         setIsRewardPending(true);
         try {
-          const claimResult = await claimReward(
-            form.id.toString(),
-            data.id.toString()
-          );
+          await claimReward();
           toast({
             title: "Success",
-            description: `Form submitted and reward claimed! View transaction: 
-            ${getExplorerLink(claimResult.transactionHash)}`,
+            description: "Form submitted and reward claimed!",
           });
         } catch (error) {
           console.error("Failed to claim reward:", error);
@@ -225,13 +235,12 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
     }
   };
 
-  // Add a debug log to help us trace the issue
-  console.log("Gate Status:", {
-    isWeb3Enabled: form.settings.web3?.enabled,
-    isTokenGatingEnabled: form.settings.web3?.tokenGating.enabled,
-    isConnected,
+  console.log("Token Gate Debug:", {
+    web3Enabled: form.settings.web3?.enabled,
+    tokenGatingEnabled: form.settings.web3?.tokenGating.enabled,
     hasAccess,
-    minRequired: form.settings.web3?.tokenGating.minTokenBalance,
+    isConnected,
+    settings: form.settings.web3,
   });
 
   const formContent = (
@@ -258,20 +267,22 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
     />
   );
 
-  // Token gate check
-  if (form.settings.web3?.enabled && form.settings.web3.tokenGating.enabled) {
+  // Show token gate check if access is not granted
+  if (
+    form.settings.web3?.enabled &&
+    form.settings.web3.tokenGating.enabled &&
+    !hasAccess
+  ) {
     return (
-      <Web3Gate
+      <TokenGateCheck
         isConnected={isConnected}
-        hasAccess={hasAccess}
-        minTokenBalance={form.settings.web3.tokenGating.minTokenBalance}
-        onConnect={() => connect({ connector: injected() })}
-      >
-        {formContent}
-      </Web3Gate>
+        minTokenBalance={form.settings.web3.tokenGating.minTokenBalance || 0}
+        contractAddress={form.settings.web3.tokenGating.contractAddress || ""}
+      />
     );
   }
 
+  // Show form content if access is granted or no token gating
   return formContent;
 }
 
