@@ -115,11 +115,15 @@ export function Web3Settings({ settings, onUpdate }: Web3SettingsProps) {
                       }
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select chain" />
+                        <SelectValue
+                          placeholder="Select chain"
+                          defaultValue="84532"
+                        />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="1">Ethereum</SelectItem>
-                        <SelectItem value="11155111">Sepolia</SelectItem>
+                        <SelectItem value="11155111">ETH Sepolia</SelectItem>
+                        <SelectItem value="84532">Base Sepolia</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -216,7 +220,7 @@ export function Web3Settings({ settings, onUpdate }: Web3SettingsProps) {
 
               {settings.rewards.enabled && (
                 <div className="space-y-4">
-                  <div className="space-y-2">
+                  {/* <div className="space-y-2">
                     <Label>Chain</Label>
                     <Select
                       value={settings.rewards.chainId.toString()}
@@ -255,12 +259,15 @@ export function Web3Settings({ settings, onUpdate }: Web3SettingsProps) {
                         })
                       }
                     />
-                  </div>
+                  </div> */}
 
                   <div className="space-y-2">
-                    <Label>Reward Amount</Label>
+                    <Label>Reward Amount (FORM tokens)</Label>
                     <Input
-                      placeholder="Amount in wei"
+                      type="number"
+                      min="0"
+                      step="1"
+                      placeholder="e.g., 10"
                       value={settings.rewards.rewardAmount || ""}
                       onChange={(e) =>
                         onUpdate({
@@ -272,6 +279,9 @@ export function Web3Settings({ settings, onUpdate }: Web3SettingsProps) {
                         })
                       }
                     />
+                    <p className="text-sm text-muted-foreground">
+                      Amount of FORM tokens to reward for each submission
+                    </p>
                   </div>
                 </div>
               )}

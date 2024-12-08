@@ -12,14 +12,16 @@ if (!process.env.PRIVATE_KEY) {
   throw new Error("PRIVATE_KEY environment variable is not set");
 }
 
+const RPC_URL = process.env.BASE_SEPOLIA_URL;
+
 // Initialize Viem clients
 const publicClient = createPublicClient({
   chain: baseSepolia,
-  transport: http(),
+  transport: http(RPC_URL),
 });
 
 const account = privateKeyToAccount(
-  process.env.PRIVATE_KEY.startsWith("0x")
+  process.env.PRIVATE_KEY?.startsWith("0x")
     ? (process.env.PRIVATE_KEY as `0x${string}`)
     : (`0x${process.env.PRIVATE_KEY}` as `0x${string}`)
 );
@@ -27,7 +29,7 @@ const account = privateKeyToAccount(
 const walletClient = createWalletClient({
   account,
   chain: baseSepolia,
-  transport: http(),
+  transport: http(RPC_URL),
 });
 
 export async function POST(
@@ -85,9 +87,23 @@ export async function POST(
       );
     }
 
-    // Ensure the form address is an operator
+    const rewardAmount = form.settings.web3.rewards.rewardAmount;
+    if (!rewardAmount) {
+      return NextResponse.json(
+        { error: "No reward amount configured" },
+        { status: 400 }
+      );
+    }
+
+    // Add server account as form operator if not already
     try {
-      const { request: operatorRequest } = await publicClient.simulateContract({
+      // Get the current nonce for the account
+      const nonce = await publicClient.getTransactionCount({
+        address: account.address,
+      });
+
+      // Prepare and sign the operator transaction
+      const { request } = await publicClient.simulateContract({
         address: contractAddress as `0x${string}`,
         abi: FormRewardsABI,
         functionName: "addFormOperator",
@@ -95,55 +111,102 @@ export async function POST(
         account: account.address,
       });
 
-      await walletClient.writeContract(operatorRequest);
-      console.log("Added form as operator");
+      // Add nonce and gas parameters
+      const preparedRequest = {
+        ...request,
+        nonce,
+        chainId: baseSepolia.id,
+      };
 
-      // Set reward limit
+      // Sign and send the transaction
+      const hash = await walletClient.writeContract(preparedRequest);
+      console.log("Operator transaction hash:", hash);
+
+      // Wait for confirmation
+      const receipt = await publicClient.waitForTransactionReceipt({ hash });
+      console.log("Operator transaction receipt:", receipt);
+
+      // Now set the reward limit
+      const limitNonce = nonce + 1;
       const { request: limitRequest } = await publicClient.simulateContract({
         address: contractAddress as `0x${string}`,
         abi: FormRewardsABI,
         functionName: "setFormRewardLimit",
-        args: [account.address, parseEther("1000")], // Adjust limit as needed
+        args: [account.address, parseEther("1000")],
         account: account.address,
       });
 
-      await walletClient.writeContract(limitRequest);
-      console.log("Set reward limit");
+      const preparedLimitRequest = {
+        ...limitRequest,
+        nonce: limitNonce,
+        chainId: baseSepolia.id,
+      };
+
+      const limitHash = await walletClient.writeContract(preparedLimitRequest);
+      await publicClient.waitForTransactionReceipt({ hash: limitHash });
     } catch (error) {
-      console.log("Form might already be an operator:", error);
+      console.error("Error setting up operator:", error);
+      return NextResponse.json(
+        {
+          error: "Failed to set up reward operator",
+          details: error instanceof Error ? error.message : "Unknown error",
+        },
+        { status: 500 }
+      );
     }
 
     // Send reward using sendReward
-    const { request } = await publicClient.simulateContract({
-      address: contractAddress as `0x${string}`,
-      abi: FormRewardsABI,
-      functionName: "sendReward",
-      args: [
-        response.walletAddress as `0x${string}`,
-        parseEther(form.settings.web3.rewards.rewardAmount || "0"),
-      ],
-      account: account.address,
-    });
+    try {
+      const { request } = await publicClient.simulateContract({
+        address: contractAddress as `0x${string}`,
+        abi: FormRewardsABI,
+        functionName: "sendReward",
+        args: [
+          response.walletAddress as `0x${string}`,
+          parseEther(rewardAmount),
+        ],
+        account: account.address,
+      });
 
-    const hash = await walletClient.writeContract(request);
-    console.log("Reward transaction hash:", hash);
+      const rewardNonce = await publicClient.getTransactionCount({
+        address: account.address,
+      });
 
-    // Wait for transaction
-    const receipt = await publicClient.waitForTransactionReceipt({ hash });
-    console.log("Transaction receipt:", receipt);
-
-    // Update response with transaction details
-    const [updatedResponse] = await db
-      .update(responses)
-      .set({
-        rewardClaimed: true,
-        transactionHash: receipt.transactionHash,
+      const preparedRewardRequest = {
+        ...request,
+        nonce: rewardNonce,
         chainId: baseSepolia.id,
-      })
-      .where(eq(responses.id, parseInt(params.responseId)))
-      .returning();
+      };
 
-    return NextResponse.json(updatedResponse);
+      const hash = await walletClient.writeContract(preparedRewardRequest);
+      console.log("Reward transaction hash:", hash);
+
+      // Wait for transaction
+      const receipt = await publicClient.waitForTransactionReceipt({ hash });
+      console.log("Transaction receipt:", receipt);
+
+      // Update response with transaction details
+      const [updatedResponse] = await db
+        .update(responses)
+        .set({
+          rewardClaimed: true,
+          transactionHash: receipt.transactionHash,
+          chainId: baseSepolia.id,
+        })
+        .where(eq(responses.id, parseInt(params.responseId)))
+        .returning();
+
+      return NextResponse.json(updatedResponse);
+    } catch (error) {
+      console.error("Failed to send reward:", error);
+      return NextResponse.json(
+        {
+          error: "Failed to send reward",
+          details: error instanceof Error ? error.message : "Unknown error",
+        },
+        { status: 500 }
+      );
+    }
   } catch (error) {
     console.error("[CLAIM_REWARD]", error);
     return NextResponse.json(
