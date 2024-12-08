@@ -14,6 +14,7 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@clerk/nextjs";
 import { Form } from "@/types/form";
+import { Trash2 } from "lucide-react";
 
 interface FormWithStats extends Form {
   _count?: {
@@ -27,7 +28,6 @@ export default function DashboardPage() {
   const { user, isLoaded } = useUser();
   const [isCreating, setIsCreating] = useState(false);
   const [forms, setForms] = useState<FormWithStats[]>([]);
-
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -86,6 +86,43 @@ export default function DashboardPage() {
     }
   };
 
+  // New function to handle form deletion
+  const handleDelete = async (formId: string) => {
+    if (confirm("Are you sure you want to delete this form?")) {
+      try {
+        const response = await fetch(`/api/forms/${formId}`, {
+          method: "DELETE",
+        });
+
+        if (response.ok) {
+          toast({
+            title: "Success",
+            description: "Form deleted successfully",
+          });
+
+          // Convert form.id to a string for comparison
+          setForms((prevForms) =>
+            prevForms.filter((form) => String(form.id) !== formId)
+          );
+        } else {
+          const errorData = await response.json();
+          toast({
+            title: "Error",
+            description: errorData.error || "Failed to delete the form",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        console.error("[DELETE_FORM_ERROR]", error);
+        toast({
+          title: "Error",
+          description: "Something went wrong. Please try again later.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
   const formatDate = (date: Date | null) => {
     if (!date) return "Unknown date";
     return new Date(date).toLocaleDateString();
@@ -113,19 +150,28 @@ export default function DashboardPage() {
         {forms.map((form) => (
           <Card key={form.id}>
             <CardHeader>
-              <CardTitle>{form.title}</CardTitle>
-              <CardDescription>
-                Created on {formatDate(form.createdAt)}
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>{form.title}</CardTitle>
+                  <CardDescription>
+                    Created on {formatDate(form.createdAt)}
+                  </CardDescription>
+                </div>
+                {/* Added delete functionality */}
+                <Button
+                  variant="ghost"
+                  onClick={() => handleDelete(String(form.id))}
+                >
+                  <Trash2 className="text-red-500" />
+                </Button>
+              </div>
             </CardHeader>
             <CardFooter className="flex justify-end gap-2">
               <Link href={`/dashboard/forms/${form.id}`}>
                 <Button variant="outline">Edit</Button>
               </Link>
               <Link href={`/dashboard/forms/${form.id}/responses`}>
-                <Button variant="outline" size="sm">
-                  Responses
-                </Button>
+                <Button variant="outline">Responses</Button>
               </Link>
               <Link href={`/forms/${form.customSlug || form.id}`}>
                 <Button>View</Button>
