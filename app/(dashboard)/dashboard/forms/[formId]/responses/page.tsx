@@ -48,6 +48,8 @@ export default function ResponsesPage({ params }: ResponsesPageProps) {
     return <ResponsesPageSkeleton />;
   }
 
+  console.log("responses:", responses);
+
   return (
     <div className="container py-6 space-y-6">
       <div>

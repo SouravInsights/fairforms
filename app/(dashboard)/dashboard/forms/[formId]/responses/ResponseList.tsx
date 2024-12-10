@@ -9,7 +9,6 @@ import {
 import { Form, FormElementType } from "@/types/form";
 import { EnrichedResponse } from "@/types/response";
 import { formatDistanceToNow } from "date-fns";
-import { formatResponseValue } from "./format-response";
 
 interface ResponseListProps {
   responses: EnrichedResponse[];
@@ -45,11 +44,18 @@ export function ResponseList({ responses, form }: ResponseListProps) {
                   addSuffix: true,
                 })}
               </TableCell>
-              {displayableElements.map((element) => (
-                <TableCell key={element.id}>
-                  {formatResponseValue(element, response.answers[element.id])}
-                </TableCell>
-              ))}
+              {displayableElements.map((element) => {
+                // Find the corresponding enriched answer
+                const enrichedAnswer = response.enrichedAnswers.find(
+                  (ans) => ans.elementId === element.id
+                );
+
+                return (
+                  <TableCell key={element.id}>
+                    {enrichedAnswer?.readableAnswer || "-"}
+                  </TableCell>
+                );
+              })}
             </TableRow>
           ))}
           {responses.length === 0 && (

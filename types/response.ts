@@ -1,10 +1,13 @@
-import { FormElement } from "./form";
+import { FormElementType } from "./form";
 
-export interface FormResponse {
-  id: number;
-  formId: number;
-  answers: Record<string, ResponseValue>;
-  submittedAt: string;
+export interface FormattedResponse {
+  elementId: string;
+  elementType: FormElementType;
+  question?: string;
+  description?: string;
+  timestamp: string;
+  answer: ResponseValue;
+  optionText?: string;
 }
 
 export type ResponseValue =
@@ -26,9 +29,29 @@ export type ResponseValue =
       firstName: string;
       lastName: string;
       middleName?: string;
-    };
+    }
+  | undefined;
+
+export interface FormResponse {
+  id: number;
+  formId: number;
+  answers: {
+    formatted: FormattedResponse[];
+    submittedAt: string;
+  };
+  submittedAt: string;
+}
+
+export interface EnrichedAnswer {
+  elementId: string;
+  question: string;
+  type: FormElementType;
+  answer: ResponseValue;
+  readableAnswer: string;
+}
 
 export interface EnrichedResponse extends FormResponse {
+  processedAnswers: Record<string, ResponseValue>;
   enrichedAnswers: EnrichedAnswer[];
 }
 
@@ -36,18 +59,4 @@ export interface Web3Response extends FormResponse {
   walletAddress: string;
   transactionHash?: string;
   rewardClaimed: boolean;
-}
-
-export interface EnrichedAnswer {
-  elementId: string;
-  question: string;
-  type: FormElement["type"];
-  answer: ResponseValue;
-  readableAnswer: string;
-}
-
-export interface ResponsesData {
-  form: FormElement;
-  responses: EnrichedResponse[];
-  total: number;
 }
