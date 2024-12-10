@@ -26,20 +26,25 @@ export function ResponseList({ responses, form }: ResponseListProps) {
   );
 
   return (
-    <div className="border rounded-lg">
+    <div className="border rounded-lg overflow-auto">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[200px]">Submitted</TableHead>
+            <TableHead className="min-w-[150px]">Submitted</TableHead>
             {displayableElements.map((element) => (
-              <TableHead key={element.id}>{element.question}</TableHead>
+              <TableHead
+                key={element.id}
+                className="min-w-[200px] max-w-[300px]"
+              >
+                {element.question}
+              </TableHead>
             ))}
           </TableRow>
         </TableHeader>
         <TableBody>
           {responses.map((response) => (
             <TableRow key={response.id}>
-              <TableCell>
+              <TableCell className="min-w-[150px]">
                 {formatDistanceToNow(new Date(response.submittedAt), {
                   addSuffix: true,
                 })}
@@ -51,7 +56,10 @@ export function ResponseList({ responses, form }: ResponseListProps) {
                 );
 
                 return (
-                  <TableCell key={element.id}>
+                  <TableCell
+                    key={element.id}
+                    className="min-w-[200px] max-w-[300px]"
+                  >
                     {enrichedAnswer?.readableAnswer || "-"}
                   </TableCell>
                 );
