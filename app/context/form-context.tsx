@@ -7,6 +7,7 @@ import {
 } from "react";
 import { Form, FormElement, FormElementProperties } from "@/types/form";
 import { useAccount } from "wagmi";
+import { FormTemplate } from "@/db/schema";
 
 /**
  * Defines the shape of our form's state
@@ -71,7 +72,12 @@ type FormAction =
       type: "UPDATE_WEB3_SETTINGS";
       payload: NonNullable<Form["settings"]["web3"]>;
     }
-  | { type: "SET_CONNECTED_ADDRESS"; payload: string | undefined };
+  | { type: "SET_CONNECTED_ADDRESS"; payload: string | undefined }
+  | { type: "CREATE_FROM_TEMPLATE"; payload: FormTemplate }
+  | {
+      type: "SAVE_AS_TEMPLATE";
+      payload: { name: string; description?: string; category: string };
+    };
 
 /**
  * The default state for a new form.
@@ -215,6 +221,27 @@ function formReducer(state: FormState, action: FormAction): FormState {
         ...state,
         connectedAddress: action.payload,
       };
+
+    case "CREATE_FROM_TEMPLATE":
+      return {
+        ...state,
+        elements: action.payload.elements,
+        title: `${action.payload.name} Copy`,
+        description: action.payload.description || null,
+        settings: {
+          ...action.payload.settings,
+          // Override any template-specific settings if needed
+          notifications: {
+            ...action.payload.settings.notifications,
+            notificationEmails: [], // Reset notification emails
+          },
+        },
+      };
+
+    case "SAVE_AS_TEMPLATE":
+      // This case might not need to modify state,
+      // but could trigger a side effect to save the template
+      return state;
 
     default:
       return state;

@@ -72,3 +72,36 @@ export const selectWaitlistSchema = createSelectSchema(waitlistTable);
 
 export type WaitlistEntry = z.infer<typeof selectWaitlistSchema>;
 export type NewWaitlistEntry = z.infer<typeof insertWaitlistSchema>;
+
+export const formTemplates = pgTable("form_templates", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  category: text("category").notNull(),
+  thumbnail: text("thumbnail_url"),
+  elements: json("elements").$type<FormElement[]>().notNull(),
+  settings: json("settings").$type<FormSettings>().notNull(),
+  isPublic: boolean("is_public").default(false),
+  userId: text("user_id"), // null for system templates
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const templateCategories = pgTable("template_categories", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  slug: text("slug").notNull().unique(),
+  orderIndex: integer("order_index").notNull(),
+});
+
+export const templateRelations = relations(formTemplates, ({ one }) => ({
+  category: one(templateCategories, {
+    fields: [formTemplates.category],
+    references: [templateCategories.slug],
+  }),
+}));
+
+export type FormTemplate = typeof formTemplates.$inferSelect;
+export type NewFormTemplate = typeof formTemplates.$inferInsert;
+export type TemplateCategory = typeof templateCategories.$inferSelect;

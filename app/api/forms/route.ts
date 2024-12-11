@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
-import { forms, responses } from "@/db/schema";
+import { forms, responses, formTemplates } from "@/db/schema";
 import { NextResponse } from "next/server";
 import { eq, desc, sql, and } from "drizzle-orm";
 import { FormSettings } from "@/types/form";
@@ -64,12 +64,28 @@ export async function GET() {
   }
 }
 
-export async function POST() {
+export async function POST(request: Request) {
   try {
     const { userId } = await auth();
 
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Get template ID from request if it exists
+    const { templateId } = await request.json();
+
+    // If templateId is provided, fetch the template
+    let templateData = null;
+    if (templateId) {
+      const [template] = await db
+        .select()
+        .from(formTemplates)
+        .where(eq(formTemplates.id, templateId));
+
+      if (template) {
+        templateData = template;
+      }
     }
 
     // Check if a draft form already exists for this user
@@ -118,17 +134,16 @@ export async function POST() {
           chainId: 1,
         },
       },
-      
     };
 
     const [form] = await db
       .insert(forms)
       .values({
         userId,
-        title: "Untitled Form",
-        description: "",
-        elements: [],
-        settings: defaultSettings,
+        title: templateData ? `${templateData.name} Copy` : "Untitled Form",
+        description: templateData?.description || "",
+        elements: templateData?.elements || [],
+        settings: templateData?.settings || defaultSettings,
         isPublished: false,
       })
       .returning();

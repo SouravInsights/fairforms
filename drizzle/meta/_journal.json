@@ -36,6 +36,13 @@
       "when": 1733521175201,
       "tag": "0004_high_baron_strucker",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1733906476033,
+      "tag": "0005_amazing_warstar",
+      "breakpoints": true
     }
   ]
 }
