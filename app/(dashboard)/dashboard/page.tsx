@@ -204,7 +204,8 @@ export default function DashboardPage() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to save template");
+        const error = await response.json();
+        throw new Error(error.message || "Failed to save template");
       }
 
       toast({

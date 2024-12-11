@@ -3,7 +3,6 @@ import { db } from "@/db";
 import { forms, formTemplates } from "@/db/schema";
 import { NextResponse } from "next/server";
 import { eq, or } from "drizzle-orm";
-import { FormElement, FormSettings } from "@/types/form";
 
 export async function GET() {
   try {
@@ -40,67 +39,43 @@ export async function POST(request: Request) {
 
     const { name, description, formId } = await request.json();
 
-    // Initialize with empty arrays/objects with proper types
-    let elements: FormElement[] = [];
-    let settings: FormSettings = {
-      theme: {
-        primaryColor: "#0f172a",
-        fontFamily: "Inter",
-        backgroundColor: "#ffffff",
-        questionColor: "#0f172a",
-      },
-      behavior: {
-        showProgressBar: true,
-        enableKeyboardNavigation: true,
-        requireLogin: false,
-        limitResponses: false,
-      },
-      notifications: {
-        enableEmailNotifications: false,
-        notificationEmails: [],
-      },
-      web3: {
-        enabled: false,
-        tokenGating: {
-          enabled: false,
-          chainId: 1,
-          tokenType: "ERC20",
-        },
-        rewards: {
-          enabled: false,
-          chainId: 1,
-        },
-      },
-    };
-
-    if (formId) {
-      const [existingForm] = await db
-        .select()
-        .from(forms)
-        .where(eq(forms.id, formId));
-
-      if (!existingForm) {
-        return NextResponse.json({ error: "Form not found" }, { status: 404 });
-      }
-
-      if (existingForm.userId !== userId) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-      }
-
-      elements = existingForm.elements;
-      settings = existingForm.settings;
+    if (!formId) {
+      return NextResponse.json(
+        { error: "Form ID is required" },
+        { status: 400 }
+      );
     }
 
+    // Fetch the existing form
+    const [existingForm] = await db
+      .select()
+      .from(forms)
+      .where(eq(forms.id, formId));
+
+    if (!existingForm) {
+      return NextResponse.json({ error: "Form not found" }, { status: 404 });
+    }
+
+    if (existingForm.userId !== userId) {
+      return NextResponse.json(
+        { error: "You don't have permission to save this form as a template" },
+        { status: 403 }
+      );
+    }
+
+    // Create the template with the form's elements and settings
     const [template] = await db
       .insert(formTemplates)
       .values({
         name,
         description,
         category: "custom",
-        elements,
-        settings,
+        elements: existingForm.elements,
+        settings: existingForm.settings,
         userId,
-        isPublic: false,
+        isPublic: false, // Default to private
+        createdAt: new Date(),
+        updatedAt: new Date(),
       })
       .returning();
 
@@ -108,7 +83,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("[TEMPLATES_POST]", error);
     return NextResponse.json(
-      { error: "Internal Server Error" },
+      { error: "Failed to save template" },
       { status: 500 }
     );
   }
