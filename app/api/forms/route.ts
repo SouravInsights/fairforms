@@ -2,8 +2,8 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
 import { forms, responses, formTemplates } from "@/db/schema";
 import { NextResponse } from "next/server";
-import { eq, desc, sql, and } from "drizzle-orm";
-import { FormSettings } from "@/types/form";
+import { eq, desc, sql, and, or } from "drizzle-orm";
+import { FormElement, FormSettings } from "@/types/form";
 
 export async function GET() {
   try {
@@ -50,7 +50,6 @@ export async function GET() {
 
     return NextResponse.json(formsWithCounts);
   } catch (error) {
-    // Add detailed error logging
     console.error("[FORMS_GET] Detailed error:", {
       message: error instanceof Error ? error.message : "Unknown error",
       stack: error instanceof Error ? error.stack : undefined,
@@ -72,39 +71,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get template ID from request if it exists
     const { templateId } = await request.json();
 
-    // If templateId is provided, fetch the template
-    let templateData = null;
-    if (templateId) {
-      const [template] = await db
-        .select()
-        .from(formTemplates)
-        .where(eq(formTemplates.id, templateId));
-
-      if (template) {
-        templateData = template;
-      }
-    }
-
-    // Check if a draft form already exists for this user
-    const [existingDraft] = await db
-      .select()
-      .from(forms)
-      .where(
-        and(
-          eq(forms.userId, userId),
-          eq(forms.isPublished, false),
-          eq(forms.title, "Untitled Form")
-        )
-      );
-
-    if (existingDraft) {
-      // Return the existing draft instead of creating a new one
-      return NextResponse.json(existingDraft);
-    }
-
+    // Default settings for new forms
     const defaultSettings: FormSettings = {
       theme: {
         primaryColor: "#0f172a",
@@ -136,17 +105,50 @@ export async function POST(request: Request) {
       },
     };
 
-    const [form] = await db
-      .insert(forms)
-      .values({
-        userId,
-        title: templateData ? `${templateData.name} Copy` : "Untitled Form",
-        description: templateData?.description || "",
-        elements: templateData?.elements || [],
-        settings: templateData?.settings || defaultSettings,
-        isPublished: false,
-      })
-      .returning();
+    // Explicitly type the formData object
+    let formData: {
+      userId: string;
+      title: string;
+      description: string;
+      elements: FormElement[];
+      settings: FormSettings;
+      isPublished: boolean;
+    } = {
+      userId,
+      title: "Untitled Form",
+      description: "",
+      elements: [],
+      settings: defaultSettings,
+      isPublished: false,
+    };
+
+    // If templateId is provided, fetch and use template data
+    if (templateId) {
+      const [template] = await db
+        .select()
+        .from(formTemplates)
+        .where(
+          and(
+            eq(formTemplates.id, templateId),
+            or(
+              eq(formTemplates.isPublic, true),
+              eq(formTemplates.userId, userId)
+            )
+          )
+        );
+
+      if (template) {
+        formData = {
+          ...formData,
+          title: `${template.name} Copy`,
+          description: template.description || "",
+          elements: template.elements as FormElement[], // Explicit type assertion
+          settings: template.settings as FormSettings,
+        };
+      }
+    }
+
+    const [form] = await db.insert(forms).values(formData).returning();
 
     return NextResponse.json(form);
   } catch (error) {

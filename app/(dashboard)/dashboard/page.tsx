@@ -115,14 +115,15 @@ export default function DashboardPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(templateId ? { templateId } : {}),
+        body: JSON.stringify({ templateId }), // Pass templateId if available
       });
 
-      const newForm = await response.json();
       if (!response.ok) {
-        throw new Error(newForm.error || "Failed to create form");
+        const error = await response.json();
+        throw new Error(error.message || "Failed to create form");
       }
 
+      const newForm = await response.json();
       router.push(`/dashboard/forms/${newForm.id}`);
     } catch {
       toast({
