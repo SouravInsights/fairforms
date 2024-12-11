@@ -279,3 +279,17 @@ export interface ApiResponse<T> {
   data?: T;
   error?: string;
 }
+
+export interface FormTemplate {
+  id: number;
+  name: string;
+  description: string | null;
+  category: string;
+  thumbnail?: string | null;
+  elements: FormElement[];
+  settings: FormSettings;
+  isPublic: boolean;
+  userId: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}

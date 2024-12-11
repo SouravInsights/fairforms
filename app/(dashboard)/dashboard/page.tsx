@@ -4,14 +4,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@clerk/nextjs";
+import Link from "next/link";
 import { Plus, Loader2, MoreVertical, Globe, Lock } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   Card,
   CardContent,
@@ -27,13 +21,20 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Form } from "@/types/form";
-import { FormTemplate } from "@/db/schema";
-import { SaveAsTemplateDialog } from "@/app/components/form-builder/SaveAsTemplateDialog";
 import { Badge } from "@/components/ui/badge";
-import Link from "next/link";
+import { Form, FormTemplate } from "@/types/form";
+import { SaveAsTemplateDialog } from "@/app/components/form-builder/SaveAsTemplateDialog";
+import { TemplatePreviewDialog } from "@/app/components/form-builder/TemplatePreviewDialog";
+import { DeleteConfirmationDialog } from "@/app/components/form-builder/DeleteConfirmationDialog";
 
 interface FormWithResponseCount extends Form {
   responseCount: number;
@@ -48,10 +49,16 @@ export default function DashboardPage() {
   const [templates, setTemplates] = useState<FormTemplate[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [templateDialogIsOpen, setTemplateDialogIsOpen] = useState(false);
   const [loadingTemplates, setLoadingTemplates] = useState(false);
-  const [saveTemplateForm, setSaveTemplateForm] = useState<Form | null>(null);
   const [activeTab, setActiveTab] = useState("forms");
+  const [templateDialogIsOpen, setTemplateDialogIsOpen] = useState(false);
+  const [saveTemplateForm, setSaveTemplateForm] = useState<Form | null>(null);
+  const [templateToPreview, setTemplateToPreview] =
+    useState<FormTemplate | null>(null);
+  const [templateToDelete, setTemplateToDelete] = useState<FormTemplate | null>(
+    null
+  );
+  const [formToDelete, setFormToDelete] = useState<Form | null>(null);
 
   useEffect(() => {
     const loadForms = async () => {
@@ -107,32 +114,6 @@ export default function DashboardPage() {
     loadTemplates();
   }, [user, activeTab, toast]);
 
-  const handleDeleteTemplate = async (templateId: number) => {
-    if (!confirm("Are you sure you want to delete this template?")) return;
-
-    try {
-      const response = await fetch(`/api/templates/${templateId}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to delete template");
-      }
-
-      setTemplates(templates.filter((template) => template.id !== templateId));
-      toast({
-        title: "Success",
-        description: "Template deleted successfully",
-      });
-    } catch {
-      toast({
-        title: "Error",
-        description: "Failed to delete template",
-        variant: "destructive",
-      });
-    }
-  };
-
   const handleCreateForm = async (templateId?: number) => {
     if (isCreating) return;
 
@@ -143,12 +124,13 @@ export default function DashboardPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ templateId }), // Pass templateId if available
+        body: JSON.stringify({
+          templateId,
+        }),
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to create form");
+        throw new Error("Failed to create form");
       }
 
       const newForm = await response.json();
@@ -165,55 +147,57 @@ export default function DashboardPage() {
     }
   };
 
-  const handleDelete = async (formId: number) => {
-    if (!confirm("Are you sure you want to delete this form?")) return;
-
+  const handleDeleteForm = async (form: Form) => {
     try {
-      const response = await fetch(`/api/forms/${formId}`, {
+      const response = await fetch(`/api/forms/${form.id}`, {
         method: "DELETE",
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to delete form");
+        throw new Error("Failed to delete form");
       }
 
-      setForms((prevForms) => prevForms.filter((form) => form.id !== formId));
-
+      setForms((prev) => prev.filter((f) => f.id !== form.id));
       toast({
         title: "Success",
         description: "Form deleted successfully",
       });
-    } catch (error) {
-      console.error("[DELETE_FORM_ERROR]", error);
+    } catch {
       toast({
         title: "Error",
-        description: "Failed to delete form. Please try again.",
+        description: "Failed to delete form",
         variant: "destructive",
       });
+    } finally {
+      setFormToDelete(null);
     }
   };
 
-  const formatDate = (date: Date) => {
-    return new Date(date).toLocaleDateString(undefined, {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
+  const handleDeleteTemplate = async (template: FormTemplate) => {
+    try {
+      const response = await fetch(`/api/templates/${template.id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete template");
+      }
+
+      setTemplates((prev) => prev.filter((t) => t.id !== template.id));
+      toast({
+        title: "Success",
+        description: "Template deleted successfully",
+      });
+    } catch {
+      toast({
+        title: "Error",
+        description: "Failed to delete template",
+        variant: "destructive",
+      });
+    } finally {
+      setTemplateToDelete(null);
+    }
   };
-
-  if (!isLoaded || isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-6 h-6 animate-spin" />
-      </div>
-    );
-  }
-
-  if (!user) {
-    router.push("/");
-    return null;
-  }
 
   const handleSaveTemplate = async (
     formId: number,
@@ -248,8 +232,16 @@ export default function DashboardPage() {
           templateData.isPublic ? "and published publicly" : "privately"
         }`,
       });
+
+      // Refresh templates if we're on the templates tab
+      if (activeTab === "templates") {
+        const templatesResponse = await fetch("/api/templates");
+        if (templatesResponse.ok) {
+          const data = await templatesResponse.json();
+          setTemplates(data);
+        }
+      }
     } catch (error) {
-      console.error("Failed to save template:", error);
       toast({
         title: "Error",
         description: "Failed to save as template. Please try again.",
@@ -258,6 +250,27 @@ export default function DashboardPage() {
       throw error;
     }
   };
+
+  const formatDate = (date: Date) => {
+    return new Date(date).toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
+  if (!isLoaded || isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="w-6 h-6 animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    router.push("/");
+    return null;
+  }
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -336,7 +349,7 @@ export default function DashboardPage() {
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
-                            onClick={() => handleDelete(form.id)}
+                            onClick={() => setFormToDelete(form)}
                             className="text-red-600"
                           >
                             Delete Form
@@ -379,7 +392,10 @@ export default function DashboardPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {templates.map((template) => (
-                <Card key={template.id}>
+                <Card
+                  key={template.id}
+                  className="hover:border-primary/50 transition-colors"
+                >
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <div className="space-y-1">
@@ -411,7 +427,7 @@ export default function DashboardPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem
-                              onClick={() => handleDeleteTemplate(template.id)}
+                              onClick={() => setTemplateToDelete(template)}
                               className="text-red-600"
                             >
                               Delete Template
@@ -426,9 +442,16 @@ export default function DashboardPage() {
                       {template.elements.length} elements
                     </div>
                   </CardContent>
-                  <CardFooter>
+                  <CardFooter className="flex gap-2">
                     <Button
-                      className="w-full"
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => setTemplateToPreview(template)}
+                    >
+                      Preview
+                    </Button>
+                    <Button
+                      className="flex-1"
                       onClick={() => handleCreateForm(template.id)}
                     >
                       Use Template
@@ -440,17 +463,6 @@ export default function DashboardPage() {
           )}
         </TabsContent>
       </Tabs>
-
-      <SaveAsTemplateDialog
-        open={saveTemplateForm !== null}
-        onOpenChange={(open) => !open && setSaveTemplateForm(null)}
-        form={saveTemplateForm}
-        onSave={async (templateData) => {
-          if (saveTemplateForm) {
-            await handleSaveTemplate(saveTemplateForm.id, templateData);
-          }
-        }}
-      />
 
       <Dialog
         open={templateDialogIsOpen}
@@ -513,7 +525,7 @@ export default function DashboardPage() {
                           <Card
                             key={template.id}
                             className="cursor-pointer hover:border-primary transition-colors"
-                            onClick={() => handleCreateForm(template.id)}
+                            onClick={() => setTemplateToPreview(template)}
                           >
                             <CardHeader>
                               <CardTitle className="text-lg line-clamp-1">
@@ -550,6 +562,51 @@ export default function DashboardPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <SaveAsTemplateDialog
+        open={saveTemplateForm !== null}
+        onOpenChange={(open) => !open && setSaveTemplateForm(null)}
+        form={saveTemplateForm}
+        onSave={async (templateData) => {
+          if (saveTemplateForm) {
+            await handleSaveTemplate(saveTemplateForm.id, templateData);
+          }
+        }}
+      />
+
+      <TemplatePreviewDialog
+        template={templateToPreview}
+        open={templateToPreview !== null}
+        onOpenChange={(open) => !open && setTemplateToPreview(null)}
+        onUseTemplate={async (templateId) => {
+          await handleCreateForm(templateId);
+          setTemplateToPreview(null);
+        }}
+      />
+
+      <DeleteConfirmationDialog
+        open={formToDelete !== null}
+        onOpenChange={(open) => !open && setFormToDelete(null)}
+        onConfirm={async () => {
+          if (formToDelete) {
+            await handleDeleteForm(formToDelete);
+          }
+        }}
+        title="Delete Form"
+        description="Are you sure you want to delete this form? This action cannot be undone."
+      />
+
+      <DeleteConfirmationDialog
+        open={templateToDelete !== null}
+        onOpenChange={(open) => !open && setTemplateToDelete(null)}
+        onConfirm={async () => {
+          if (templateToDelete) {
+            await handleDeleteTemplate(templateToDelete);
+          }
+        }}
+        title="Delete Template"
+        description="Are you sure you want to delete this template? This action cannot be undone."
+      />
     </div>
   );
 }
