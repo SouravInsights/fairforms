@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@clerk/nextjs";
 import Link from "next/link";
-import { Plus, Loader2, MoreVertical } from "lucide-react";
+import { Plus, Loader2, MoreVertical, LayoutTemplate } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -235,19 +235,27 @@ export default function DashboardPage() {
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">My Forms</h1>
-        <Button
-          onClick={() => setTemplateDialogIsOpen(true)}
-          disabled={isCreating}
-        >
-          {isCreating ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Creating...
-            </>
-          ) : (
-            "Create New Form"
-          )}
-        </Button>
+        <div className="inline-flex gap-2 justify-center ">
+          <Link href="/dashboard/templates">
+            <Button variant="ghost">
+              <LayoutTemplate className="w-4 h-4 mr-2" />
+              Templates
+            </Button>
+          </Link>
+          <Button
+            onClick={() => setTemplateDialogIsOpen(true)}
+            disabled={isCreating}
+          >
+            {isCreating ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Creating...
+              </>
+            ) : (
+              "Create New Form"
+            )}
+          </Button>
+        </div>
       </div>
 
       {forms.length === 0 ? (
