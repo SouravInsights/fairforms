@@ -4,8 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@clerk/nextjs";
-import Link from "next/link";
-import { Plus, Loader2, MoreVertical } from "lucide-react";
+import { Plus, Loader2, MoreVertical, Globe, Lock } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,6 +32,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Form } from "@/types/form";
 import { FormTemplate } from "@/db/schema";
 import { SaveAsTemplateDialog } from "@/app/components/form-builder/SaveAsTemplateDialog";
+import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
 
 interface FormWithResponseCount extends Form {
   responseCount: number;
@@ -50,6 +51,7 @@ export default function DashboardPage() {
   const [templateDialogIsOpen, setTemplateDialogIsOpen] = useState(false);
   const [loadingTemplates, setLoadingTemplates] = useState(false);
   const [saveTemplateForm, setSaveTemplateForm] = useState<Form | null>(null);
+  const [activeTab, setActiveTab] = useState("forms");
 
   useEffect(() => {
     const loadForms = async () => {
@@ -80,7 +82,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const loadTemplates = async () => {
-      if (!user || !templateDialogIsOpen) return;
+      if (!user || activeTab !== "templates") return;
 
       try {
         setLoadingTemplates(true);
@@ -103,7 +105,33 @@ export default function DashboardPage() {
     };
 
     loadTemplates();
-  }, [user, templateDialogIsOpen, toast]);
+  }, [user, activeTab, toast]);
+
+  const handleDeleteTemplate = async (templateId: number) => {
+    if (!confirm("Are you sure you want to delete this template?")) return;
+
+    try {
+      const response = await fetch(`/api/templates/${templateId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete template");
+      }
+
+      setTemplates(templates.filter((template) => template.id !== templateId));
+      toast({
+        title: "Success",
+        description: "Template deleted successfully",
+      });
+    } catch {
+      toast({
+        title: "Error",
+        description: "Failed to delete template",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleCreateForm = async (templateId?: number) => {
     if (isCreating) return;
@@ -234,7 +262,7 @@ export default function DashboardPage() {
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">My Forms</h1>
+        <h1 className="text-3xl font-bold">Dashboard</h1>
         <Button
           onClick={() => setTemplateDialogIsOpen(true)}
           disabled={isCreating}
@@ -245,83 +273,184 @@ export default function DashboardPage() {
               Creating...
             </>
           ) : (
-            "Create New Form"
+            <>
+              <Plus className="w-4 h-4 mr-2" />
+              Create New Form
+            </>
           )}
         </Button>
       </div>
 
-      {forms.length === 0 ? (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-center">No forms yet</CardTitle>
-            <CardDescription className="text-center">
-              Create your first form to get started
-            </CardDescription>
-          </CardHeader>
-          <CardFooter className="justify-center">
-            <Button
-              onClick={() => setTemplateDialogIsOpen(true)}
-              disabled={isCreating}
-            >
-              Create Form
-            </Button>
-          </CardFooter>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {forms.map((form) => (
-            <Card key={form.id}>
+      <Tabs defaultValue="forms" value={activeTab} onValueChange={setActiveTab}>
+        <TabsList>
+          <TabsTrigger value="forms">My Forms</TabsTrigger>
+          <TabsTrigger value="templates">Templates</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="forms" className="space-y-4">
+          {forms.length === 0 ? (
+            <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <CardTitle className="line-clamp-1">{form.title}</CardTitle>
-                    <CardDescription>
-                      {form.responseCount}{" "}
-                      {form.responseCount === 1 ? "response" : "responses"}
-                      <br />
-                      Created on {formatDate(form.createdAt)}
-                    </CardDescription>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={() => setSaveTemplateForm(form)}
-                        >
-                          Save as Template
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          onClick={() => handleDelete(form.id)}
-                          className="text-red-600"
-                        >
-                          Delete Form
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
+                <CardTitle className="text-center">No forms yet</CardTitle>
+                <CardDescription className="text-center">
+                  Create your first form to get started
+                </CardDescription>
               </CardHeader>
-              <CardFooter className="flex justify-end gap-2">
-                <Link href={`/dashboard/forms/${form.id}`}>
-                  <Button variant="outline">Edit</Button>
-                </Link>
-                <Link href={`/dashboard/forms/${form.id}/responses`}>
-                  <Button variant="outline">Responses</Button>
-                </Link>
-                <Link href={`/forms/${form.customSlug || form.id}`}>
-                  <Button>View</Button>
-                </Link>
+              <CardFooter className="justify-center">
+                <Button
+                  onClick={() => setTemplateDialogIsOpen(true)}
+                  disabled={isCreating}
+                >
+                  Create Form
+                </Button>
               </CardFooter>
             </Card>
-          ))}
-        </div>
-      )}
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {forms.map((form) => (
+                <Card key={form.id}>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-1">
+                        <CardTitle className="line-clamp-1">
+                          {form.title}
+                        </CardTitle>
+                        <CardDescription>
+                          {form.responseCount}{" "}
+                          {form.responseCount === 1 ? "response" : "responses"}
+                          <br />
+                          Created on {formatDate(form.createdAt)}
+                        </CardDescription>
+                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => setSaveTemplateForm(form)}
+                          >
+                            Save as Template
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => handleDelete(form.id)}
+                            className="text-red-600"
+                          >
+                            Delete Form
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </CardHeader>
+                  <CardFooter className="flex justify-end gap-2">
+                    <Link href={`/dashboard/forms/${form.id}`}>
+                      <Button variant="outline">Edit</Button>
+                    </Link>
+                    <Link href={`/dashboard/forms/${form.id}/responses`}>
+                      <Button variant="outline">Responses</Button>
+                    </Link>
+                    <Link href={`/forms/${form.customSlug || form.id}`}>
+                      <Button>View</Button>
+                    </Link>
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="templates" className="space-y-4">
+          {loadingTemplates ? (
+            <div className="flex justify-center p-8">
+              <Loader2 className="w-6 h-6 animate-spin" />
+            </div>
+          ) : templates.length === 0 ? (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-center">No templates yet</CardTitle>
+                <CardDescription className="text-center">
+                  Save your forms as templates to reuse them later
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {templates.map((template) => (
+                <Card key={template.id}>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-1">
+                        <CardTitle className="flex items-center gap-2">
+                          {template.name}
+                          <Badge
+                            variant={
+                              template.isPublic ? "default" : "secondary"
+                            }
+                          >
+                            {template.isPublic ? (
+                              <Globe className="w-3 h-3 mr-1" />
+                            ) : (
+                              <Lock className="w-3 h-3 mr-1" />
+                            )}
+                            {template.isPublic ? "Public" : "Private"}
+                          </Badge>
+                        </CardTitle>
+                        <CardDescription>
+                          {template.description}
+                        </CardDescription>
+                      </div>
+                      {template.userId === user?.id && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => handleDeleteTemplate(template.id)}
+                              className="text-red-600"
+                            >
+                              Delete Template
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-sm text-muted-foreground">
+                      {template.elements.length} elements
+                    </div>
+                  </CardContent>
+                  <CardFooter>
+                    <Button
+                      className="w-full"
+                      onClick={() => handleCreateForm(template.id)}
+                    >
+                      Use Template
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+
+      <SaveAsTemplateDialog
+        open={saveTemplateForm !== null}
+        onOpenChange={(open) => !open && setSaveTemplateForm(null)}
+        form={saveTemplateForm}
+        onSave={async (templateData) => {
+          if (saveTemplateForm) {
+            await handleSaveTemplate(saveTemplateForm.id, templateData);
+          }
+        }}
+      />
 
       <Dialog
         open={templateDialogIsOpen}
@@ -386,15 +515,6 @@ export default function DashboardPage() {
                             className="cursor-pointer hover:border-primary transition-colors"
                             onClick={() => handleCreateForm(template.id)}
                           >
-                            {template.thumbnail && (
-                              <div className="relative h-32">
-                                <img
-                                  src={template.thumbnail}
-                                  alt={template.name}
-                                  className="w-full h-full object-cover rounded-t-lg"
-                                />
-                              </div>
-                            )}
                             <CardHeader>
                               <CardTitle className="text-lg line-clamp-1">
                                 {template.name}
@@ -430,16 +550,6 @@ export default function DashboardPage() {
           </div>
         </DialogContent>
       </Dialog>
-      <SaveAsTemplateDialog
-        open={saveTemplateForm !== null}
-        onOpenChange={(open) => !open && setSaveTemplateForm(null)}
-        form={saveTemplateForm!}
-        onSave={async (templateData) => {
-          if (saveTemplateForm) {
-            await handleSaveTemplate(saveTemplateForm.id, templateData);
-          }
-        }}
-      />
     </div>
   );
 }
