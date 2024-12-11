@@ -5,13 +5,15 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { Form } from "@/types/form";
-import { Loader2 } from "lucide-react";
+import { Loader2, Globe, Lock } from "lucide-react";
 
 interface SaveAsTemplateDialogProps {
   open: boolean;
@@ -20,6 +22,7 @@ interface SaveAsTemplateDialogProps {
   onSave: (templateData: {
     name: string;
     description: string;
+    isPublic: boolean;
   }) => Promise<void>;
 }
 
@@ -31,9 +34,9 @@ export function SaveAsTemplateDialog({
 }: SaveAsTemplateDialogProps) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [isPublic, setIsPublic] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Update name and description when form changes
   useEffect(() => {
     if (form) {
       setName(form.title);
@@ -47,24 +50,28 @@ export function SaveAsTemplateDialog({
 
     setIsSaving(true);
     try {
-      await onSave({ name, description });
+      await onSave({ name, description, isPublic });
       onOpenChange(false);
       // Reset form
       setName("");
       setDescription("");
+      setIsPublic(false);
     } finally {
       setIsSaving(false);
     }
   };
 
-  // Don't render the dialog content if there's no form
   if (!form) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Save as Template</DialogTitle>
+          <DialogDescription>
+            Create a template from your current form. Public templates can be
+            used by all users.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -85,6 +92,29 @@ export function SaveAsTemplateDialog({
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Enter template description"
               rows={3}
+            />
+          </div>
+          <div className="flex items-center justify-between space-x-2">
+            <div className="space-y-0.5">
+              <Label htmlFor="public">Visibility</Label>
+              <div className="text-sm text-muted-foreground">
+                {isPublic ? (
+                  <div className="flex items-center text-sm">
+                    <Globe className="w-4 h-4 mr-1" />
+                    Public - All users can use this template
+                  </div>
+                ) : (
+                  <div className="flex items-center text-sm">
+                    <Lock className="w-4 h-4 mr-1" />
+                    Private - Only you can use this template
+                  </div>
+                )}
+              </div>
+            </div>
+            <Switch
+              id="public"
+              checked={isPublic}
+              onCheckedChange={setIsPublic}
             />
           </div>
           <DialogFooter>

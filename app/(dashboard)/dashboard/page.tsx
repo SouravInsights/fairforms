@@ -189,7 +189,11 @@ export default function DashboardPage() {
 
   const handleSaveTemplate = async (
     formId: number,
-    templateData: { name: string; description: string }
+    templateData: {
+      name: string;
+      description: string;
+      isPublic: boolean;
+    }
   ) => {
     try {
       const response = await fetch("/api/templates", {
@@ -200,6 +204,7 @@ export default function DashboardPage() {
         body: JSON.stringify({
           name: templateData.name,
           description: templateData.description,
+          isPublic: templateData.isPublic,
           formId: formId,
         }),
       });
@@ -211,7 +216,9 @@ export default function DashboardPage() {
 
       toast({
         title: "Success",
-        description: "Form saved as template successfully",
+        description: `Template saved ${
+          templateData.isPublic ? "and published publicly" : "privately"
+        }`,
       });
     } catch (error) {
       console.error("Failed to save template:", error);
