@@ -37,7 +37,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { name, description, formId } = await request.json();
+    const { name, description, formId, isPublic } = await request.json();
 
     if (!formId) {
       return NextResponse.json(
@@ -73,7 +73,7 @@ export async function POST(request: Request) {
         elements: existingForm.elements,
         settings: existingForm.settings,
         userId,
-        isPublic: false, // Default to private
+        isPublic: isPublic ?? false, // Use the isPublic value from request, fallback to false
         createdAt: new Date(),
         updatedAt: new Date(),
       })
