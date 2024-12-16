@@ -10,19 +10,19 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Collaborator } from "@/types/collaborator";
 import { useUser } from "@clerk/nextjs";
 import { ArrowRight, Loader2, ShieldAlert } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import type { Collaborator } from "@/types/collaborator";
 
 export default function AcceptInvitationPage({
   params,
 }: {
   params: { formId: string };
 }) {
-  const { isLoaded, isSignedIn, user } = useUser();
+  const { user } = useUser();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
@@ -32,21 +32,15 @@ export default function AcceptInvitationPage({
     role: string;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const email = searchParams.get("email");
 
   useEffect(() => {
-    // If user is loaded but not signed in, redirect to sign-in
-    if (isLoaded && !isSignedIn) {
-      const currentUrl = window.location.href;
-      router.push(`/sign-in?redirect_url=${encodeURIComponent(currentUrl)}`);
-    }
-  }, [isLoaded, isSignedIn, router]);
-
-  useEffect(() => {
     const loadInvitationDetails = async () => {
-      if (!email) {
+      if (!email || !user) {
         setError("Invalid invitation link");
+        setIsLoading(false);
         return;
       }
 
@@ -57,7 +51,6 @@ export default function AcceptInvitationPage({
         }
         const form = await response.json();
 
-        // Get collaborator details
         const collaboratorResponse = await fetch(
           `/api/forms/${params.formId}/collaborators`
         );
@@ -68,7 +61,7 @@ export default function AcceptInvitationPage({
           (await collaboratorResponse.json()) as Collaborator[];
 
         const invitation = collaborators.find(
-          (c: Collaborator) => c.email === email && c.status === "pending"
+          (c) => c.email === email && c.status === "pending"
         );
 
         if (!invitation) {
@@ -81,13 +74,15 @@ export default function AcceptInvitationPage({
         });
       } catch (err) {
         setError(err instanceof Error ? err.message : "Something went wrong");
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    if (isSignedIn && email) {
+    if (user) {
       loadInvitationDetails();
     }
-  }, [params.formId, email, isSignedIn]);
+  }, [params.formId, email, user]);
 
   const handleAcceptInvitation = async () => {
     if (!email || !user) return;
@@ -101,7 +96,10 @@ export default function AcceptInvitationPage({
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ email }),
+          body: JSON.stringify({
+            email,
+            userId: user.id,
+          }),
         }
       );
 
@@ -114,7 +112,6 @@ export default function AcceptInvitationPage({
         description: "You now have access to the form",
       });
 
-      // Redirect to the form
       router.push(`/dashboard/forms/${params.formId}`);
     } catch (err) {
       toast({
@@ -128,7 +125,7 @@ export default function AcceptInvitationPage({
     }
   };
 
-  if (!isLoaded || (!isSignedIn && isLoaded)) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-6 w-6 animate-spin" />

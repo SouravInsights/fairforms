@@ -1,5 +1,5 @@
 // app/components/forms/ManageCollaboratorsDialog.tsx
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -44,7 +44,7 @@ export function ManageCollaboratorsDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
-  const loadCollaborators = async () => {
+  const loadCollaborators = useCallback(async () => {
     try {
       setIsLoading(true);
       const response = await fetch(`/api/forms/${form.id}/collaborators`);
@@ -60,7 +60,16 @@ export function ManageCollaboratorsDialog({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [form.id, toast]);
+
+  // Reset state when dialog closes
+  useEffect(() => {
+    if (!isOpen) {
+      setCollaborators([]);
+    } else {
+      loadCollaborators();
+    }
+  }, [isOpen, loadCollaborators]);
 
   const addCollaborator = async (e: React.FormEvent) => {
     e.preventDefault();
