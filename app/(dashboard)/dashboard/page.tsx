@@ -38,6 +38,8 @@ import { DeleteConfirmationDialog } from "@/app/components/form-builder/DeleteCo
 
 interface FormWithResponseCount extends Form {
   responseCount: number;
+  isCollaborator?: boolean;
+  role?: "owner" | "editor" | "viewer";
 }
 
 export default function DashboardPage() {
@@ -325,8 +327,13 @@ export default function DashboardPage() {
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <div className="space-y-1">
-                        <CardTitle className="line-clamp-1">
+                        <CardTitle className="line-clamp-1 flex items-center gap-2">
                           {form.title}
+                          {form.isCollaborator && (
+                            <Badge variant="secondary" className="text-xs">
+                              {form.role === "editor" ? "Editor" : "Viewer"}
+                            </Badge>
+                          )}
                         </CardTitle>
                         <CardDescription>
                           {form.responseCount}{" "}
@@ -335,27 +342,29 @@ export default function DashboardPage() {
                           Created on {formatDate(form.createdAt)}
                         </CardDescription>
                       </div>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => setSaveTemplateForm(form)}
-                          >
-                            Save as Template
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() => setFormToDelete(form)}
-                            className="text-red-600"
-                          >
-                            Delete Form
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      {!form.isCollaborator && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => setSaveTemplateForm(form)}
+                            >
+                              Save as Template
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => setFormToDelete(form)}
+                              className="text-red-600"
+                            >
+                              Delete Form
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
                     </div>
                   </CardHeader>
                   <CardFooter className="flex justify-end gap-2">

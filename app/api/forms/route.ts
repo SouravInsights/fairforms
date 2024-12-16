@@ -1,9 +1,14 @@
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
-import { forms, responses, formTemplates } from "@/db/schema";
+import { forms, responses, formTemplates, collaborators } from "@/db/schema";
 import { NextResponse } from "next/server";
 import { eq, desc, sql, and, or } from "drizzle-orm";
 import { FormElement, FormSettings } from "@/types/form";
+import { createClerkClient } from "@clerk/backend";
+
+const clerkClient = createClerkClient({
+  secretKey: process.env.CLERK_SECRET_KEY,
+});
 
 export async function GET() {
   try {
@@ -13,7 +18,30 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userForms = await db
+    // Get user's email for checking collaborations
+    const user = await clerkClient.users.getUser(userId);
+    const userEmail = user.emailAddresses.find(
+      (email) => email.id === user.primaryEmailAddressId
+    )?.emailAddress;
+
+    // First, get the form IDs where user is a collaborator
+    const collaboratedForms = await db
+      .select({ formId: collaborators.formId })
+      .from(collaborators)
+      .where(
+        and(
+          or(
+            eq(collaborators.userId, userId),
+            eq(collaborators.email, userEmail || "")
+          ),
+          eq(collaborators.status, "accepted")
+        )
+      );
+
+    const collaboratedFormIds = collaboratedForms.map((f) => f.formId);
+
+    // Get all forms (owned + collaborated)
+    const allForms = await db
       .select({
         id: forms.id,
         userId: forms.userId,
@@ -30,25 +58,48 @@ export async function GET() {
         socialImageUrl: forms.socialImageUrl,
       })
       .from(forms)
-      .where(eq(forms.userId, userId))
+      .where(
+        or(
+          eq(forms.userId, userId),
+          sql`${forms.id} IN (${sql.join(collaboratedFormIds)})`
+        )
+      )
       .orderBy(desc(forms.createdAt));
 
-    // Get response counts separately
-    const formsWithCounts = await Promise.all(
-      userForms.map(async (form) => {
+    // Get the collaboration info for each form
+    const formsWithCollabInfo = await Promise.all(
+      allForms.map(async (form) => {
+        // Get response count
         const [count] = await db
           .select({ count: sql<number>`count(*)` })
           .from(responses)
           .where(eq(responses.formId, form.id));
 
+        // Get collaboration role if user is a collaborator
+        const [collaboration] = await db
+          .select()
+          .from(collaborators)
+          .where(
+            and(
+              eq(collaborators.formId, form.id),
+              or(
+                eq(collaborators.userId, userId),
+                eq(collaborators.email, userEmail || "")
+              ),
+              eq(collaborators.status, "accepted")
+            )
+          );
+
         return {
           ...form,
           responseCount: Number(count?.count || 0),
+          role: form.userId === userId ? "owner" : collaboration?.role,
+          isCollaborator: form.userId !== userId,
         };
       })
     );
 
-    return NextResponse.json(formsWithCounts);
+    return NextResponse.json(formsWithCollabInfo);
   } catch (error) {
     console.error("[FORMS_GET] Detailed error:", {
       message: error instanceof Error ? error.message : "Unknown error",
