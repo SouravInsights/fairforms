@@ -1,4 +1,5 @@
 /* eslint-disable react/no-unescaped-entities */
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -37,20 +38,25 @@ export default function AcceptInvitationPage({
   const email = searchParams.get("email");
 
   useEffect(() => {
-    const loadInvitationDetails = async () => {
-      if (!email || !user) {
-        setError("Invalid invitation link");
-        setIsLoading(false);
-        return;
+    // Only proceed with loading if we have both user and email
+    if (!user || !email) {
+      setIsLoading(false);
+      if (!email) {
+        setError("Missing email in invitation link");
       }
+      return;
+    }
 
+    const loadInvitationDetails = async () => {
       try {
-        const response = await fetch(`/api/forms/${params.formId}`);
-        if (!response.ok) {
+        // Get form details
+        const formResponse = await fetch(`/api/forms/${params.formId}`);
+        if (!formResponse.ok) {
           throw new Error("Form not found");
         }
-        const form = await response.json();
+        const form = await formResponse.json();
 
+        // Get collaborator details
         const collaboratorResponse = await fetch(
           `/api/forms/${params.formId}/collaborators`
         );
@@ -72,20 +78,27 @@ export default function AcceptInvitationPage({
           formTitle: form.title,
           role: invitation.role,
         });
+        setError(null);
       } catch (err) {
+        console.error("Error loading invitation:", err);
         setError(err instanceof Error ? err.message : "Something went wrong");
       } finally {
         setIsLoading(false);
       }
     };
 
-    if (user) {
-      loadInvitationDetails();
-    }
+    loadInvitationDetails();
   }, [params.formId, email, user]);
 
   const handleAcceptInvitation = async () => {
-    if (!email || !user) return;
+    if (!email || !user) {
+      toast({
+        title: "Error",
+        description: "Missing required information",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setIsAccepting(true);
     try {
@@ -104,7 +117,8 @@ export default function AcceptInvitationPage({
       );
 
       if (!response.ok) {
-        throw new Error("Failed to accept invitation");
+        const error = await response.text();
+        throw new Error(error || "Failed to accept invitation");
       }
 
       toast({
@@ -125,6 +139,7 @@ export default function AcceptInvitationPage({
     }
   };
 
+  // Show loading state while we wait for initial data
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -133,6 +148,7 @@ export default function AcceptInvitationPage({
     );
   }
 
+  // Show error state if anything went wrong
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-screen p-4">
@@ -157,28 +173,21 @@ export default function AcceptInvitationPage({
     );
   }
 
-  if (!invitationDetails) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-6 w-6 animate-spin" />
-      </div>
-    );
-  }
-
+  // Show invitation acceptance UI
   return (
     <div className="flex items-center justify-center min-h-screen p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Accept Invitation</CardTitle>
           <CardDescription>
-            You've been invited to collaborate on "{invitationDetails.formTitle}
-            " as a {invitationDetails.role}.
+            You've been invited to collaborate on "
+            {invitationDetails?.formTitle}" as a {invitationDetails?.role}.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             <div className="text-sm text-muted-foreground">
-              {invitationDetails.role === "editor" ? (
+              {invitationDetails?.role === "editor" ? (
                 <p>
                   As an editor, you'll be able to view responses and edit the
                   form.
