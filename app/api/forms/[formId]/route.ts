@@ -1,9 +1,52 @@
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
-import { forms } from "@/db/schema";
+import { forms, collaborators } from "@/db/schema";
 import { NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { UpdateFormData } from "@/types/form";
+import { CollaboratorRole } from "@/types/collaborator";
+
+async function checkFormAccess(
+  formId: number,
+  userId: string
+): Promise<{
+  hasAccess: boolean;
+  role?: CollaboratorRole;
+  isOwner: boolean;
+}> {
+  const [form] = await db.select().from(forms).where(eq(forms.id, formId));
+
+  if (!form) {
+    return { hasAccess: false, isOwner: false };
+  }
+
+  // Check if user is the owner
+  if (form.userId === userId) {
+    return { hasAccess: true, isOwner: true };
+  }
+
+  // Check if user is a collaborator
+  const [collaborator] = await db
+    .select()
+    .from(collaborators)
+    .where(
+      and(
+        eq(collaborators.formId, formId),
+        eq(collaborators.userId, userId),
+        eq(collaborators.status, "accepted")
+      )
+    );
+
+  if (collaborator) {
+    return {
+      hasAccess: true,
+      role: collaborator.role as CollaboratorRole,
+      isOwner: false,
+    };
+  }
+
+  return { hasAccess: false, isOwner: false };
+}
 
 export async function GET(
   req: Request,
@@ -16,10 +59,14 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const [form] = await db
-      .select()
-      .from(forms)
-      .where(eq(forms.id, parseInt(params.formId)));
+    const formId = parseInt(params.formId);
+    const { hasAccess } = await checkFormAccess(formId, userId);
+
+    if (!hasAccess) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
+    const [form] = await db.select().from(forms).where(eq(forms.id, formId));
 
     if (!form) {
       return NextResponse.json({ error: "Form not found" }, { status: 404 });
@@ -47,17 +94,15 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // First check if form exists and belongs to user
-    const [existingForm] = await db
-      .select()
-      .from(forms)
-      .where(eq(forms.id, parseInt(params.formId)));
+    const formId = parseInt(params.formId);
+    const { hasAccess, role, isOwner } = await checkFormAccess(formId, userId);
 
-    if (!existingForm) {
-      return NextResponse.json({ error: "Form not found" }, { status: 404 });
+    if (!hasAccess) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    if (existingForm.userId !== userId) {
+    // Only owners and editors can update the form
+    if (!isOwner && role !== "editor") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -76,7 +121,7 @@ export async function PATCH(
         ...cleanUpdates,
         updatedAt: new Date(),
       })
-      .where(eq(forms.id, parseInt(params.formId)))
+      .where(eq(forms.id, formId))
       .returning();
 
     if (!updatedForm) {
@@ -104,9 +149,21 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const formId = parseInt(params.formId);
+    const { isOwner } = await checkFormAccess(formId, userId);
+
+    // Only the owner can delete the form
+    if (!isOwner) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Delete collaborators first
+    await db.delete(collaborators).where(eq(collaborators.formId, formId));
+
+    // Then delete the form
     const [form] = await db
       .delete(forms)
-      .where(eq(forms.id, parseInt(params.formId)))
+      .where(eq(forms.id, formId))
       .returning();
 
     if (!form) {
