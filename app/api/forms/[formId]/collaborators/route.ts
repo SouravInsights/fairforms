@@ -44,6 +44,12 @@ export async function GET(
 
     const formId = parseInt(params.formId);
 
+    // Get user's email from Clerk
+    const user = await clerkClient.users.getUser(userId);
+    const userEmail = user.emailAddresses.find(
+      (email) => email.id === user.primaryEmailAddressId
+    )?.emailAddress;
+
     // Check if user is form owner or a collaborator
     const form = await db.query.forms.findFirst({
       where: eq(forms.id, formId),
@@ -56,16 +62,29 @@ export async function GET(
       return new NextResponse("Form not found", { status: 404 });
     }
 
-    if (
-      form.userId !== userId &&
-      !form.collaborators.some((c) => c.userId === userId)
-    ) {
+    const isOwner = form.userId === userId;
+    const isCollaborator = form.collaborators.some(
+      (c) =>
+        c.userId === userId || (c.email === userEmail && c.status === "pending")
+    );
+
+    if (!isOwner && !isCollaborator) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
     const formCollaborators = await db.query.collaborators.findMany({
       where: eq(collaborators.formId, formId),
     });
+
+    // If user is not the owner, only return their own collaboration record
+    if (!isOwner) {
+      const userCollaboration = formCollaborators.filter(
+        (c) =>
+          c.userId === userId ||
+          (c.email === userEmail && c.status === "pending")
+      );
+      return NextResponse.json(userCollaboration);
+    }
 
     return NextResponse.json(formCollaborators);
   } catch (error) {
