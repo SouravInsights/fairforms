@@ -5,10 +5,16 @@ import { NextResponse } from "next/server";
 import { and, eq } from "drizzle-orm";
 import { UpdateFormData } from "@/types/form";
 import { CollaboratorRole } from "@/types/collaborator";
+import { createClerkClient } from "@clerk/backend";
+
+const clerkClient = createClerkClient({
+  secretKey: process.env.CLERK_SECRET_KEY,
+});
 
 async function checkFormAccess(
   formId: number,
-  userId: string
+  userId: string,
+  includePending: boolean = false // Add new parameter
 ): Promise<{
   hasAccess: boolean;
   role?: CollaboratorRole;
@@ -25,17 +31,22 @@ async function checkFormAccess(
     return { hasAccess: true, isOwner: true };
   }
 
+  // Build the collaborator query conditions
+  const conditions = [
+    eq(collaborators.formId, formId),
+    eq(collaborators.userId, userId),
+  ];
+
+  // Only add status check if we don't want to include pending
+  if (!includePending) {
+    conditions.push(eq(collaborators.status, "accepted"));
+  }
+
   // Check if user is a collaborator
   const [collaborator] = await db
     .select()
     .from(collaborators)
-    .where(
-      and(
-        eq(collaborators.formId, formId),
-        eq(collaborators.userId, userId),
-        eq(collaborators.status, "accepted")
-      )
-    );
+    .where(and(...conditions));
 
   if (collaborator) {
     return {
@@ -43,6 +54,36 @@ async function checkFormAccess(
       role: collaborator.role as CollaboratorRole,
       isOwner: false,
     };
+  }
+
+  // If we want to include pending, check for pending invitations by email
+  if (includePending) {
+    // Get user's email from Clerk
+    const user = await clerkClient.users.getUser(userId);
+    const userEmail = user.emailAddresses.find(
+      (email) => email.id === user.primaryEmailAddressId
+    )?.emailAddress;
+
+    if (userEmail) {
+      const [pendingInvite] = await db
+        .select()
+        .from(collaborators)
+        .where(
+          and(
+            eq(collaborators.formId, formId),
+            eq(collaborators.email, userEmail),
+            eq(collaborators.status, "pending")
+          )
+        );
+
+      if (pendingInvite) {
+        return {
+          hasAccess: true,
+          role: pendingInvite.role as CollaboratorRole,
+          isOwner: false,
+        };
+      }
+    }
   }
 
   return { hasAccess: false, isOwner: false };
@@ -60,7 +101,8 @@ export async function GET(
     }
 
     const formId = parseInt(params.formId);
-    const { hasAccess } = await checkFormAccess(formId, userId);
+    // Pass true to include pending invitations
+    const { hasAccess } = await checkFormAccess(formId, userId, true);
 
     if (!hasAccess) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
