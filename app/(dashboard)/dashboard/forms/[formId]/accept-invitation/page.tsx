@@ -1,5 +1,4 @@
 /* eslint-disable react/no-unescaped-entities */
-
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -12,7 +11,7 @@ import {
 } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@clerk/nextjs";
-import { ArrowRight, Loader2, ShieldAlert } from "lucide-react";
+import { ArrowRight, Loader2, LogOut, ShieldAlert } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -35,28 +34,38 @@ export default function AcceptInvitationPage({
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const email = searchParams.get("email");
+  const invitationEmail = searchParams.get("email");
+  const currentUserEmail = user?.primaryEmailAddress?.emailAddress;
 
   useEffect(() => {
-    // Only proceed with loading if we have both user and email
-    if (!user || !email) {
+    if (!invitationEmail) {
+      setError("Missing email in invitation link");
       setIsLoading(false);
-      if (!email) {
-        setError("Missing email in invitation link");
-      }
+      return;
+    }
+
+    if (!user) {
+      setIsLoading(false);
+      return;
+    }
+
+    // Check if the invitation email matches the logged-in user's email
+    if (currentUserEmail !== invitationEmail) {
+      setError(
+        "Please log in with the email address that received the invitation"
+      );
+      setIsLoading(false);
       return;
     }
 
     const loadInvitationDetails = async () => {
       try {
-        // Get form details
         const formResponse = await fetch(`/api/forms/${params.formId}`);
         if (!formResponse.ok) {
           throw new Error("Form not found");
         }
         const form = await formResponse.json();
 
-        // Get collaborator details
         const collaboratorResponse = await fetch(
           `/api/forms/${params.formId}/collaborators`
         );
@@ -67,7 +76,7 @@ export default function AcceptInvitationPage({
           (await collaboratorResponse.json()) as Collaborator[];
 
         const invitation = collaborators.find(
-          (c) => c.email === email && c.status === "pending"
+          (c) => c.email === invitationEmail && c.status === "pending"
         );
 
         if (!invitation) {
@@ -88,17 +97,10 @@ export default function AcceptInvitationPage({
     };
 
     loadInvitationDetails();
-  }, [params.formId, email, user]);
+  }, [params.formId, invitationEmail, user, currentUserEmail]);
 
   const handleAcceptInvitation = async () => {
-    if (!email || !user) {
-      toast({
-        title: "Error",
-        description: "Missing required information",
-        variant: "destructive",
-      });
-      return;
-    }
+    if (!invitationEmail || !user) return;
 
     setIsAccepting(true);
     try {
@@ -110,7 +112,7 @@ export default function AcceptInvitationPage({
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            email,
+            email: invitationEmail,
             userId: user.id,
           }),
         }
@@ -139,7 +141,6 @@ export default function AcceptInvitationPage({
     }
   };
 
-  // Show loading state while we wait for initial data
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -148,7 +149,45 @@ export default function AcceptInvitationPage({
     );
   }
 
-  // Show error state if anything went wrong
+  // Show email mismatch error with option to sign out
+  if (currentUserEmail !== invitationEmail) {
+    return (
+      <div className="flex items-center justify-center min-h-screen p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ShieldAlert className="h-5 w-5 text-destructive" />
+              Wrong Account
+            </CardTitle>
+            <CardDescription>
+              This invitation was sent to {invitationEmail}. Please sign in with
+              that email address to accept the invitation.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="text-sm text-muted-foreground">
+              Currently signed in as: {currentUserEmail}
+            </div>
+            <div className="flex gap-2">
+              <Button asChild variant="outline" className="flex-1">
+                <Link href="/sign-out">
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sign Out
+                </Link>
+              </Button>
+              <Button asChild className="flex-1">
+                <Link href="/dashboard">
+                  Go to Dashboard
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-screen p-4">
