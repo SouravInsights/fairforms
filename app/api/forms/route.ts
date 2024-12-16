@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
 import { forms, responses, formTemplates, collaborators } from "@/db/schema";
 import { NextResponse } from "next/server";
-import { eq, desc, sql, and, or } from "drizzle-orm";
+import { eq, desc, sql, and, or, inArray } from "drizzle-orm";
 import { FormElement, FormSettings } from "@/types/form";
 import { createClerkClient } from "@clerk/backend";
 
@@ -59,10 +59,9 @@ export async function GET() {
       })
       .from(forms)
       .where(
-        or(
-          eq(forms.userId, userId),
-          sql`${forms.id} IN (${sql.join(collaboratedFormIds)})`
-        )
+        collaboratedFormIds.length > 0
+          ? or(eq(forms.userId, userId), inArray(forms.id, collaboratedFormIds))
+          : eq(forms.userId, userId)
       )
       .orderBy(desc(forms.createdAt));
 
@@ -76,25 +75,35 @@ export async function GET() {
           .where(eq(responses.formId, form.id));
 
         // Get collaboration role if user is a collaborator
-        const [collaboration] = await db
-          .select()
-          .from(collaborators)
-          .where(
-            and(
-              eq(collaborators.formId, form.id),
-              or(
-                eq(collaborators.userId, userId),
-                eq(collaborators.email, userEmail || "")
-              ),
-              eq(collaborators.status, "accepted")
-            )
-          );
+        let role: "owner" | "editor" | "viewer" = "owner";
+        let isCollaborator = false;
+
+        if (form.userId !== userId) {
+          const [collaboration] = await db
+            .select()
+            .from(collaborators)
+            .where(
+              and(
+                eq(collaborators.formId, form.id),
+                or(
+                  eq(collaborators.userId, userId),
+                  eq(collaborators.email, userEmail || "")
+                ),
+                eq(collaborators.status, "accepted")
+              )
+            );
+
+          if (collaboration) {
+            role = collaboration.role as "editor" | "viewer";
+            isCollaborator = true;
+          }
+        }
 
         return {
           ...form,
           responseCount: Number(count?.count || 0),
-          role: form.userId === userId ? "owner" : collaboration?.role,
-          isCollaborator: form.userId !== userId,
+          role,
+          isCollaborator,
         };
       })
     );
