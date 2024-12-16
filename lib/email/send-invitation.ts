@@ -17,7 +17,7 @@ export async function sendInvitationEmail({
   inviteeEmail,
   role,
 }: SendInvitationProps) {
-  const acceptUrl = `${process.env.NEXT_PUBLIC_APP_URL}/forms/${formId}/accept-invitation`;
+  const acceptUrl = `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/forms/${formId}/accept-invitation`;
 
   try {
     // Await the render function
