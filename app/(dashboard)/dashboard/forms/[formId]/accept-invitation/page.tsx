@@ -16,6 +16,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { Collaborator } from "@/types/collaborator";
+import { SignOutButton } from "@clerk/nextjs";
 
 export default function AcceptInvitationPage({
   params,
@@ -169,12 +170,12 @@ export default function AcceptInvitationPage({
               Currently signed in as: {currentUserEmail}
             </div>
             <div className="flex gap-2">
-              <Button asChild variant="outline" className="flex-1">
-                <Link href="/sign-out">
+              <SignOutButton>
+                <Button variant="outline" className="flex-1">
                   <LogOut className="h-4 w-4 mr-2" />
                   Sign Out
-                </Link>
-              </Button>
+                </Button>
+              </SignOutButton>
               <Button asChild className="flex-1">
                 <Link href="/dashboard">
                   Go to Dashboard
