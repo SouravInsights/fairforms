@@ -6,6 +6,7 @@ const isPublicRoute = createRouteMatcher([
   "/forms/(.+)",
   "/api/forms/(.*)/(public|submit)",
   "/api/waitlist(.*)",
+  "/dashboard/forms/(.*)/accept-invitation",
 ]);
 
 export default clerkMiddleware(async (auth, request) => {
