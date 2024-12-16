@@ -5,7 +5,6 @@ import {
   Container,
   Head,
   Heading,
-  Hr,
   Html,
   Preview,
   Section,
@@ -17,23 +16,18 @@ interface CollaborationInviteEmailProps {
   formTitle: string;
   inviterName: string;
   role: "editor" | "viewer";
-  acceptUrl: string;
+  email: string;
+  formId: number;
 }
 
 export const CollaborationInviteEmail = ({
   formTitle,
   inviterName,
   role,
-  acceptUrl,
+  email,
+  formId,
 }: CollaborationInviteEmailProps) => {
-  const roleCapabilities = {
-    editor: [
-      "View form responses",
-      "Edit form content",
-      "Update form settings",
-    ],
-    viewer: ["View form responses"],
-  };
+  const acceptUrl = `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/forms/${formId}/accept-invitation?email=${encodeURIComponent(email)}`;
 
   return (
     <Html>
@@ -50,28 +44,24 @@ export const CollaborationInviteEmail = ({
             {formTitle}" as a {role}.
           </Text>
 
-          <Section style={capabilities}>
+          <Section style={section}>
             <Text style={text}>As a {role}, you will be able to:</Text>
-            <ul>
-              {roleCapabilities[role].map((capability, index) => (
-                <li key={index} style={listItem}>
-                  {capability}
-                </li>
-              ))}
-            </ul>
+            {role === "editor" ? (
+              <ul>
+                <li style={listItem}>View form responses</li>
+                <li style={listItem}>Edit form content</li>
+                <li style={listItem}>Update form settings</li>
+              </ul>
+            ) : (
+              <ul>
+                <li style={listItem}>View form responses</li>
+              </ul>
+            )}
           </Section>
 
-          <Button
-            href={acceptUrl}
-            style={{
-              ...button,
-              padding: "12px 20px",
-            }}
-          >
+          <Button href={acceptUrl} style={button}>
             Accept Invitation
           </Button>
-
-          <Hr style={hr} />
 
           <Text style={footer}>
             If you didn't expect this invitation, you can safely ignore this
@@ -83,7 +73,6 @@ export const CollaborationInviteEmail = ({
   );
 };
 
-// Styles
 const main = {
   backgroundColor: "#ffffff",
   fontFamily:
@@ -94,6 +83,10 @@ const container = {
   margin: "0 auto",
   padding: "20px 0 48px",
   maxWidth: "560px",
+};
+
+const section = {
+  margin: "24px 0",
 };
 
 const h1 = {
@@ -111,10 +104,6 @@ const text = {
   margin: "0 0 16px",
 };
 
-const capabilities = {
-  margin: "24px 0",
-};
-
 const listItem = {
   color: "#1a1a1a",
   fontSize: "16px",
@@ -127,15 +116,12 @@ const button = {
   borderRadius: "6px",
   color: "#fff",
   fontSize: "16px",
+  fontWeight: "500",
   textDecoration: "none",
   textAlign: "center" as const,
-  display: "inline-block",
+  display: "block",
+  padding: "12px 20px",
   margin: "16px 0",
-};
-
-const hr = {
-  borderColor: "#e6e6e6",
-  margin: "32px 0",
 };
 
 const footer = {

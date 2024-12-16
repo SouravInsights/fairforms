@@ -1,6 +1,6 @@
 import { resend } from "./config";
-import CollaborationInviteEmail from "@/app/emails/CollaborationInvite";
 import { render } from "@react-email/render";
+import CollaborationInviteEmail from "@/app/emails/CollaborationInvite";
 
 interface SendInvitationProps {
   formId: number;
@@ -17,21 +17,19 @@ export async function sendInvitationEmail({
   inviteeEmail,
   role,
 }: SendInvitationProps) {
-  const acceptUrl = `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/forms/${formId}/accept-invitation`;
-
   try {
-    // Await the render function
     const html = await render(
       CollaborationInviteEmail({
         formTitle,
         inviterName,
         role,
-        acceptUrl,
+        email: inviteeEmail,
+        formId,
       })
     );
 
     const data = await resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL || "Forms <hello@fairforms.xyz>",
+      from: process.env.RESEND_FROM_EMAIL || "Forms <forms@yourdomain.com>",
       to: inviteeEmail,
       subject: `You've been invited to collaborate on "${formTitle}"`,
       html,
