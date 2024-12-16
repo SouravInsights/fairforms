@@ -8,6 +8,7 @@ import {
   boolean,
   json,
   integer,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -42,13 +43,33 @@ export const responses = pgTable("responses", {
   chainId: integer("chain_id"),
 });
 
-export const collaborators = pgTable("collaborators", {
-  id: serial("id").primaryKey(),
-  formId: serial("form_id").references(() => forms.id),
-  userId: text("user_id").notNull(),
-  role: text("role").notNull(), // 'editor' | 'viewer'
-  addedAt: timestamp("added_at").defaultNow(),
-});
+export const COLLABORATOR_ROLES = ["editor", "viewer"] as const;
+export type CollaboratorRole = (typeof COLLABORATOR_ROLES)[number];
+export const INVITATION_STATUS = ["pending", "accepted", "declined"] as const;
+export type InvitationStatus = (typeof INVITATION_STATUS)[number];
+
+export const collaborators = pgTable(
+  "collaborators",
+  {
+    id: serial("id").primaryKey(),
+    formId: serial("form_id").references(() => forms.id),
+    userId: text("user_id").notNull(),
+    email: text("email").notNull(),
+    addedBy: text("added_by").notNull(),
+    role: text("role", { enum: COLLABORATOR_ROLES }).notNull(),
+    status: text("status", { enum: INVITATION_STATUS })
+      .notNull()
+      .default("pending"),
+    addedAt: timestamp("added_at").defaultNow(),
+    acceptedAt: timestamp("accepted_at"),
+  },
+  (table) => ({
+    uniqueCollaborator: uniqueIndex("unique_collaborator_idx").on(
+      table.formId,
+      table.userId
+    ),
+  })
+);
 
 export const waitlistTable = pgTable("waitlist", {
   id: serial("id").primaryKey(),
@@ -69,9 +90,6 @@ export const waitlistRelations = relations(waitlistTable, ({ one }) => ({
 // Schemas for validation
 export const insertWaitlistSchema = createInsertSchema(waitlistTable);
 export const selectWaitlistSchema = createSelectSchema(waitlistTable);
-
-export type WaitlistEntry = z.infer<typeof selectWaitlistSchema>;
-export type NewWaitlistEntry = z.infer<typeof insertWaitlistSchema>;
 
 export const formTemplates = pgTable("form_templates", {
   id: serial("id").primaryKey(),
@@ -102,6 +120,23 @@ export const templateRelations = relations(formTemplates, ({ one }) => ({
   }),
 }));
 
+export const formRelations = relations(forms, ({ many }) => ({
+  collaborators: many(collaborators),
+  responses: many(responses),
+}));
+
+export const collaboratorRelations = relations(collaborators, ({ one }) => ({
+  form: one(forms, {
+    fields: [collaborators.formId],
+    references: [forms.id],
+  }),
+}));
+
+// Types
+export type WaitlistEntry = z.infer<typeof selectWaitlistSchema>;
+export type NewWaitlistEntry = z.infer<typeof insertWaitlistSchema>;
 export type FormTemplate = typeof formTemplates.$inferSelect;
 export type NewFormTemplate = typeof formTemplates.$inferInsert;
 export type TemplateCategory = typeof templateCategories.$inferSelect;
+export type Collaborator = typeof collaborators.$inferSelect;
+export type NewCollaborator = typeof collaborators.$inferInsert;

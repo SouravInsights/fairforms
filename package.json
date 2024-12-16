@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@clerk/backend": "^1.21.2",
     "@clerk/nextjs": "^6.5.1",
     "@hello-pangea/dnd": "^17.0.0",
     "@neondatabase/serverless": "^0.10.4",
@@ -26,6 +27,7 @@
     "@radix-ui/react-switch": "^1.1.1",
     "@radix-ui/react-tabs": "^1.1.1",
     "@radix-ui/react-toast": "^1.2.2",
+    "@react-email/components": "^0.0.31",
     "@tanstack/react-query": "^5.62.3",
     "@vercel/blob": "^0.26.0",
     "axios": "^1.7.8",
@@ -42,6 +44,8 @@
     "react": "^18",
     "react-day-picker": "8.10.1",
     "react-dom": "^18",
+    "react-email": "^3.0.4",
+    "resend": "^4.0.1",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
     "use-debounce": "^10.0.4",
