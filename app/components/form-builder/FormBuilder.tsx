@@ -27,6 +27,7 @@ import {
 import { ChevronRight, Home } from "lucide-react";
 import { EditFormDialog } from "./EditFormDialog";
 import { Web3Dialog } from "../forms/Web3Dialog";
+import { ManageCollaboratorsDialog } from "./ManageCollaboratorsDialog";
 
 export function FormBuilder({ formId }: { formId: string }) {
   const { state, dispatch } = useFormContext();
@@ -352,6 +353,23 @@ export function FormBuilder({ formId }: { formId: string }) {
                       socialImageUrl: null,
                     }}
                     onUpdate={handleFormUpdate}
+                  />
+                  <ManageCollaboratorsDialog
+                    form={{
+                      id: parseInt(formId),
+                      title: state.title,
+                      description: state.description,
+                      elements: state.elements,
+                      settings: state.settings,
+                      isPublished,
+                      userId: user?.id || "",
+                      createdAt: new Date(),
+                      updatedAt: new Date(),
+                      customSlug: null,
+                      metaTitle: state.title,
+                      metaDescription: state.description,
+                      socialImageUrl: null,
+                    }}
                   />
                   <Button
                     onClick={togglePublish}

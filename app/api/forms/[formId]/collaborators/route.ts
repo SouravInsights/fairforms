@@ -122,6 +122,14 @@ export async function POST(
       })
       .returning();
 
+    console.log("Attempting to send email with data:", {
+      formId,
+      formTitle: form.title,
+      inviterName: inviterName.trim(),
+      inviteeEmail: email,
+      role,
+    });
+
     // Send invitation email
     const emailResult = await sendInvitationEmail({
       formId,
@@ -130,6 +138,8 @@ export async function POST(
       inviteeEmail: email,
       role,
     });
+
+    console.log("Email result:", emailResult);
 
     if (!emailResult.success) {
       // If email fails, we might want to delete the collaborator record
