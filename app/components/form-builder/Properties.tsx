@@ -16,6 +16,8 @@ import { NumberProperties } from "./properties/NumberProperties";
 import { FileUploadProperties } from "./properties/FileUploadProperties";
 import { WelcomeScreenProperties } from "./properties/WelcomeScreenProperties";
 import { EndScreenProperties } from "./properties/EndScreenProperties";
+import { ThemeSelector } from "./ThemeSelector";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export function Properties({ className }: { className?: string }) {
   const { state, dispatch } = useFormContext();
@@ -35,6 +37,13 @@ export function Properties({ className }: { className?: string }) {
           type: activeElement.type, // Ensure type stays the same
         } as FormElement,
       },
+    });
+  };
+
+  const handleThemeChange = (theme: typeof state.settings.theme) => {
+    dispatch({
+      type: "UPDATE_SETTINGS",
+      payload: { theme },
     });
   };
 
@@ -79,28 +88,44 @@ export function Properties({ className }: { className?: string }) {
   ].includes(activeElement.type);
 
   return (
-    <div className={cn("p-4 space-y-4", className)}>
-      {showBasicFields && (
-        <>
-          <div className="space-y-2">
-            <Label>Question</Label>
-            <Input
-              value={activeElement.question}
-              onChange={(e) => updateElement({ question: e.target.value })}
-            />
-          </div>
-          <div className="flex items-center space-x-2">
-            <Switch
-              checked={activeElement.required}
-              onCheckedChange={(checked) =>
-                updateElement({ required: checked })
-              }
-            />
-            <Label>Required</Label>
-          </div>
-        </>
-      )}
-      {renderElementSpecificProperties()}
+    <div className={cn("space-y-4", className)}>
+      <Tabs defaultValue="content">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="content">Content</TabsTrigger>
+          <TabsTrigger value="design">Design</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="content" className="p-4 space-y-4">
+          {showBasicFields && (
+            <>
+              <div className="space-y-2">
+                <Label>Question</Label>
+                <Input
+                  value={activeElement.question}
+                  onChange={(e) => updateElement({ question: e.target.value })}
+                />
+              </div>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  checked={activeElement.required}
+                  onCheckedChange={(checked) =>
+                    updateElement({ required: checked })
+                  }
+                />
+                <Label>Required</Label>
+              </div>
+            </>
+          )}
+          {renderElementSpecificProperties()}
+        </TabsContent>
+
+        <TabsContent value="design" className="p-4">
+          <ThemeSelector
+            value={state.settings.theme}
+            onChange={handleThemeChange}
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

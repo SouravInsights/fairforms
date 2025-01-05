@@ -1,4 +1,5 @@
 import {
+  Form,
   type FormElement,
   FormElementType,
   FormElementValue,
@@ -24,9 +25,15 @@ interface FormElementProps {
   element: FormElement;
   value: FormElementValue;
   onChange: (value: FormElementValue) => void;
+  theme: Form["settings"]["theme"];
 }
 
-export function FormElement({ element, value, onChange }: FormElementProps) {
+export function FormElement({
+  element,
+  value,
+  onChange,
+  theme,
+}: FormElementProps) {
   switch (element.type) {
     case FormElementType.SHORT_TEXT:
       return (
@@ -91,6 +98,7 @@ export function FormElement({ element, value, onChange }: FormElementProps) {
           element={element}
           value={value as string | string[]}
           onChange={onChange}
+          theme={theme}
         />
       );
     case FormElementType.DROPDOWN:
@@ -137,7 +145,9 @@ export function FormElement({ element, value, onChange }: FormElementProps) {
       return <Statement element={element} />;
 
     case FormElementType.WELCOME_SCREEN:
-      return <WelcomeScreen element={element} onChange={onChange} />;
+      return (
+        <WelcomeScreen element={element} onChange={onChange} theme={theme} />
+      );
     case FormElementType.END_SCREEN:
       return <EndScreen element={element} onChange={onChange} />;
     case FormElementType.CONTACT_INFO:

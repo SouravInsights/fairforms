@@ -6,7 +6,15 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "db:generate": "drizzle-kit generate",
+    "db:check": "drizzle-kit check",
+    "db:push:dev": "DRIZZLE_ENV=development drizzle-kit push",
+    "db:studio:dev": "DRIZZLE_ENV=development drizzle-kit studio",
+    "db:push:staging": "DRIZZLE_ENV=staging drizzle-kit push",
+    "db:studio:staging": "DRIZZLE_ENV=staging drizzle-kit studio",
+    "db:push:prod": "DRIZZLE_ENV=production drizzle-kit push",
+    "db:studio:prod": "DRIZZLE_ENV=production drizzle-kit studio"
   },
   "dependencies": {
     "@clerk/backend": "^1.21.2",

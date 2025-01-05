@@ -1,4 +1,4 @@
-import { FormElement, FormElementType } from "@/types/form";
+import { Form, FormElement, FormElementType } from "@/types/form";
 import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
@@ -25,12 +25,14 @@ interface MultipleChoiceInputProps {
   element: FormElement;
   value: string | string[];
   onChange: (value: string | string[]) => void;
+  theme: Form["settings"]["theme"];
 }
 
 export function MultipleChoiceInput({
   element,
   value,
   onChange,
+  theme,
 }: MultipleChoiceInputProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -75,17 +77,26 @@ export function MultipleChoiceInput({
       <div className="space-y-2">
         <motion.h2
           className="text-xl md:text-2xl font-medium leading-tight "
+          style={{ color: theme.questionColor }}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
         >
           {element.question}
-          {element.required && <span className="text-primary ml-1">*</span>}
+          {element.required && (
+            <span
+              style={{ color: theme.primaryColor }}
+              className="text-primary ml-1"
+            >
+              *
+            </span>
+          )}
         </motion.h2>
 
         {element.description && (
           <motion.p
-            className="text-base sm:text-lg text-muted-foreground"
+            className="text-base sm:text-lg"
+            style={{ color: theme.questionColor + "99" }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3, delay: 0.1 }}
@@ -109,33 +120,43 @@ export function MultipleChoiceInput({
             >
               <button
                 onClick={() => handleOptionClick(option.id)}
+                style={{
+                  borderColor: isOptionSelected
+                    ? theme.primaryColor
+                    : "var(--muted)",
+                  backgroundColor: isOptionSelected
+                    ? `${theme.primaryColor}0D`
+                    : "transparent",
+                }}
                 className={cn(
                   "w-full text-left p-4 rounded-lg border-2 transition-all",
                   "hover:border-primary/50 active:scale-[0.99]",
-                  "outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                  isOptionSelected && [
-                    "border-primary bg-primary/5",
-                    isAnimating && "animate-[blink_0.25s_ease-in-out_3]",
-                  ],
-                  !isOptionSelected && "border-muted"
+                  "outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 )}
                 disabled={isAnimating}
               >
                 <div className="flex items-center gap-3">
                   <div
-                    className={cn(
-                      "w-5 h-5 rounded-full border-2 flex-shrink-0",
-                      "transition-colors duration-200",
-                      isOptionSelected
-                        ? "border-primary bg-primary"
-                        : "border-muted-foreground/30"
-                    )}
+                    className="w-5 h-5 rounded-full border-2 flex-shrink-0 transition-colors duration-200"
+                    style={{
+                      borderColor: isOptionSelected
+                        ? theme.primaryColor
+                        : "var(--muted-foreground)",
+                      backgroundColor: isOptionSelected
+                        ? theme.primaryColor
+                        : "transparent",
+                    }}
                   >
                     {isOptionSelected && (
                       <div className="w-full h-full rounded-full bg-white scale-[0.4]" />
                     )}
                   </div>
-                  <span className="text-base sm:text-lg">{option.text}</span>
+                  <span
+                    style={{ color: theme.questionColor }}
+                    className="text-base sm:text-lg"
+                  >
+                    {option.text}
+                  </span>
                 </div>
               </button>
             </motion.div>

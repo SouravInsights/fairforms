@@ -69,7 +69,10 @@ export function FormContent({
         className,
         isPreview ? "min-h-[400px]" : ""
       )}
-      style={{ height: isPreview ? "400px" : height }}
+      style={{
+        height: isPreview ? "400px" : height,
+        backgroundColor: form.settings.theme.backgroundColor,
+      }}
     >
       {form.settings.behavior.showProgressBar && (
         <Progress
@@ -104,17 +107,26 @@ export function FormContent({
       >
         <div className="flex h-full flex-col md:flex-row">
           {/* Sidebar */}
-          <div className="flex flex-col w-full md:w-[400px] justify-between bg-gray-100 p-6">
+          <div
+            className="flex flex-col w-full md:w-[400px] justify-between p-6"
+            style={{ backgroundColor: `${form.settings.theme.primaryColor}10` }}
+          >
             {/* Header */}
             <div className="justify-center content-center h-[80%]">
               {/*<div className="pb-4">
                 <LogoIcon width={120} height={20} />
               </div>*/}
               <div>
-                <h1 className="text-2xl font-medium mb-1 flex items-center gap-2 ">
+                <h1
+                  className="text-2xl font-medium mb-1 flex items-center gap-2 "
+                  style={{ color: form.settings.theme.questionColor }}
+                >
                   {form.title}
                 </h1>
-                <p className="text-base font-normal ">
+                <p
+                  className="text-base font-normal "
+                  style={{ color: form.settings.theme.questionColor + "99" }}
+                >
                   Please take a moment to fill out this form.
                 </p>
               </div>
@@ -128,7 +140,10 @@ export function FormContent({
           </div>
 
           {/* Main Form Content */}
-          <div className="flex-1 bg-white flex flex-col justify-center">
+          <div
+            className="flex-1 flex flex-col justify-center"
+            style={{ backgroundColor: form.settings.theme.backgroundColor }}
+          >
             <div className="content-center overflow-y-auto">
               <div className="container max-w-lg mx-auto py-12 px-4 md:px-8">
                 <div className="flex flex-col justify-center min-h-full pb-10">
@@ -136,6 +151,7 @@ export function FormContent({
                     element={currentElement}
                     value={responses[currentElement.id]}
                     onChange={handleValueChange}
+                    theme={form.settings.theme}
                   />
                 </div>
 
