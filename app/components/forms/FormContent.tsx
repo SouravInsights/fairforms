@@ -78,6 +78,9 @@ export function FormContent({
         <Progress
           value={progress}
           className="fixed top-0 left-0 right-0 h-1 z-50"
+          style={{
+            backgroundColor: form.settings.theme.primaryColor,
+          }}
         />
       )}
 
@@ -109,7 +112,7 @@ export function FormContent({
           {/* Sidebar */}
           <div
             className="flex flex-col w-full md:w-[400px] justify-between p-6"
-            style={{ backgroundColor: `${form.settings.theme.primaryColor}10` }}
+            style={{ backgroundColor: form.settings.theme.sidebarColor }}
           >
             {/* Header */}
             <div className="justify-center content-center h-[80%]">
@@ -125,7 +128,7 @@ export function FormContent({
                 </h1>
                 <p
                   className="text-base font-normal "
-                  style={{ color: form.settings.theme.questionColor + "99" }}
+                  style={{ color: form.settings.theme.textColor }}
                 >
                   Please take a moment to fill out this form.
                 </p>
@@ -133,7 +136,10 @@ export function FormContent({
             </div>
 
             {/* Footer */}
-            <div className="hidden md:flex items-center">
+            <div
+              className="hidden md:flex items-center"
+              style={{ color: form.settings.theme.textColor }}
+            >
               <p className="text-base font-normal pr-3">Created with</p>
               <LogoIcon width={120} height={20} />
             </div>
@@ -168,6 +174,7 @@ export function FormContent({
                     onNext={handleNext}
                     onPrevious={handlePrevious}
                     onSubmit={handleSubmit}
+                    theme={form.settings.theme}
                   />
                 )}
               </div>

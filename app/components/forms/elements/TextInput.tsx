@@ -1,4 +1,4 @@
-import { FormElement, FormElementType } from "@/types/form";
+import { Form, FormElement, FormElementType } from "@/types/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { motion } from "motion/react";
@@ -22,9 +22,10 @@ interface TextInputProps {
   element: FormElement;
   value: string;
   onChange: (value: string) => void;
+  theme: Form["settings"]["theme"];
 }
 
-export function TextInput({ element, value, onChange }: TextInputProps) {
+export function TextInput({ element, value, onChange, theme }: TextInputProps) {
   if (!isTextInputElement(element)) {
     return null;
   }
@@ -34,16 +35,25 @@ export function TextInput({ element, value, onChange }: TextInputProps) {
       <div className="space-y-2">
         <motion.h2
           className="text-xl md:text-2xl font-medium leading-tight"
+          style={{ color: theme.questionColor }}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
           {element.question}
-          {element.required && <span className="text-primary ml-1">*</span>}
+          {element.required && (
+            <span
+              style={{ color: theme.primaryColor }}
+              className="text-primary ml-1"
+            >
+              *
+            </span>
+          )}
         </motion.h2>
 
         {element.description && (
           <motion.p
-            className="text-lg text-muted-foreground"
+            style={{ color: theme.textColor }}
+            className="text-lg"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.1 }}
@@ -66,6 +76,11 @@ export function TextInput({ element, value, onChange }: TextInputProps) {
             minLength={element.properties.minLength}
             maxLength={element.properties.maxLength}
             className="text-lg min-h-[150px] resize-none"
+            style={{
+              backgroundColor: theme.backgroundColor,
+              color: theme.questionColor,
+              borderColor: `${theme.primaryColor}33`,
+            }}
           />
         ) : (
           <Input
@@ -76,6 +91,11 @@ export function TextInput({ element, value, onChange }: TextInputProps) {
             minLength={element.properties.minLength}
             maxLength={element.properties.maxLength}
             className="text-lg h-14"
+            style={{
+              backgroundColor: theme.backgroundColor,
+              color: theme.questionColor,
+              borderColor: `${theme.primaryColor}33`,
+            }}
           />
         )}
 

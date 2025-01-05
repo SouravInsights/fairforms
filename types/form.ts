@@ -208,6 +208,8 @@ export type FormSettings = {
     fontFamily: string;
     backgroundColor: string;
     questionColor: string;
+    textColor: string;
+    sidebarColor: string;
   };
   behavior: {
     showProgressBar: boolean;

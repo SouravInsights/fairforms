@@ -96,7 +96,7 @@ export function MultipleChoiceInput({
         {element.description && (
           <motion.p
             className="text-base sm:text-lg"
-            style={{ color: theme.questionColor + "99" }}
+            style={{ color: theme.textColor }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3, delay: 0.1 }}
@@ -123,9 +123,9 @@ export function MultipleChoiceInput({
                 style={{
                   borderColor: isOptionSelected
                     ? theme.primaryColor
-                    : "var(--muted)",
+                    : "rgba(0,0,0,0.1)",
                   backgroundColor: isOptionSelected
-                    ? `${theme.primaryColor}0D`
+                    ? `${theme.primaryColor}15`
                     : "transparent",
                 }}
                 className={cn(
@@ -141,7 +141,7 @@ export function MultipleChoiceInput({
                     style={{
                       borderColor: isOptionSelected
                         ? theme.primaryColor
-                        : "var(--muted-foreground)",
+                        : theme.textColor + "50",
                       backgroundColor: isOptionSelected
                         ? theme.primaryColor
                         : "transparent",

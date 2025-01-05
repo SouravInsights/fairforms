@@ -1,4 +1,4 @@
-import { FormElement, FormElementType } from "@/types/form";
+import { Form, FormElement, FormElementType } from "@/types/form";
 import { motion } from "motion/react";
 
 function isTextAreaElement(element: FormElement): element is FormElement & {
@@ -17,9 +17,10 @@ interface TextAreaProps {
   element: FormElement;
   value: string;
   onChange: (value: string) => void;
+  theme: Form["settings"]["theme"];
 }
 
-export function TextArea({ element, value, onChange }: TextAreaProps) {
+export function TextArea({ element, value, onChange, theme }: TextAreaProps) {
   if (!isTextAreaElement(element)) {
     return null;
   }
@@ -29,16 +30,25 @@ export function TextArea({ element, value, onChange }: TextAreaProps) {
       <div className="space-y-2">
         <motion.h2
           className="text-xl md:text-2xl font-medium leading-tight"
+          style={{ color: theme.questionColor }}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
           {element.question}
-          {element.required && <span className="text-primary ml-1">*</span>}
+          {element.required && (
+            <span
+              style={{ color: theme.primaryColor }}
+              className="text-primary ml-1"
+            >
+              *
+            </span>
+          )}
         </motion.h2>
 
         {element.description && (
           <motion.p
-            className="text-lg text-muted-foreground"
+            className="text-lg"
+            style={{ color: theme.textColor }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.1 }}
@@ -55,7 +65,12 @@ export function TextArea({ element, value, onChange }: TextAreaProps) {
         transition={{ delay: 0.2 }}
       >
         <textarea
-          className="w-full min-h-[200px] rounded-lg border border-input bg-background p-4 text-lg ring-offset-background placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
+          className="w-full min-h-[200px] rounded-lg p-4 text-lg resize-none"
+          style={{
+            backgroundColor: theme.backgroundColor,
+            color: theme.questionColor,
+            borderColor: `${theme.primaryColor}33`,
+          }}
           value={value || ""}
           onChange={(e) => onChange(e.target.value)}
           placeholder={element.properties.placeholder}
@@ -65,7 +80,8 @@ export function TextArea({ element, value, onChange }: TextAreaProps) {
 
         {(element.properties.minLength || element.properties.maxLength) && (
           <motion.p
-            className="text-sm text-muted-foreground text-right"
+            className="text-sm text-right"
+            style={{ color: theme.textColor + "CC" }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}

@@ -41,6 +41,7 @@ export function FormElement({
           element={element}
           value={value as string}
           onChange={onChange}
+          theme={theme}
         />
       );
     case FormElementType.LONG_TEXT:
@@ -49,6 +50,7 @@ export function FormElement({
           element={element}
           value={value as string}
           onChange={onChange}
+          theme={theme}
         />
       );
     case FormElementType.EMAIL:

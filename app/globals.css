@@ -76,3 +76,37 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+:root {
+  --primary-color: #0f172a;
+  --background-color: #ffffff;
+  --question-color: #0f172a;
+  --text-color: #374151;
+  --sidebar-color: #f8fafc;
+}
+
+.form-themed {
+  --primary-color: var(--theme-primary-color);
+  --background-color: var(--theme-background-color);
+  --question-color: var(--theme-question-color);
+  --text-color: var(--theme-text-color);
+  --sidebar-color: var(--theme-sidebar-color);
+}
+
+.form-input {
+  @apply w-full rounded-lg border transition-colors duration-200;
+  background-color: var(--background-color);
+  color: var(--question-color);
+  border-color: color-mix(in srgb, var(--primary-color) 20%, transparent);
+}
+
+.form-input:focus {
+  @apply outline-none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px
+    color-mix(in srgb, var(--primary-color) 20%, transparent);
+}
+
+.form-textarea {
+  @apply form-input resize-none min-h-[200px] p-4 text-lg;
+}

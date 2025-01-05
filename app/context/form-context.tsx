@@ -94,6 +94,8 @@ const initialState: FormState = {
       fontFamily: "Inter",
       backgroundColor: "#ffffff",
       questionColor: "#0f172a",
+      textColor: "#374151",
+      sidebarColor: "#F8FAFC",
     },
     behavior: {
       showProgressBar: true,

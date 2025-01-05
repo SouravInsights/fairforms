@@ -89,7 +89,7 @@ export function Properties({ className }: { className?: string }) {
 
   return (
     <div className={cn("space-y-4", className)}>
-      <Tabs defaultValue="content">
+      <Tabs defaultValue="content" className="pt-2 px-2">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="content">Content</TabsTrigger>
           <TabsTrigger value="design">Design</TabsTrigger>
