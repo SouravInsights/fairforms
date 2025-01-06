@@ -120,19 +120,23 @@ export function MultipleChoiceInput({
             >
               <button
                 onClick={() => handleOptionClick(option.id)}
+                className={cn(
+                  "w-full text-left p-4 rounded-lg border-2 transition-all",
+                  "active:scale-[0.99]",
+                  "outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                  isOptionSelected &&
+                    isAnimating &&
+                    "animate-[blink_0.25s_ease-in-out_3]"
+                )}
                 style={{
                   borderColor: isOptionSelected
                     ? theme.primaryColor
-                    : `${theme.textColor}33`,
+                    : `${theme.questionColor}33`, // 20% opacity for border
                   backgroundColor: isOptionSelected
                     ? `${theme.primaryColor}15`
                     : "transparent",
+                  color: theme.questionColor,
                 }}
-                className={cn(
-                  "w-full text-left p-4 rounded-lg border-2 transition-all",
-                  "hover:border-primary/50 active:scale-[0.99]",
-                  "outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                )}
                 disabled={isAnimating}
               >
                 <div className="flex items-center gap-3">
@@ -141,7 +145,7 @@ export function MultipleChoiceInput({
                     style={{
                       borderColor: isOptionSelected
                         ? theme.primaryColor
-                        : theme.textColor + "50",
+                        : `${theme.textColor}50`,
                       backgroundColor: isOptionSelected
                         ? theme.primaryColor
                         : "transparent",
@@ -151,12 +155,7 @@ export function MultipleChoiceInput({
                       <div className="w-full h-full rounded-full bg-white scale-[0.4]" />
                     )}
                   </div>
-                  <span
-                    style={{ color: theme.questionColor }}
-                    className="text-base sm:text-lg"
-                  >
-                    {option.text}
-                  </span>
+                  <span className="text-base sm:text-lg">{option.text}</span>
                 </div>
               </button>
             </motion.div>
