@@ -139,7 +139,7 @@ export function FormContent({
               style={{ color: form.settings.theme.textColor }}
             >
               <p className="text-base font-normal pr-3">Created with</p>
-              <LogoIcon width={120} height={20} />
+              <LogoIcon width={120} height={20} theme={form.settings.theme} />
             </div>
           </div>
 
