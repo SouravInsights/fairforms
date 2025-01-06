@@ -279,7 +279,7 @@ export function useFormContext() {
 }
 
 /**
- * A basic explanation of the entire state flow in our Form Builder an example:
+ * A basic explanation of the entire state flow in our Form Builder:
  *
  * Initial Form State:
  * {

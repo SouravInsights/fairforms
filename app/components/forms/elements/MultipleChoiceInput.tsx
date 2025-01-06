@@ -123,7 +123,7 @@ export function MultipleChoiceInput({
                 style={{
                   borderColor: isOptionSelected
                     ? theme.primaryColor
-                    : "rgba(0,0,0,0.1)",
+                    : `${theme.textColor}33`,
                   backgroundColor: isOptionSelected
                     ? `${theme.primaryColor}15`
                     : "transparent",
