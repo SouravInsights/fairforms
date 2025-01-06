@@ -3,6 +3,7 @@ import { FormView } from "@/app/components/forms/FormView";
 import { notFound } from "next/navigation";
 import { Form } from "@/types/form";
 import { Metadata } from "next";
+import { ThemeProvider } from "@/app/components/forms/ThemeProvider";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -123,7 +124,7 @@ export default async function FormPage({ params }: FormPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <ThemeProvider theme={form.settings.theme}>
       <Suspense
         fallback={
           <div className="flex items-center justify-center min-h-screen">
@@ -133,6 +134,6 @@ export default async function FormPage({ params }: FormPageProps) {
       >
         <FormView form={form} />
       </Suspense>
-    </div>
+    </ThemeProvider>
   );
 }

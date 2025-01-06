@@ -179,8 +179,13 @@ export function FormContent({
             </div>
           </div>
           <div className="flex md:hidden justify-center py-5">
-            <p className="text-base font-normal pr-3">Created with</p>
-            <LogoIcon width={120} height={20} />
+            <p
+              className="text-base font-normal pr-3"
+              style={{ color: form.settings.theme.textColor }}
+            >
+              Created with
+            </p>
+            <LogoIcon width={120} height={20} theme={form.settings.theme} />
           </div>
         </div>
       </motion.div>
