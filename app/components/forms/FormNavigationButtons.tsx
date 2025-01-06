@@ -31,15 +31,37 @@ export function FormNavigationButtons({
   onSubmit,
   theme,
 }: FormNavigationButtonsProps) {
-  const primaryButtonClass = cn(
-    "transition-colors duration-200",
-    "hover:opacity-90 disabled:opacity-50"
-  );
+  // Custom button styles based on theme
+  const primaryButtonStyles = {
+    backgroundColor: theme.primaryColor,
+    color: theme.backgroundColor,
+    "&:hover": {
+      backgroundColor: `${theme.primaryColor}E6`, // 90% opacity
+    },
+    "&:focus": {
+      outline: "none",
+      boxShadow: `0 0 0 2px ${theme.primaryColor}33`,
+    },
+  };
 
-  const outlineButtonClass = cn(
-    "transition-colors duration-200",
-    "hover:bg-opacity-10 border"
-  );
+  const outlineButtonStyles = {
+    backgroundColor: "transparent",
+    color: theme.questionColor,
+    borderColor: `${theme.primaryColor}33`,
+    "&:hover": {
+      backgroundColor: `${theme.primaryColor}11`,
+      borderColor: theme.primaryColor,
+    },
+  };
+
+  const ghostButtonStyles = {
+    backgroundColor: "transparent",
+    color: theme.textColor,
+    "&:hover": {
+      backgroundColor: `${theme.primaryColor}11`,
+      color: theme.questionColor,
+    },
+  };
 
   return (
     <div className="flex items-center py-2 gap-4 form-themed">
@@ -50,11 +72,8 @@ export function FormNavigationButtons({
             variant="outline"
             size="lg"
             onClick={onPrevious}
-            className={cn("md:hidden", outlineButtonClass)}
-            style={{
-              borderColor: theme.primaryColor + "33",
-              color: theme.questionColor,
-            }}
+            className={"md:hidden"}
+            style={outlineButtonStyles}
           >
             <ChevronLeft className="h-5 w-5" />
           </Button>
@@ -65,7 +84,7 @@ export function FormNavigationButtons({
             size="sm"
             onClick={onPrevious}
             className="hidden md:inline-flex"
-            style={{ color: theme.textColor }}
+            style={ghostButtonStyles}
           >
             Press ↑ for previous
           </Button>
@@ -74,11 +93,8 @@ export function FormNavigationButtons({
 
       {!isLastElement ? (
         <Button
-          className={cn("flex-1 md:flex-none md:ml-auto", primaryButtonClass)}
-          style={{
-            backgroundColor: theme.primaryColor,
-            color: theme.backgroundColor,
-          }}
+          className="flex-1 md:flex-none md:ml-auto"
+          style={primaryButtonStyles}
           onClick={onNext}
           size="lg"
         >
@@ -86,10 +102,17 @@ export function FormNavigationButtons({
         </Button>
       ) : (
         <Button
-          className={cn("ml-auto", primaryButtonClass)}
+          className={cn(
+            "ml-auto",
+            (isSubmitting || isRewardPending) && "opacity-70"
+          )}
           style={{
-            backgroundColor: theme.primaryColor,
-            color: theme.backgroundColor,
+            ...primaryButtonStyles,
+            ...(isSubmitting || isRewardPending
+              ? {
+                  backgroundColor: `${theme.primaryColor}99`,
+                }
+              : {}),
           }}
           onClick={onSubmit}
           size="lg"
