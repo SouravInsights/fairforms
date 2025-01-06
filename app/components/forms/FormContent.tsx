@@ -78,9 +78,7 @@ export function FormContent({
         <Progress
           value={progress}
           className="fixed top-0 left-0 right-0 h-1 z-50"
-          style={{
-            backgroundColor: form.settings.theme.primaryColor,
-          }}
+          indicatorColor={form.settings.theme.primaryColor}
         />
       )}
 
