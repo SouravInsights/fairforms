@@ -61,7 +61,13 @@ export default function PublicResponsesPage({
         }
 
         setForm(data.form);
-        setResponses(data.responses);
+        setResponses(
+          data.responses.sort(
+            (a, b) =>
+              new Date(b.submittedAt).getTime() -
+              new Date(a.submittedAt).getTime()
+          )
+        );
       } catch (error) {
         toast({
           title: "Error",
