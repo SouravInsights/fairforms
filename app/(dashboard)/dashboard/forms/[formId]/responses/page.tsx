@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ResponsesPageSkeleton } from "./ResponsesPageSkeleton";
 import { Form } from "@/types/form";
 import { EnrichedResponse } from "@/types/response";
+import { PublicResponsesShareButton } from "@/app/components/forms/PublicResponsesShareButton";
 
 interface ResponsesPageProps {
   params: {
@@ -52,12 +53,15 @@ export default function ResponsesPage({ params }: ResponsesPageProps) {
 
   return (
     <div className="container py-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">{form.title} - Responses</h1>
-        <p className="text-muted-foreground">
-          {responses.length} total{" "}
-          {responses.length === 1 ? "response" : "responses"}
-        </p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">{form.title} - Responses</h1>
+          <p className="text-muted-foreground">
+            {responses.length} total{" "}
+            {responses.length === 1 ? "response" : "responses"}
+          </p>
+        </div>
+        <PublicResponsesShareButton formId={params.formId} />
       </div>
 
       <Tabs defaultValue="list">
