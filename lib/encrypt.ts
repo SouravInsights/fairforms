@@ -2,7 +2,6 @@ import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
 
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || "defaultencryptionkey";
 
-// Simple key derivation function that works in both Node.js and browser environments
 function deriveKey(key: string): Buffer {
   const hash = Array.from(key).reduce((acc, char) => {
     const last = acc[acc.length - 1] || 0;

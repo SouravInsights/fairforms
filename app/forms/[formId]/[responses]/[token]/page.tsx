@@ -41,9 +41,12 @@ export default function PublicResponsesPage({
   useEffect(() => {
     const loadResponses = async () => {
       try {
-        const response = await fetch(`/api/forms/${params.formId}/responses`);
-        const data = await response.json();
+        const response = await fetch(
+          `/api/forms/${params.formId}/public/${params.token}`
+        );
 
+        console.log("response from page:", response);
+        const data = (await response.json()) as ApiResponse;
         console.log("data from page:", data);
 
         if (!response.ok) {
