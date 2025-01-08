@@ -1,8 +1,8 @@
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
-import { forms, responses } from "@/db/schema";
+import { collaborators, forms, responses } from "@/db/schema";
 import { NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { FormElement, FormElementType } from "@/types/form";
 import {
   EnrichedResponse,
@@ -83,8 +83,30 @@ export async function GET(
 
     const [form] = await db.select().from(forms).where(eq(forms.id, formId));
 
-    if (!form || form.userId !== userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!form) {
+      return NextResponse.json({ error: "Form not found" }, { status: 404 });
+    }
+
+    // Check if user is owner
+    const isOwner = form.userId === userId;
+
+    if (!isOwner) {
+      // Check if user is a collaborator with accepted status
+      const [collaborator] = await db
+        .select()
+        .from(collaborators)
+        .where(
+          and(
+            eq(collaborators.formId, formId),
+            eq(collaborators.userId, userId),
+            eq(collaborators.status, "accepted")
+          )
+        );
+
+      // If not owner and not an accepted collaborator, return unauthorized
+      if (!collaborator) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
     }
 
     const formResponses = await db
