@@ -8,7 +8,7 @@ import { Loader2 } from "lucide-react";
 import { EnrichedResponse } from "@/types/response";
 import { Form } from "@/types/form";
 import { PublicResponseList } from "@/app/components/forms/PublicResponseList";
-import { ColorSchemeName } from "@/lib/responses-theme-options";
+import { ColorSchemeName, colorSchemes } from "@/lib/responses-theme-options";
 import { ColorSchemeToggle } from "@/app/components/shared/ColorSchemeToggle";
 interface PublicResponsesPageProps {
   params: {
@@ -39,14 +39,14 @@ export default function PublicResponsesPage({
   const [responses, setResponses] = useState<EnrichedResponse[]>([]);
   const [form, setForm] = useState<Form | null>(null);
   const { toast } = useToast();
-  const [colorScheme, setColorScheme] = useState<ColorSchemeName>("rose");
+  const [colorScheme, setColorScheme] = useState<ColorSchemeName>("neonNight");
 
   console.log("Current color scheme:", colorScheme);
 
-  const handleColorSchemeChange = (newScheme: ColorSchemeName) => {
-    console.log("Color scheme changing to:", newScheme);
-    setColorScheme(newScheme);
-  };
+  // const handleColorSchemeChange = (newScheme: ColorSchemeName) => {
+  //   console.log("Color scheme changing to:", newScheme);
+  //   setColorScheme(newScheme);
+  // };
 
   useEffect(() => {
     const loadResponses = async () => {
@@ -116,13 +116,20 @@ export default function PublicResponsesPage({
     );
   }
 
+  console.log("colorSchemes[colorScheme]", colorSchemes[colorScheme].bg);
+
   return (
-    <div className="min-h-screen">
+    <div className={`min-h-screen ${colorSchemes[colorScheme].bg}`}>
       <div className="container max-w-screen-xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         <div className="space-y-8">
           <div>
-            <h1 className="text-3xl font-bold">{form.title} - Responses</h1>
-            <p className="text-muted-foreground">
+            {/* Apply text colors to title and subtitle */}
+            <h1
+              className={`text-3xl font-bold ${colorSchemes[colorScheme].text}`}
+            >
+              {form.title} - Responses
+            </h1>
+            <p className={colorSchemes[colorScheme].muted}>
               {responses.length} total{" "}
               {responses.length === 1 ? "response" : "responses"}
             </p>
@@ -139,10 +146,7 @@ export default function PublicResponsesPage({
           />
         </div>
       </div>
-      <ColorSchemeToggle
-        activeScheme={colorScheme}
-        onChange={handleColorSchemeChange}
-      />
+      <ColorSchemeToggle activeScheme={colorScheme} onChange={setColorScheme} />
     </div>
   );
 }

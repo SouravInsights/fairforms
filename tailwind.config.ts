@@ -125,5 +125,49 @@ const config: Config = {
     },
   },
   plugins: [animatePlugin],
+  safelist: [
+    // Light Themes
+    "bg-[#F5F3FF]",
+    "text-[#27272A]",
+    "text-[#4C1D95]",
+    "bg-white",
+    "border-[#EDE9FE]",
+    "bg-[#F5F3FF]",
+    "hover:bg-[#EDE9FE]",
+
+    "bg-[#F0F9FF]",
+    "text-[#27272A]",
+    "text-[#0C4A6E]",
+    "bg-white",
+    "border-[#E0F2FE]",
+    "bg-[#F0F9FF]",
+    "hover:bg-[#E0F2FE]",
+
+    // Neon/Dark Themes
+    "bg-[#1A202C]",
+    "text-[#E2E8F0]",
+    "text-[#F472B6]",
+    "bg-[#10151B]",
+    "border-[#10151B]",
+    "bg-[#1A202C]",
+    "hover:bg-[#10151B]",
+
+    // Dark Themes
+    "bg-[#2D1B69]",
+    "text-[#E2E8F0]",
+    "text-[#F8FAFC]",
+    "bg-[#1E1B4B]",
+    "border-[#1E1B4B]",
+    "bg-[#2D1B69]",
+    "hover:bg-[#1E1B4B]",
+
+    "bg-[#27141E]",
+    "text-[#E2E8F0]",
+    "text-[#F9FAFB]",
+    "bg-[#1A0F15]",
+    "border-[#1A0F15]",
+    "bg-[#27141E]",
+    "hover:bg-[#1A0F15]",
+  ],
 };
 export default config;
