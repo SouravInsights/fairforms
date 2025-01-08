@@ -59,6 +59,7 @@ export function FormElement({
           element={element}
           value={value as string}
           onChange={onChange}
+          theme={theme}
         />
       );
     case FormElementType.PHONE:
@@ -164,6 +165,7 @@ export function FormElement({
             }
           }
           onChange={onChange}
+          theme={theme}
         />
       );
     default:
