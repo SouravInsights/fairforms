@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { ResponseList } from "@/app/(dashboard)/dashboard/forms/[formId]/responses/ResponseList";
+// import { ResponseList } from "@/app/(dashboard)/dashboard/forms/[formId]/responses/ResponseList";
 import { Card } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { EnrichedResponse } from "@/types/response";
 import { Form } from "@/types/form";
+import { PublicResponseList } from "@/app/components/forms/PublicResponseList";
 
 interface PublicResponsesPageProps {
   params: {
@@ -101,16 +102,22 @@ export default function PublicResponsesPage({
   }
 
   return (
-    <div className="container py-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">{form.title} - Responses</h1>
-        <p className="text-muted-foreground">
-          {responses.length} total{" "}
-          {responses.length === 1 ? "response" : "responses"}
-        </p>
-      </div>
+    <div className="min-h-screen bg-background">
+      <div className="container max-w-screen-xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+        <div className="space-y-8">
+          {/* Header */}
+          <div>
+            <h1 className="text-3xl font-bold">{form.title} - Responses</h1>
+            <p className="text-muted-foreground mt-2">
+              {responses.length} total{" "}
+              {responses.length === 1 ? "response" : "responses"}
+            </p>
+          </div>
 
-      <ResponseList responses={responses} form={form} />
+          {/* Response List */}
+          <PublicResponseList responses={responses} form={form} />
+        </div>
+      </div>
     </div>
   );
 }
