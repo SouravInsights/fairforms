@@ -12,6 +12,7 @@ import { FormNavigationButtons } from "./FormNavigationButtons";
 import { FormSubmissionFeedback } from "./FormSubmissionFeedback";
 import { FormLoadingState } from "./FormLoadingState";
 import { LogoIcon } from "../icons";
+import Link from "next/link";
 
 interface FormContentProps {
   form: Form;
@@ -139,7 +140,9 @@ export function FormContent({
               style={{ color: form.settings.theme.textColor }}
             >
               <p className="text-base font-normal pr-3">Created with</p>
-              <LogoIcon width={120} height={20} theme={form.settings.theme} />
+              <Link href="https://www.fairforms.xyz/" target="_blank">
+                <LogoIcon width={120} height={20} theme={form.settings.theme} />
+              </Link>
             </div>
           </div>
 
@@ -185,7 +188,9 @@ export function FormContent({
             >
               Created with
             </p>
-            <LogoIcon width={120} height={20} theme={form.settings.theme} />
+            <Link href="https://www.fairforms.xyz/" target="_blank">
+              <LogoIcon width={120} height={20} theme={form.settings.theme} />
+            </Link>
           </div>
         </div>
       </motion.div>
