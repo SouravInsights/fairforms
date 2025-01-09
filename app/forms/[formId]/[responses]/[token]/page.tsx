@@ -139,7 +139,12 @@ export default function PublicResponsesPage({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="feedbackFilter">Filter Long Feedback</Label>
+                    <Label
+                      htmlFor="feedbackFilter"
+                      className={colorSchemes[colorScheme].text}
+                    >
+                      Filter Long Feedback
+                    </Label>
                     <Switch
                       id="feedbackFilter"
                       checked={filters.feedbackFilter.enabled}
@@ -167,7 +172,9 @@ export default function PublicResponsesPage({
                         }))
                       }
                     >
-                      <SelectTrigger>
+                      <SelectTrigger
+                        className={`${colorSchemes[colorScheme].text} ${colorSchemes[colorScheme].bg}`}
+                      >
                         <SelectValue placeholder="Select minimum length" />
                       </SelectTrigger>
                       <SelectContent>
@@ -181,7 +188,10 @@ export default function PublicResponsesPage({
 
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="outfitDesignFilter">
+                    <Label
+                      htmlFor="outfitDesignFilter"
+                      className={colorSchemes[colorScheme].text}
+                    >
                       Filter Outfit Design Responses
                     </Label>
                     <Switch
@@ -211,7 +221,9 @@ export default function PublicResponsesPage({
                         }))
                       }
                     >
-                      <SelectTrigger>
+                      <SelectTrigger
+                        className={`${colorSchemes[colorScheme].text} ${colorSchemes[colorScheme].bg}`}
+                      >
                         <SelectValue placeholder="Select minimum length" />
                       </SelectTrigger>
                       <SelectContent>
@@ -238,7 +250,9 @@ export default function PublicResponsesPage({
                     }))
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger
+                    className={`${colorSchemes[colorScheme].text} ${colorSchemes[colorScheme].bg}`}
+                  >
                     <SelectValue placeholder="Filter by age group" />
                   </SelectTrigger>
                   <SelectContent>
@@ -262,7 +276,9 @@ export default function PublicResponsesPage({
                     }))
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger
+                    className={`${colorSchemes[colorScheme].text} ${colorSchemes[colorScheme].bg}`}
+                  >
                     <SelectValue placeholder="Filter by gender" />
                   </SelectTrigger>
                   <SelectContent>
@@ -277,7 +293,7 @@ export default function PublicResponsesPage({
               <Button
                 variant="outline"
                 onClick={() => setFilters(DEFAULT_FILTERS)}
-                className="w-full sm:w-auto"
+                className={`w-full sm:w-auto ${colorSchemes[colorScheme].text} ${colorSchemes[colorScheme].bg} hover:${colorSchemes[colorScheme].rowHover}`}
               >
                 Reset Filters
               </Button>
