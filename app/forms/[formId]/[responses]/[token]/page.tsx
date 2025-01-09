@@ -10,26 +10,12 @@ import { Form } from "@/types/form";
 import { PublicResponseList } from "@/app/components/forms/PublicResponseList";
 import { ColorSchemeName, colorSchemes } from "@/lib/responses-theme-options";
 import { ColorSchemeToggle } from "@/app/components/shared/ColorSchemeToggle";
+
 interface PublicResponsesPageProps {
   params: {
     formId: string;
     token: string;
   };
-}
-
-interface SuccessResponse {
-  form: Form;
-  responses: EnrichedResponse[];
-}
-
-interface ErrorResponse {
-  error: string;
-}
-
-type ApiResponse = SuccessResponse | ErrorResponse;
-
-function isErrorResponse(response: ApiResponse): response is ErrorResponse {
-  return "error" in response;
 }
 
 export default function PublicResponsesPage({
@@ -43,40 +29,19 @@ export default function PublicResponsesPage({
 
   console.log("Current color scheme:", colorScheme);
 
-  // const handleColorSchemeChange = (newScheme: ColorSchemeName) => {
-  //   console.log("Color scheme changing to:", newScheme);
-  //   setColorScheme(newScheme);
-  // };
-
   useEffect(() => {
     const loadResponses = async () => {
       try {
         const response = await fetch(
           `/api/forms/${params.formId}/public/${params.token}`
         );
-
-        console.log("response from page:", response);
-        const data = (await response.json()) as ApiResponse;
+        const data = await response.json();
         console.log("data from page:", data);
 
-        if (!response.ok) {
-          throw new Error(
-            isErrorResponse(data) ? data.error : "Failed to load responses"
-          );
-        }
+        if (!response.ok) throw new Error(data.error);
 
-        if (isErrorResponse(data)) {
-          throw new Error(data.error);
-        }
-
+        setResponses(data.responses);
         setForm(data.form);
-        setResponses(
-          data.responses.sort(
-            (a, b) =>
-              new Date(b.submittedAt).getTime() -
-              new Date(a.submittedAt).getTime()
-          )
-        );
       } catch (error) {
         toast({
           title: "Error",

@@ -26,10 +26,6 @@ export function PublicResponseList({
   colorScheme,
 }: PublicResponseListProps) {
   const scheme = colorSchemes[colorScheme];
-  console.log("PublicResponseList rendered with scheme:", {
-    colorScheme,
-    scheme,
-  });
 
   const isMobile = useMediaQuery("(max-width: 768px)");
 
@@ -99,9 +95,9 @@ export function PublicResponseList({
   // Desktop View
   return (
     <div className={`rounded-lg border ${scheme.card} shadow-sm`}>
-      <Table>
+      <Table className={`text-sm ${scheme.text}`}>
         <TableHeader>
-          <TableRow className={scheme.headerBg}>
+          <TableRow className={`${scheme.headerBg} ${scheme.text}`}>
             <TableHead className={`w-[100px] text-center ${scheme.text}`}>
               #
             </TableHead>
