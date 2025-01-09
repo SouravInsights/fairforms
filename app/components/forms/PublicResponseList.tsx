@@ -13,20 +13,25 @@ import { EnrichedResponse } from "@/types/response";
 import { formatDistanceToNow } from "date-fns";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { ColorSchemeName, colorSchemes } from "@/lib/responses-theme-options";
+import { Button } from "@/components/ui/button";
+import { Star } from "lucide-react";
 
 interface PublicResponseListProps {
   responses: EnrichedResponse[];
   form: Form;
   colorScheme: ColorSchemeName;
+  onToggleStar: (responseId: string) => void;
+  starredResponses: Set<string>;
 }
 
 export function PublicResponseList({
   responses,
   form,
   colorScheme,
+  onToggleStar,
+  starredResponses,
 }: PublicResponseListProps) {
   const scheme = colorSchemes[colorScheme];
-
   const isMobile = useMediaQuery("(max-width: 768px)");
 
   const displayableElements = form.elements.filter(
@@ -57,7 +62,27 @@ export function PublicResponseList({
             <div
               className={`p-4 flex items-center justify-between border-b ${scheme.borderdivider} ${scheme.muted}`}
             >
-              <span>Response #{responses.length - responseIdx}</span>
+              <div className="flex items-center gap-3">
+                <span>Response #{responses.length - responseIdx}</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onToggleStar(response.id.toString())} // Convert to string here
+                  className={
+                    starredResponses.has(response.id.toString())
+                      ? "text-yellow-500"
+                      : ""
+                  } // And here
+                >
+                  <Star
+                    className={`h-4 w-4 ${
+                      starredResponses.has(response.id.toString())
+                        ? "fill-current"
+                        : "" // And here
+                    }`}
+                  />
+                </Button>
+              </div>
               <span>
                 {formatDistanceToNow(new Date(response.submittedAt), {
                   addSuffix: true,
@@ -98,6 +123,9 @@ export function PublicResponseList({
       <Table className={`text-sm ${scheme.text}`}>
         <TableHeader>
           <TableRow className={`${scheme.headerBg} ${scheme.text}`}>
+            <TableHead className={`w-[50px] text-center ${scheme.text}`}>
+              <Star className="h-4 w-4" />
+            </TableHead>
             <TableHead className={`w-[100px] text-center ${scheme.text}`}>
               #
             </TableHead>
@@ -118,6 +146,26 @@ export function PublicResponseList({
               key={response.id}
               className={`${scheme.rowHover} transition-colors`}
             >
+              <TableCell className="text-center">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onToggleStar(response.id.toString())} // Convert to string here
+                  className={
+                    starredResponses.has(response.id.toString())
+                      ? "text-yellow-500"
+                      : ""
+                  } // And here
+                >
+                  <Star
+                    className={`h-4 w-4 ${
+                      starredResponses.has(response.id.toString())
+                        ? "fill-current"
+                        : "" // And here
+                    }`}
+                  />
+                </Button>
+              </TableCell>
               <TableCell className={`text-center font-medium ${scheme.text}`}>
                 {responses.length - idx}
               </TableCell>
