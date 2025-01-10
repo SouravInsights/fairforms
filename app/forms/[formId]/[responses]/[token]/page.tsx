@@ -41,7 +41,11 @@ export default function PublicResponsesPage({
   const [filters, setFilters] = useState<ResponseFilters>(DEFAULT_FILTERS);
   const { toast } = useToast();
   const [colorScheme, setColorScheme] = useState<ColorSchemeName>("neonNight");
-  const { starredResponses, toggleStar } = useStarredResponses(params.formId);
+  const {
+    starredResponses,
+    toggleStar,
+    isLoading: starredLoading,
+  } = useStarredResponses(params.formId, params.token);
 
   useEffect(() => {
     const loadResponses = async () => {
@@ -83,7 +87,7 @@ export default function PublicResponsesPage({
     filters
   );
 
-  if (isLoading) {
+  if (isLoading || starredLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-6 w-6 animate-spin" />

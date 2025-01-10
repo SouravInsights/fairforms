@@ -1,32 +1,60 @@
-// hooks/use-starred-responses.ts
 import { useState, useEffect } from "react";
 
-export function useStarredResponses(formId: string) {
-  const storageKey = `starred-responses-${formId}`;
+export function useStarredResponses(formId: string, token: string) {
   const [starredResponses, setStarredResponses] = useState<Set<string>>(
     new Set()
   );
+  const [isLoading, setIsLoading] = useState(true);
 
+  // Load starred responses
   useEffect(() => {
-    const saved = localStorage.getItem(storageKey);
-    if (saved) {
-      setStarredResponses(new Set(JSON.parse(saved)));
-    }
-  }, [storageKey]);
-
-  const toggleStar = (responseId: string) => {
-    setStarredResponses((prev) => {
-      const next = new Set(prev);
-      if (next.has(responseId)) {
-        next.delete(responseId);
-      } else {
-        next.add(responseId);
+    const loadStarred = async () => {
+      try {
+        const response = await fetch(
+          `/api/forms/${formId}/public/${token}/star`
+        );
+        const data = await response.json();
+        if (response.ok) {
+          setStarredResponses(new Set(data.starred.map(String)));
+        }
+      } catch (error) {
+        console.error("Failed to load starred responses:", error);
+      } finally {
+        setIsLoading(false);
       }
-      // Convert Set to Array for JSON serialization
-      localStorage.setItem(storageKey, JSON.stringify(Array.from(next)));
-      return next;
-    });
+    };
+
+    loadStarred();
+  }, [formId, token]);
+
+  const toggleStar = async (responseId: string) => {
+    try {
+      const response = await fetch(
+        `/api/forms/${formId}/public/${token}/star`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ responseId: parseInt(responseId) }),
+        }
+      );
+
+      if (response.ok) {
+        setStarredResponses((prev) => {
+          const next = new Set(prev);
+          if (next.has(responseId)) {
+            next.delete(responseId);
+          } else {
+            next.add(responseId);
+          }
+          return next;
+        });
+      }
+    } catch (error) {
+      console.error("Failed to toggle star:", error);
+    }
   };
 
-  return { starredResponses, toggleStar };
+  return { starredResponses, toggleStar, isLoading };
 }

@@ -113,6 +113,14 @@ export const templateCategories = pgTable("template_categories", {
   orderIndex: integer("order_index").notNull(),
 });
 
+export const starredResponses = pgTable("starred_responses", {
+  id: serial("id").primaryKey(),
+  responseId: integer("response_id").notNull(),
+  formId: integer("form_id").notNull(),
+  starredAt: timestamp("starred_at").defaultNow().notNull(),
+  token: text("token").notNull(),
+});
+
 export const templateRelations = relations(formTemplates, ({ one }) => ({
   category: one(templateCategories, {
     fields: [formTemplates.category],
