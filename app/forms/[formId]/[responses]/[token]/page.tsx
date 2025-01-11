@@ -310,20 +310,20 @@ export default function PublicResponsesPage({
             <TabsList className={`${colorSchemes[colorScheme].card}`}>
               <TabsTrigger
                 value="all"
-                className={`data-[state=active]:bg-[#F472B6]`}
+                className={`${colorSchemes[colorScheme].text} data-[state=active]:bg-[#F472B6]`}
               >
                 All Responses
               </TabsTrigger>
               <TabsTrigger
                 value="starred"
-                className={`data-[state=active]:bg-[#F472B6]`}
+                className={`${colorSchemes[colorScheme].text} data-[state=active]:bg-[#F472B6]`}
               >
                 <Star className="h-4 w-4 mr-2" />
                 Starred
               </TabsTrigger>
               <TabsTrigger
                 value="stats"
-                className={`data-[state=active]:bg-[#F472B6]`}
+                className={`${colorSchemes[colorScheme].text} data-[state=active]:bg-[#F472B6]`}
               >
                 <BarChart2 className="h-4 w-4 mr-2" />
                 Statistics
