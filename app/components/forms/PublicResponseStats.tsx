@@ -144,7 +144,31 @@ export function PublicResponseStats({
                 <YAxis />
               </>
             )}
-            <Tooltip />
+
+            <Tooltip
+              content={({ active, payload, label }) => {
+                if (active && payload && payload.length) {
+                  const value = payload[0].value as number;
+                  const item = data.find((item) => item.value === value);
+                  return (
+                    <div
+                      className={`${colorSchemes[colorScheme].card} p-3 rounded-lg shadow-lg border ${colorSchemes[colorScheme].borderdivider}`}
+                    >
+                      <p
+                        className={`${colorSchemes[colorScheme].text} font-medium mb-1`}
+                      >
+                        {label}
+                      </p>
+                      <p className={`${colorSchemes[colorScheme].muted}`}>
+                        {value} responses ({item?.percentage}%)
+                      </p>
+                    </div>
+                  );
+                }
+                return null;
+              }}
+            />
+
             <Bar dataKey="value" fill="#8884d8">
               {data.map((entry, index) => (
                 <Cell
