@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Card } from "@/components/ui/card";
-import { Loader2, Star } from "lucide-react";
+import { BarChart2, Loader2, Star } from "lucide-react";
 import { EnrichedResponse } from "@/types/response";
 import { Form } from "@/types/form";
 import { PublicResponseList } from "@/app/components/forms/PublicResponseList";
@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { PublicResponseStats } from "@/app/components/forms/PublicResponseStats";
 
 interface PublicResponsesPageProps {
   params: {
@@ -306,11 +307,26 @@ export default function PublicResponsesPage({
 
           {/* Tabs */}
           <Tabs defaultValue="all" className="w-full">
-            <TabsList>
-              <TabsTrigger value="all">All Responses</TabsTrigger>
-              <TabsTrigger value="starred">
+            <TabsList className={`${colorSchemes[colorScheme].card}`}>
+              <TabsTrigger
+                value="all"
+                className={`data-[state=active]:bg-[#F472B6]`}
+              >
+                All Responses
+              </TabsTrigger>
+              <TabsTrigger
+                value="starred"
+                className={`data-[state=active]:bg-[#F472B6]`}
+              >
                 <Star className="h-4 w-4 mr-2" />
                 Starred
+              </TabsTrigger>
+              <TabsTrigger
+                value="stats"
+                className={`data-[state=active]:bg-[#F472B6]`}
+              >
+                <BarChart2 className="h-4 w-4 mr-2" />
+                Statistics
               </TabsTrigger>
             </TabsList>
 
@@ -333,6 +349,14 @@ export default function PublicResponsesPage({
                 colorScheme={colorScheme}
                 onToggleStar={toggleStar}
                 starredResponses={starredResponses}
+              />
+            </TabsContent>
+
+            <TabsContent value="stats" className="mt-6">
+              <PublicResponseStats
+                formId={params.formId}
+                token={params.token}
+                colorScheme={colorScheme}
               />
             </TabsContent>
           </Tabs>
