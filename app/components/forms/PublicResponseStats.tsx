@@ -15,6 +15,7 @@ import {
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { ColorSchemeName, colorSchemes } from "@/lib/responses-theme-options";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Heart, ShoppingBag, Users2 } from "lucide-react";
 
 interface ChartData {
   name: string;
@@ -158,6 +159,19 @@ export function PublicResponseStats({
     </Card>
   );
 
+  function getTabName(name: string, isMobile: boolean) {
+    switch (name) {
+      case "Demographics":
+        return isMobile ? "Age & Gender" : "Demographics";
+      case "Shopping Behavior":
+        return isMobile ? "Shopping" : "Shopping Behavior";
+      case "Preferences":
+        return name; // This is already short
+      default:
+        return name;
+    }
+  }
+
   return (
     <div className="space-y-6">
       <Tabs defaultValue="demographics" className="w-full">
@@ -166,20 +180,23 @@ export function PublicResponseStats({
         >
           <TabsTrigger
             value="demographics"
-            className={`${colorSchemes[colorScheme].text} data-[state=active]:bg-[#F472B6]`}
+            className={`${colorSchemes[colorScheme].text} data-[state=active]:bg-[#F472B6] gap-2`}
           >
-            Demographics
+            {!isMobile && <Users2 className="h-4 w-4" />}
+            {getTabName("Demographics", isMobile)}
           </TabsTrigger>
           <TabsTrigger
             value="shopping"
-            className={`${colorSchemes[colorScheme].text} data-[state=active]:bg-[#F472B6]`}
+            className={`${colorSchemes[colorScheme].text} data-[state=active]:bg-[#F472B6] gap-2`}
           >
-            Shopping Behavior
+            {!isMobile && <ShoppingBag className="h-4 w-4" />}
+            {getTabName("Shopping Behavior", isMobile)}
           </TabsTrigger>
           <TabsTrigger
             value="preferences"
-            className={`${colorSchemes[colorScheme].text} data-[state=active]:bg-[#F472B6]`}
+            className={`${colorSchemes[colorScheme].text} data-[state=active]:bg-[#F472B6] gap-2`}
           >
+            {!isMobile && <Heart className="h-4 w-4" />}
             Preferences
           </TabsTrigger>
         </TabsList>
