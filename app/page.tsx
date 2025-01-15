@@ -11,7 +11,6 @@ import {
   Users,
   Coins,
   Terminal,
-  GitBranch,
   BarChart2,
 } from "lucide-react";
 
