@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 function isFileUploadElement(element: FormElement): element is FormElement & {
   type: FormElementType.FILE_UPLOAD;
   properties: {
-    maxSize: number; // in bytes
+    maxSize: number;
     allowedTypes: string[];
     maxFiles: number;
   };
@@ -25,7 +25,7 @@ interface FileUploadProps {
   onChange: (files: File[]) => void;
 }
 
-export function FileUpload({ element, value, onChange }: FileUploadProps) {
+export function FileUpload({ element, value = [], onChange }: FileUploadProps) {
   const { toast } = useToast();
   const [isDragging, setIsDragging] = useState(false);
 
@@ -44,7 +44,18 @@ export function FileUpload({ element, value, onChange }: FileUploadProps) {
         return false;
       }
 
-      if (!element.properties.allowedTypes.includes(file.type)) {
+      // Handle wildcard file types
+      const isAllowed = element.properties.allowedTypes.some((type) => {
+        if (type.endsWith("/*")) {
+          // For wildcards like 'image/*', match the main type
+          const mainType = type.split("/")[0];
+          return file.type.startsWith(mainType + "/");
+        }
+        // For specific types, do an exact match
+        return type === file.type;
+      });
+
+      if (!isAllowed) {
         toast({
           title: "Invalid file type",
           description: `Allowed types are: ${element.properties.allowedTypes.join(
@@ -67,11 +78,12 @@ export function FileUpload({ element, value, onChange }: FileUploadProps) {
   const handleFileChange = (files: FileList | null) => {
     if (!files) return;
 
+    const existingCount = value ? value.length : 0;
     const newFiles = Array.from(files)
       .filter(validateFile)
-      .slice(0, element.properties.maxFiles - value.length);
+      .slice(0, element.properties.maxFiles - existingCount);
 
-    if (newFiles.length + value.length > element.properties.maxFiles) {
+    if (newFiles.length + existingCount > element.properties.maxFiles) {
       toast({
         title: "Too many files",
         description: `Maximum ${element.properties.maxFiles} files allowed`,
@@ -80,7 +92,7 @@ export function FileUpload({ element, value, onChange }: FileUploadProps) {
       return;
     }
 
-    onChange([...value, ...newFiles]);
+    onChange([...(value || []), ...newFiles]);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -100,7 +112,7 @@ export function FileUpload({ element, value, onChange }: FileUploadProps) {
   };
 
   const removeFile = (index: number) => {
-    const newFiles = [...value];
+    const newFiles = [...(value || [])];
     newFiles.splice(index, 1);
     onChange(newFiles);
   };
@@ -113,7 +125,7 @@ export function FileUpload({ element, value, onChange }: FileUploadProps) {
 
   return (
     <div className="space-y-4">
-      <Label className="text-xl md:text-2xl font-medium leading-tight ">
+      <Label className="text-xl md:text-2xl font-medium leading-tight">
         {element.question}
         {element.required && <span className="text-red-500 ml-1">*</span>}
       </Label>
@@ -150,7 +162,7 @@ export function FileUpload({ element, value, onChange }: FileUploadProps) {
         </label>
       </div>
 
-      {value.length > 0 && (
+      {value && value.length > 0 && (
         <div className="space-y-2">
           {value.map((file, index) => (
             <div
