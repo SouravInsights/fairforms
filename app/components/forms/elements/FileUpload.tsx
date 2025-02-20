@@ -78,21 +78,27 @@ export function FileUpload({ element, value = [], onChange }: FileUploadProps) {
   const handleFileChange = (files: FileList | null) => {
     if (!files) return;
 
-    const existingCount = value ? value.length : 0;
-    const newFiles = Array.from(files)
-      .filter(validateFile)
-      .slice(0, element.properties.maxFiles - existingCount);
+    // Convert FileList to array and validate each file
+    const validFiles = Array.from(files).filter(validateFile);
 
-    if (newFiles.length + existingCount > element.properties.maxFiles) {
+    // Calculate how many more files we can add
+    const currentCount = value.length;
+    const remainingSlots = element.properties.maxFiles - currentCount;
+
+    if (validFiles.length > remainingSlots) {
       toast({
         title: "Too many files",
-        description: `Maximum ${element.properties.maxFiles} files allowed`,
+        description: `Maximum ${element.properties.maxFiles} files allowed. You can add ${remainingSlots} more files.`,
         variant: "destructive",
       });
-      return;
+      // Only take the number of files that will fit
+      validFiles.splice(remainingSlots);
     }
 
-    onChange([...(value || []), ...newFiles]);
+    // Combine existing files with new ones
+    const updatedFiles = [...value, ...validFiles];
+    console.log("Updating files:", updatedFiles); // Debug log
+    onChange(updatedFiles);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
