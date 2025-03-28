@@ -13,6 +13,7 @@ import { FormSubmissionFeedback } from "./FormSubmissionFeedback";
 import { FormLoadingState } from "./FormLoadingState";
 import { LogoIcon } from "../icons";
 import Link from "next/link";
+import { AlertCircle } from "lucide-react";
 
 interface FormContentProps {
   form: Form;
@@ -34,6 +35,7 @@ interface FormContentProps {
   handleSubmit: () => void;
   handleKeyDown: (e: React.KeyboardEvent) => void;
   handleValueChange: (value: FormElementValue) => void;
+  validationErrors?: Record<string, string>;
 }
 
 export function FormContent({
@@ -56,12 +58,16 @@ export function FormContent({
   handleSubmit,
   handleKeyDown,
   handleValueChange,
+  validationErrors = {},
 }: FormContentProps) {
   const progress = (currentElementIndex / totalElements) * 100;
   const isLastElement = currentElementIndex === totalElements - 1;
   const showNavigationButtons =
     currentElement.type !== FormElementType.WELCOME_SCREEN &&
     currentElement.type !== FormElementType.END_SCREEN;
+
+  // Check if the current element has a validation error
+  const hasError = !!validationErrors[currentElement.id];
 
   return (
     <div
@@ -159,7 +165,20 @@ export function FormContent({
                     value={responses[currentElement.id]}
                     onChange={handleValueChange}
                     theme={form.settings.theme}
+                    hasError={hasError}
                   />
+
+                  {/* Validation Error Message */}
+                  {hasError && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mt-2 text-red-500 flex items-center"
+                    >
+                      <AlertCircle className="h-4 w-4 mr-2" />
+                      <span>{validationErrors[currentElement.id]}</span>
+                    </motion.div>
+                  )}
                 </div>
 
                 {/*Navigation Buttons*/}
@@ -176,6 +195,7 @@ export function FormContent({
                     onPrevious={handlePrevious}
                     onSubmit={handleSubmit}
                     theme={form.settings.theme}
+                    hasError={hasError}
                   />
                 )}
               </div>

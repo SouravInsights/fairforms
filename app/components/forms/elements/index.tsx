@@ -26,6 +26,7 @@ interface FormElementProps {
   value: FormElementValue;
   onChange: (value: FormElementValue) => void;
   theme: Form["settings"]["theme"];
+  hasError?: boolean;
 }
 
 export function FormElement({
@@ -33,6 +34,7 @@ export function FormElement({
   value,
   onChange,
   theme,
+  hasError = false,
 }: FormElementProps) {
   switch (element.type) {
     case FormElementType.SHORT_TEXT:
@@ -60,6 +62,7 @@ export function FormElement({
           value={value as string}
           onChange={onChange}
           theme={theme}
+          hasError={hasError}
         />
       );
     case FormElementType.PHONE:
@@ -68,6 +71,8 @@ export function FormElement({
           element={element}
           value={value as { countryCode: string; number: string }}
           onChange={onChange}
+          theme={theme}
+          hasError={hasError}
         />
       );
     case FormElementType.ADDRESS:

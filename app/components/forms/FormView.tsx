@@ -1,7 +1,7 @@
 "use client";
 
 import { Form, FormElementType, FormElementValue } from "@/types/form";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useTokenGate } from "@/app/hooks/use-token-gate";
 import { useFormRewards } from "@/app/hooks/use-form-rewards";
@@ -24,6 +24,9 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
   const [responses, setResponses] = useState<Record<string, FormElementValue>>(
     {}
   );
+  const [validationErrors, setValidationErrors] = useState<
+    Record<string, string>
+  >({});
   const [height, setHeight] = useState("100vh");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -34,6 +37,7 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
     form.settings.web3?.tokenGating
   );
   const [submissionId, setSubmissionId] = useState<number | null>(null);
+  const formRef = useRef<HTMLDivElement>(null);
 
   const { claimReward, isReady } = useFormRewards({
     rewards: form.settings.web3?.rewards || { enabled: false, chainId: 1 },
@@ -65,23 +69,82 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
     };
   }, []);
 
+  useEffect(() => {
+    // Focus the element when validation error occurs
+    if (Object.keys(validationErrors).length > 0 && formRef.current) {
+      formRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [validationErrors]);
+
   const totalElements = form.elements.length;
   const currentElement = form.elements[currentElementIndex];
   const isLastElement = currentElementIndex === form.elements.length - 1;
 
+  // Function to validate the current element with error messages
+  const validateCurrentElement = (): boolean => {
+    // Clear any existing validation errors for this element
+    setValidationErrors((prev) => {
+      const updated = { ...prev };
+      delete updated[currentElement.id];
+      return updated;
+    });
+
+    // Check if the element is required and has no response
+    if (currentElement.required && !responses[currentElement.id]) {
+      // Use more conversational and specific error messages based on element type
+      let errorMessage = "Please fill in this field";
+
+      switch (currentElement.type) {
+        case FormElementType.EMAIL:
+          errorMessage = "Please enter your email";
+          break;
+        case FormElementType.PHONE:
+          errorMessage = "Please enter your phone number";
+          break;
+        case FormElementType.SHORT_TEXT:
+        case FormElementType.LONG_TEXT:
+          errorMessage = "Please provide an answer";
+          break;
+        case FormElementType.MULTIPLE_CHOICE:
+          errorMessage = "Please select an option";
+          break;
+        case FormElementType.DROPDOWN:
+          errorMessage = "Please choose an option";
+          break;
+        case FormElementType.DATE:
+          errorMessage = "Please select a date";
+          break;
+        case FormElementType.FILE_UPLOAD:
+          errorMessage = "Please upload a file";
+          break;
+        case FormElementType.CONTACT_INFO:
+          errorMessage = "Please complete your contact information";
+          break;
+        default:
+          errorMessage = "This field is required";
+      }
+
+      setValidationErrors((prev) => ({
+        ...prev,
+        [currentElement.id]: errorMessage,
+      }));
+
+      return false;
+    }
+
+    return true;
+  };
+
   const handleNext = () => {
-    if (!currentElement.required && !responses[currentElement.id]) {
+    // If not required or has a response, proceed
+    if (!currentElement.required || responses[currentElement.id]) {
       setCurrentElementIndex((prev) => prev + 1);
       return;
     }
 
-    if (currentElement.required && !responses[currentElement.id]) {
-      toast({
-        title: "Required Field",
-        description: "Please answer this question before proceeding.",
-        variant: "destructive",
-      });
-      return;
+    // Validate the current element
+    if (!validateCurrentElement()) {
+      return; // Stop if validation fails
     }
 
     setCurrentElementIndex((prev) => prev + 1);
@@ -101,6 +164,11 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
         title: "Preview Mode",
         description: "Form submission is disabled in preview mode",
       });
+      return;
+    }
+
+    // Validate the current element if it's required
+    if (!validateCurrentElement()) {
       return;
     }
 
@@ -217,6 +285,15 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
   };
 
   const handleValueChange = (value: FormElementValue) => {
+    // Clear validation error when user provides a value
+    if (validationErrors[currentElement.id]) {
+      setValidationErrors((prev) => {
+        const updated = { ...prev };
+        delete updated[currentElement.id];
+        return updated;
+      });
+    }
+
     setResponses((prev) => ({
       ...prev,
       [currentElement.id]: value,
@@ -241,27 +318,30 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
   });
 
   const formContent = (
-    <FormContent
-      form={form}
-      isPreview={isPreview}
-      className={className}
-      currentElementIndex={currentElementIndex}
-      totalElements={totalElements}
-      currentElement={currentElement}
-      responses={responses}
-      isSubmitting={isSubmitting}
-      isSuccess={isSuccess}
-      isRewardPending={isRewardPending}
-      showRewardSuccess={showRewardSuccess}
-      height={height}
-      isMobile={isMobile}
-      chainId={chainId}
-      handleNext={handleNext}
-      handlePrevious={handlePrevious}
-      handleSubmit={handleSubmit}
-      handleKeyDown={handleKeyDown}
-      handleValueChange={handleValueChange}
-    />
+    <div ref={formRef}>
+      <FormContent
+        form={form}
+        isPreview={isPreview}
+        className={className}
+        currentElementIndex={currentElementIndex}
+        totalElements={totalElements}
+        currentElement={currentElement}
+        responses={responses}
+        isSubmitting={isSubmitting}
+        isSuccess={isSuccess}
+        isRewardPending={isRewardPending}
+        showRewardSuccess={showRewardSuccess}
+        height={height}
+        isMobile={isMobile}
+        chainId={chainId}
+        handleNext={handleNext}
+        handlePrevious={handlePrevious}
+        handleSubmit={handleSubmit}
+        handleKeyDown={handleKeyDown}
+        handleValueChange={handleValueChange}
+        validationErrors={validationErrors}
+      />
+    </div>
   );
 
   // Show token gate check if access is not granted
@@ -282,8 +362,3 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
   // Show form content if access is granted or no token gating
   return formContent;
 }
-
-// // Helper function to get explorer link
-// const getExplorerLink = (txHash: string) => {
-//   return `https://sepolia.basescan.org/tx/${txHash}`;
-// };

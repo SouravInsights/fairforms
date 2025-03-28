@@ -16,6 +16,7 @@ interface FormNavigationButtonsProps {
   onPrevious: () => void;
   onSubmit: () => void;
   theme: Form["settings"]["theme"];
+  hasError?: boolean; // Add hasError prop
 }
 
 export function FormNavigationButtons({
@@ -30,18 +31,32 @@ export function FormNavigationButtons({
   onPrevious,
   onSubmit,
   theme,
+  hasError = false, // Default to false
 }: FormNavigationButtonsProps) {
   // Custom button styles based on theme
-  const primaryButtonStyles = {
-    backgroundColor: theme.primaryColor,
+  // const primaryButtonStyles = {
+  //   backgroundColor: theme.primaryColor,
+  //   color: theme.backgroundColor,
+  //   "&:hover": {
+  //     backgroundColor: `${theme.primaryColor}E6`, // 90% opacity
+  //   },
+  //   "&:focus": {
+  //     outline: "none",
+  //     boxShadow: `0 0 0 2px ${theme.primaryColor}33`,
+  //   },
+  // };
+
+  const errorButtonStyles = {
+    backgroundColor: hasError ? "#f87171" : theme.primaryColor, // Light red for error state
     color: theme.backgroundColor,
     "&:hover": {
-      backgroundColor: `${theme.primaryColor}E6`, // 90% opacity
+      backgroundColor: hasError ? "#ef4444" : `${theme.primaryColor}E6`, // Darker red on hover
     },
     "&:focus": {
       outline: "none",
-      boxShadow: `0 0 0 2px ${theme.primaryColor}33`,
+      boxShadow: `0 0 0 2px ${hasError ? "#fca5a5" : theme.primaryColor}33`, // Light red shadow
     },
+    cursor: hasError ? "not-allowed" : "pointer",
   };
 
   const outlineButtonStyles = {
@@ -61,6 +76,38 @@ export function FormNavigationButtons({
       backgroundColor: `${theme.primaryColor}11`,
       color: theme.questionColor,
     },
+  };
+
+  // Function to handle next button click with validation feedback
+  const handleNextClick = () => {
+    if (hasError) {
+      // Do nothing or shake animation if there's an error
+      const buttonElement = document.getElementById("next-button");
+      if (buttonElement) {
+        buttonElement.classList.add("animate-shake");
+        setTimeout(() => {
+          buttonElement.classList.remove("animate-shake");
+        }, 500);
+      }
+      return;
+    }
+    onNext();
+  };
+
+  // Function to handle submit button click with validation feedback
+  const handleSubmitClick = () => {
+    if (hasError) {
+      // Do nothing or shake animation if there's an error
+      const buttonElement = document.getElementById("submit-button");
+      if (buttonElement) {
+        buttonElement.classList.add("animate-shake");
+        setTimeout(() => {
+          buttonElement.classList.remove("animate-shake");
+        }, 500);
+      }
+      return;
+    }
+    onSubmit();
   };
 
   return (
@@ -93,28 +140,34 @@ export function FormNavigationButtons({
 
       {!isLastElement ? (
         <Button
-          className="flex-1 md:flex-none md:ml-auto"
-          style={primaryButtonStyles}
-          onClick={onNext}
+          id="next-button"
+          className={cn(
+            "flex-1 md:flex-none md:ml-auto",
+            hasError && "animate-pulse"
+          )}
+          style={errorButtonStyles}
+          onClick={handleNextClick}
           size="lg"
         >
           {isMobile ? "OK" : "Press Enter ↵"}
         </Button>
       ) : (
         <Button
+          id="submit-button"
           className={cn(
             "ml-auto",
-            (isSubmitting || isRewardPending) && "opacity-70"
+            (isSubmitting || isRewardPending) && "opacity-70",
+            hasError && "animate-pulse"
           )}
           style={{
-            ...primaryButtonStyles,
+            ...errorButtonStyles,
             ...(isSubmitting || isRewardPending
               ? {
                   backgroundColor: `${theme.primaryColor}99`,
                 }
               : {}),
           }}
-          onClick={onSubmit}
+          onClick={handleSubmitClick}
           size="lg"
           disabled={isSubmitting || isRewardPending}
         >
@@ -125,7 +178,9 @@ export function FormNavigationButtons({
               : chainId !== baseSepolia.id &&
                   form.settings.web3?.rewards.enabled
                 ? "Switch Network & Submit"
-                : "Submit"}
+                : hasError
+                  ? "Please Fill Required Field"
+                  : "Submit"}
         </Button>
       )}
     </div>
