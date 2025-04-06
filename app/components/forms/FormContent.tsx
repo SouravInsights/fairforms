@@ -62,13 +62,14 @@ export function FormContent({
 }: FormContentProps) {
   const progress = (currentElementIndex / totalElements) * 100;
   const isLastElement = currentElementIndex === totalElements - 1;
+  // Add safe checks for currentElement
   const showNavigationButtons =
+    currentElement &&
     currentElement.type !== FormElementType.WELCOME_SCREEN &&
     currentElement.type !== FormElementType.END_SCREEN;
 
   // Check if the current element has a validation error
-  const hasError = !!validationErrors[currentElement.id];
-
+  const hasError = currentElement && !!validationErrors[currentElement.id];
   return (
     <div
       className={cn(

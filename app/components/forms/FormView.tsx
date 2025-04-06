@@ -82,6 +82,9 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
 
   // Function to validate the current element with error messages
   const validateCurrentElement = (): boolean => {
+    // If currentElement is undefined, return false
+    if (!currentElement) return false;
+
     // Clear any existing validation errors for this element
     setValidationErrors((prev) => {
       const updated = { ...prev };
@@ -136,6 +139,12 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
   };
 
   const handleNext = () => {
+    // If we're at the last element, handle submission instead of navigation
+    if (isLastElement) {
+      handleSubmit();
+      return;
+    }
+
     // If not required or has a response, proceed
     if (!currentElement.required || responses[currentElement.id]) {
       setCurrentElementIndex((prev) => prev + 1);
@@ -151,7 +160,10 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
   };
 
   const handlePrevious = () => {
-    setCurrentElementIndex((prev) => prev - 1);
+    // Ensure we don't go below index 0
+    if (currentElementIndex > 0) {
+      setCurrentElementIndex((prev) => prev - 1);
+    }
   };
 
   const showRewardSuccess = Boolean(
@@ -171,6 +183,9 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
     if (!validateCurrentElement()) {
       return;
     }
+
+    // Get the most up-to-date responses including the last question
+    const currentResponses = { ...responses };
 
     // Connect wallet if needed for rewards
     if (
@@ -206,7 +221,7 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          responses,
+          responses: currentResponses,
           walletAddress: address,
         }),
       });
@@ -294,10 +309,14 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
       });
     }
 
-    setResponses((prev) => ({
-      ...prev,
+    // Store the response immediately
+    const updatedResponses = {
+      ...responses,
       [currentElement.id]: value,
-    }));
+    };
+
+    // Update the responses state
+    setResponses(updatedResponses);
 
     // Auto-advance for Welcome Screen and single-choice selection
     if (
@@ -305,7 +324,20 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
       (currentElement.type === FormElementType.MULTIPLE_CHOICE &&
         !currentElement.properties.allowMultiple)
     ) {
-      handleNext();
+      // Don't auto-navigate or submit on the last element for multiple choice
+      if (
+        isLastElement &&
+        currentElement.type === FormElementType.MULTIPLE_CHOICE
+      ) {
+        return;
+      }
+
+      // Use setTimeout to ensure the state update happens before navigation
+      setTimeout(() => {
+        if (!isLastElement) {
+          handleNext();
+        }
+      }, 50);
     }
   };
 
@@ -316,6 +348,15 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
     isConnected,
     settings: form.settings.web3,
   });
+
+  // Safety check - if currentElement is undefined, show a fallback
+  if (!currentElement) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p>Error loading form content. Please refresh the page.</p>
+      </div>
+    );
+  }
 
   const formContent = (
     <div ref={formRef}>
