@@ -1,4 +1,9 @@
-import { FormElement, FormElementType, Form } from "@/types/form";
+import {
+  FormElement,
+  FormElementType,
+  Form,
+  PhoneProperties,
+} from "@/types/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -21,13 +26,24 @@ const defaultTheme = {
   backgroundColor: "#FFFFFF",
 };
 
+// Country code validation patterns
+const phoneValidationRules: Record<
+  string,
+  { pattern: RegExp; example: string }
+> = {
+  "+1": { pattern: /^\d{10}$/, example: "10 digits (e.g., 5551234567)" },
+  "+44": { pattern: /^\d{10,11}$/, example: "10-11 digits (e.g., 7911123456)" },
+  "+91": { pattern: /^\d{10}$/, example: "10 digits (e.g., 9876543210)" },
+  "+33": { pattern: /^\d{9}$/, example: "9 digits (e.g., 612345678)" },
+  "+49": { pattern: /^\d{10,11}$/, example: "10-11 digits (e.g., 1701234567)" },
+  "+81": { pattern: /^\d{10,11}$/, example: "10-11 digits (e.g., 9012345678)" },
+  "+86": { pattern: /^\d{11}$/, example: "11 digits (e.g., 13912345678)" },
+  default: { pattern: /^\d{6,15}$/, example: "6-15 digits" },
+};
+
 function isPhoneElement(element: FormElement): element is FormElement & {
   type: FormElementType.PHONE;
-  properties: {
-    placeholder: string;
-    defaultCountry: string;
-    allowInternational: boolean;
-  };
+  properties: PhoneProperties;
 } {
   return element.type === FormElementType.PHONE;
 }
@@ -56,14 +72,37 @@ export function PhoneInput({
   // Merge default theme with provided theme
   const currentTheme = { ...defaultTheme, ...theme };
 
-  // Validate phone number without setting state
-  const validatePhone = (phoneNumber: string) => {
+  // Make sure the element is a phone element before accessing its properties
+  if (!isPhoneElement(element)) {
+    return null;
+  }
+
+  // Get the current country code or use the default from element properties
+  const currentCountryCode =
+    value?.countryCode || element.properties.defaultCountry;
+
+  // Get validation rules for the current country code
+  const validationRule =
+    phoneValidationRules[currentCountryCode] || phoneValidationRules.default;
+
+  // Validate phone number based on country-specific rules
+  const validatePhone = (phoneNumber: string, countryCode: string) => {
     if (!phoneNumber && element.required) {
       return "Please enter your phone number";
     }
 
-    if (phoneNumber && (phoneNumber.length < 6 || phoneNumber.length > 15)) {
-      return "Please enter a valid phone number";
+    // Skip further validation if empty and not required
+    if (!phoneNumber && !element.required) {
+      return null;
+    }
+
+    // Get country-specific validation rule
+    const rule =
+      phoneValidationRules[countryCode as keyof typeof phoneValidationRules] ||
+      phoneValidationRules.default;
+
+    if (!rule.pattern.test(phoneNumber)) {
+      return `Invalid phone number format. Expected ${rule.example}`;
     }
 
     return null;
@@ -71,12 +110,12 @@ export function PhoneInput({
 
   // Handle input change with validation
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const sanitizedValue = e.target.value.replace(/[^0-9+]/g, ""); // Allow only numbers and "+"
+    const sanitizedValue = e.target.value.replace(/[^0-9]/g, ""); // Allow only numbers (no "+" in the number field)
     onChange({ ...value, number: sanitizedValue });
 
     // Only set internal error for format validation, not for required field
     const validationError = sanitizedValue
-      ? validatePhone(sanitizedValue)
+      ? validatePhone(sanitizedValue, currentCountryCode)
       : null;
     setInternalError(validationError);
     setIsValid(!validationError && sanitizedValue.length > 0);
@@ -87,10 +126,22 @@ export function PhoneInput({
     setIsFocused(false);
     if (value.number) {
       // Only validate format on blur, not "required" state
-      const formatError = validatePhone(value.number);
+      const formatError = validatePhone(value.number, currentCountryCode);
       if (formatError && formatError !== "Please enter your phone number") {
         setInternalError(formatError);
       }
+    }
+  };
+
+  // Handle country code change
+  const handleCountryChange = (countryCode: string) => {
+    onChange({ ...value, countryCode });
+
+    // Revalidate number when country changes
+    if (value.number) {
+      const validationError = validatePhone(value.number, countryCode);
+      setInternalError(validationError);
+      setIsValid(!validationError && value.number.length > 0);
     }
   };
 
@@ -99,10 +150,6 @@ export function PhoneInput({
   const hasAnyError = hasError || !!internalError || !!externalError;
   // Prioritize internal format errors over external required field errors
   const errorToShow = internalError || externalError;
-
-  if (!isPhoneElement(element)) {
-    return null;
-  }
 
   return (
     <div className="space-y-6">
@@ -144,10 +191,8 @@ export function PhoneInput({
         <div className="flex gap-2">
           {/* Country Code Select */}
           <Select
-            value={value?.countryCode || element.properties.defaultCountry}
-            onValueChange={(countryCode: string) =>
-              onChange({ ...value, countryCode })
-            }
+            value={currentCountryCode}
+            onValueChange={handleCountryChange}
           >
             <SelectTrigger
               className={cn(
@@ -188,7 +233,9 @@ export function PhoneInput({
               onChange={handleInputChange}
               onFocus={() => setIsFocused(true)}
               onBlur={handleBlur}
-              placeholder={element.properties.placeholder}
+              placeholder={
+                element.properties.placeholder || validationRule.example
+              }
               className={cn(
                 "transition-all duration-200",
                 isFocused && "ring-2",
@@ -237,6 +284,17 @@ export function PhoneInput({
           >
             <AlertCircle className="h-3 w-3 mr-1 flex-shrink-0" />
             <span>{errorToShow}</span>
+          </motion.p>
+        )}
+
+        {/* Optional hint showing format for selected country */}
+        {isFocused && !errorToShow && (
+          <motion.p
+            initial={{ opacity: 0, y: -5 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-sm mt-2 text-gray-500"
+          >
+            Format: {validationRule.example}
           </motion.p>
         )}
       </motion.div>
