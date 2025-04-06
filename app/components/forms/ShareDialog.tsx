@@ -26,9 +26,8 @@ export function ShareDialog({ form, onUpdate }: ShareDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [slugError, setSlugError] = useState<string | null>("");
+  const [slugError, setSlugError] = useState<string | null>(null);
   const [customSlug, setCustomSlug] = useState(form.customSlug || "");
-  const [isValidating, setIsValidating] = useState(false);
   const [seoData, setSeoData] = useState({
     metaTitle: form.metaTitle || form.title,
     metaDescription: form.metaDescription || form.description || "",
@@ -37,6 +36,16 @@ export function ShareDialog({ form, onUpdate }: ShareDialogProps) {
   const [isSeoUpdating, setIsSeoUpdating] = useState(false);
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
+
+  // Update local state when form prop changes
+  useEffect(() => {
+    setCustomSlug(form.customSlug || "");
+    setSeoData({
+      metaTitle: form.metaTitle || form.title,
+      metaDescription: form.metaDescription || form.description || "",
+      socialImageUrl: form.socialImageUrl || "",
+    });
+  }, [form]);
 
   // Fetch form data when dialog opens
   useEffect(() => {
@@ -50,8 +59,14 @@ export function ShareDialog({ form, onUpdate }: ShareDialogProps) {
 
         const data = await response.json();
         setCustomSlug(data.customSlug || "");
+        setSeoData({
+          metaTitle: data.metaTitle || data.title,
+          metaDescription: data.metaDescription || data.description || "",
+          socialImageUrl: data.socialImageUrl || "",
+        });
         setSlugError(null);
-      } catch {
+      } catch (error) {
+        console.error("Error loading form data:", error);
         toast({
           title: "Error",
           description: "Failed to load form data",
@@ -73,10 +88,6 @@ export function ShareDialog({ form, onUpdate }: ShareDialogProps) {
     }
     return `${baseUrl}/forms/${form.id}`;
   };
-
-  useEffect(() => {
-    setCustomSlug(form.customSlug || "");
-  }, [form.customSlug]);
 
   const formUrl = form.customSlug
     ? `${baseUrl}/forms/${form.customSlug}`
@@ -104,7 +115,6 @@ export function ShareDialog({ form, onUpdate }: ShareDialogProps) {
     if (!slug) return true;
 
     try {
-      setIsValidating(true);
       const response = await fetch("/api/forms/validate-slug", {
         method: "POST",
         headers: {
@@ -125,11 +135,10 @@ export function ShareDialog({ form, onUpdate }: ShareDialogProps) {
 
       setSlugError(null);
       return true;
-    } catch {
+    } catch (error) {
+      console.error("Error validating slug:", error);
       setSlugError("Failed to validate URL");
       return false;
-    } finally {
-      setIsValidating(false);
     }
   };
 
@@ -139,25 +148,66 @@ export function ShareDialog({ form, onUpdate }: ShareDialogProps) {
   };
 
   const handleSlugUpdate = async () => {
-    if (isUpdating || isValidating) return;
+    if (isUpdating) {
+      return;
+    }
+
+    // Format the slug once
+    const formattedSlug = formatSlug(customSlug);
+
+    // Don't update if slug hasn't changed from what's already saved
+    if (form.customSlug === formattedSlug) {
+      return;
+    }
 
     try {
+      // Set updating state to prevent multiple clicks
       setIsUpdating(true);
 
-      const formattedSlug = formatSlug(customSlug);
+      // First validate the slug
       const isValid = await validateSlug(formattedSlug);
 
-      if (!isValid) return;
+      if (!isValid) {
+        return; // Exit early if validation fails
+      }
 
-      await onUpdate({ customSlug: formattedSlug || null });
+      // Make direct API request to update the slug
+      const updateResponse = await fetch(`/api/forms/${form.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          customSlug: formattedSlug || null,
+        }),
+      });
 
+      // Handle API errors
+      if (!updateResponse.ok) {
+        const errorData = await updateResponse.json();
+        console.error("API error:", errorData);
+        throw new Error("Failed to update custom URL");
+      }
+
+      // Parse the response
+      const updatedForm = await updateResponse.json();
+
+      // Update the local state
+      setCustomSlug(updatedForm.customSlug || "");
+
+      // Show success message
       toast({
         title: "Success",
         description: "Custom URL updated successfully",
       });
 
+      // Clear any previous errors
       setSlugError(null);
-    } catch {
+
+      // Call onUpdate to keep parent state in sync
+      await onUpdate({ customSlug: formattedSlug || null });
+    } catch (error) {
+      console.error("Error updating slug:", error);
       toast({
         title: "Error",
         description: "Failed to update custom URL",
@@ -180,6 +230,24 @@ export function ShareDialog({ form, onUpdate }: ShareDialogProps) {
 
     try {
       setIsSeoUpdating(true);
+
+      const updateResponse = await fetch(`/api/forms/${form.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          metaTitle: seoData.metaTitle,
+          metaDescription: seoData.metaDescription,
+          socialImageUrl: seoData.socialImageUrl,
+        }),
+      });
+
+      if (!updateResponse.ok) {
+        throw new Error("Failed to update SEO settings");
+      }
+
+      // Also update parent state
       await onUpdate({
         metaTitle: seoData.metaTitle,
         metaDescription: seoData.metaDescription,
@@ -190,7 +258,8 @@ export function ShareDialog({ form, onUpdate }: ShareDialogProps) {
         title: "Success",
         description: "SEO settings updated successfully",
       });
-    } catch {
+    } catch (error) {
+      console.error("Error updating SEO settings:", error);
       toast({
         title: "Error",
         description: "Failed to update SEO settings",
@@ -254,7 +323,7 @@ export function ShareDialog({ form, onUpdate }: ShareDialogProps) {
                   </div>
                   {customSlug &&
                     !slugError &&
-                    form.customSlug !== customSlug && (
+                    form.customSlug !== formatSlug(customSlug) && (
                       <p className="text-sm text-muted-foreground mt-1">
                         This URL will be active once you save
                       </p>
@@ -280,9 +349,8 @@ export function ShareDialog({ form, onUpdate }: ShareDialogProps) {
                       onClick={handleSlugUpdate}
                       disabled={
                         isUpdating ||
-                        isValidating ||
                         !!slugError ||
-                        form.customSlug === customSlug
+                        form.customSlug === formatSlug(customSlug)
                       }
                     >
                       {isUpdating ? "Saving..." : "Save"}

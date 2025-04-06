@@ -33,78 +33,77 @@ export function FormBuilder({ formId }: { formId: string }) {
   const { state, dispatch } = useFormContext();
   const [isLoading, setIsLoading] = useState(true);
   const [isPublished, setIsPublished] = useState(false);
+  const [formData, setFormData] = useState<Form | null>(null);
   const { toast } = useToast();
   const { user } = useUser();
 
-  useEffect(() => {
-    const loadForm = async () => {
-      try {
-        setIsLoading(true);
+  const loadFormData = async () => {
+    try {
+      setIsLoading(true);
 
-        if (formId === "new") {
-          // Create a new form
-          const response = await fetch("/api/forms", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
+      if (formId === "new") {
+        // Create a new form
+        const response = await fetch("/api/forms", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        const newForm = await response.json();
+        if (response.ok) {
+          dispatch({
+            type: "SET_INITIAL_STATE",
+            payload: {
+              elements: newForm.elements,
+              title: newForm.title,
+              description: newForm.description,
+              settings: newForm.settings,
             },
           });
-
-          const newForm = await response.json();
-          if (response.ok) {
-            dispatch({
-              type: "SET_INITIAL_STATE",
-              payload: {
-                elements: newForm.elements,
-                title: newForm.title,
-                description: newForm.description,
-                settings: newForm.settings,
-              },
-            });
-            setIsPublished(newForm.isPublished);
-            // Redirect to the new form's edit page
-            window.history.replaceState(
-              {},
-              "",
-              `/dashboard/forms/${newForm.id}`
-            );
-          } else {
-            throw new Error("Failed to create new form");
-          }
+          setIsPublished(newForm.isPublished);
+          setFormData(newForm);
+          // Redirect to the new form's edit page
+          window.history.replaceState({}, "", `/dashboard/forms/${newForm.id}`);
         } else {
-          // Load existing form
-          const response = await fetch(`/api/forms/${formId}`);
-          const form = await response.json();
-
-          if (response.ok) {
-            dispatch({
-              type: "SET_INITIAL_STATE",
-              payload: {
-                elements: form.elements,
-                title: form.title,
-                description: form.description,
-                settings: form.settings,
-              },
-            });
-            setIsPublished(form.isPublished);
-          } else {
-            throw new Error("Failed to load form");
-          }
+          throw new Error("Failed to create new form");
         }
-      } catch (error) {
-        console.error("Error loading form:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load form. Please try again.",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
+      } else {
+        // Load existing form
+        const response = await fetch(`/api/forms/${formId}`);
+        const form = await response.json();
 
-    loadForm();
-  }, [formId, dispatch, toast]);
+        if (response.ok) {
+          dispatch({
+            type: "SET_INITIAL_STATE",
+            payload: {
+              elements: form.elements,
+              title: form.title,
+              description: form.description,
+              settings: form.settings,
+            },
+          });
+          setIsPublished(form.isPublished);
+          setFormData(form);
+        } else {
+          throw new Error("Failed to load form");
+        }
+      }
+    } catch (error) {
+      console.error("Error loading form:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load form. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadFormData();
+  }, [formId]);
 
   const saveFormChanges = async (formData: Partial<UpdateFormData>) => {
     if (formId === "new") return;
@@ -121,12 +120,16 @@ export function FormBuilder({ formId }: { formId: string }) {
       if (!response.ok) {
         throw new Error("Failed to save changes");
       }
-    } catch {
+
+      const updatedData = await response.json();
+      return updatedData;
+    } catch (error) {
       toast({
         title: "Error",
         description: "Failed to save changes. Please try again.",
         variant: "destructive",
       });
+      throw error;
     }
   };
 
@@ -228,27 +231,19 @@ export function FormBuilder({ formId }: { formId: string }) {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        Loading...
-      </div>
-    );
-  }
-
   const handleFormUpdate = async (updates: Partial<Form>): Promise<void> => {
     try {
-      const response = await fetch(`/api/forms/${formId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updates),
+      // Make the API call
+      const updatedForm = await saveFormChanges(updates);
+      console.log("Form updated successfully:", updatedForm);
+
+      // Update local state
+      setFormData((prev) => {
+        if (!prev) return updatedForm;
+        return { ...prev, ...updatedForm };
       });
 
-      if (!response.ok) throw new Error("Failed to update form");
-
-      // Update local state if needed
+      // Update form context if needed
       if (updates.title !== undefined) {
         dispatch({
           type: "UPDATE_FORM_DETAILS",
@@ -262,19 +257,33 @@ export function FormBuilder({ formId }: { formId: string }) {
         });
       }
 
-      toast({
-        title: "Success",
-        description: "Form updated successfully",
-      });
+      // For slug updates, make sure to refresh form data
+      if (updates.customSlug !== undefined) {
+        // Short delay to ensure the database has updated
+        setTimeout(() => {
+          loadFormData();
+        }, 500);
+      }
+
+      return Promise.resolve();
     } catch (error) {
+      console.error("Error in handleFormUpdate:", error);
       toast({
         title: "Error",
         description: "Failed to update form settings",
         variant: "destructive",
       });
-      throw error;
+      return Promise.reject(error);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        Loading...
+      </div>
+    );
+  }
 
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
@@ -316,7 +325,7 @@ export function FormBuilder({ formId }: { formId: string }) {
                   settings={state.settings}
                 />
               )}
-              {formId !== "new" && (
+              {formId !== "new" && formData && (
                 <>
                   <Web3Dialog
                     form={{
@@ -327,12 +336,13 @@ export function FormBuilder({ formId }: { formId: string }) {
                       settings: state.settings,
                       isPublished,
                       userId: user?.id || "",
-                      createdAt: new Date(),
-                      updatedAt: new Date(),
-                      customSlug: null,
-                      metaTitle: state.title,
-                      metaDescription: state.description,
-                      socialImageUrl: null,
+                      createdAt: formData.createdAt,
+                      updatedAt: formData.updatedAt,
+                      customSlug: formData.customSlug,
+                      metaTitle: formData.metaTitle || state.title,
+                      metaDescription:
+                        formData.metaDescription || state.description,
+                      socialImageUrl: formData.socialImageUrl,
                     }}
                     onUpdate={handleFormUpdate}
                   />
@@ -345,12 +355,13 @@ export function FormBuilder({ formId }: { formId: string }) {
                       settings: state.settings,
                       isPublished,
                       userId: user?.id || "",
-                      createdAt: new Date(),
-                      updatedAt: new Date(),
-                      customSlug: null,
-                      metaTitle: state.title,
-                      metaDescription: state.description,
-                      socialImageUrl: null,
+                      createdAt: formData.createdAt,
+                      updatedAt: formData.updatedAt,
+                      customSlug: formData.customSlug,
+                      metaTitle: formData.metaTitle || state.title,
+                      metaDescription:
+                        formData.metaDescription || state.description,
+                      socialImageUrl: formData.socialImageUrl,
                     }}
                     onUpdate={handleFormUpdate}
                   />
@@ -363,12 +374,13 @@ export function FormBuilder({ formId }: { formId: string }) {
                       settings: state.settings,
                       isPublished,
                       userId: user?.id || "",
-                      createdAt: new Date(),
-                      updatedAt: new Date(),
-                      customSlug: null,
-                      metaTitle: state.title,
-                      metaDescription: state.description,
-                      socialImageUrl: null,
+                      createdAt: formData.createdAt,
+                      updatedAt: formData.updatedAt,
+                      customSlug: formData.customSlug,
+                      metaTitle: formData.metaTitle || state.title,
+                      metaDescription:
+                        formData.metaDescription || state.description,
+                      socialImageUrl: formData.socialImageUrl,
                     }}
                   />
                   <Button
