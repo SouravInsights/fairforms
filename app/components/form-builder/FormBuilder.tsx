@@ -193,6 +193,16 @@ export function FormBuilder({ formId }: { formId: string }) {
       });
       return;
     }
+    // prevent publishing if there are no form elements
+    if (state.elements.length === 0 && !isPublished) {
+      toast({
+        title: "Error",
+        description:
+          "Cannot publish a form with no elements. Please add at least one form element.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     try {
       const response = await fetch(`/api/forms/${formId}/publish`, {
