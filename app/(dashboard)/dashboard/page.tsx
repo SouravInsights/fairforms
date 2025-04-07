@@ -35,6 +35,7 @@ import { Form, FormTemplate } from "@/types/form";
 import { SaveAsTemplateDialog } from "@/app/components/form-builder/SaveAsTemplateDialog";
 import { TemplatePreviewDialog } from "@/app/components/form-builder/TemplatePreviewDialog";
 import { DeleteConfirmationDialog } from "@/app/components/form-builder/DeleteConfirmationDialog";
+import { AIPromptModal } from "@/app/components/form-builder/AIPromptModal";
 
 interface FormWithResponseCount extends Form {
   responseCount: number;
@@ -278,22 +279,26 @@ export default function DashboardPage() {
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Dashboard</h1>
-        <Button
-          onClick={() => setTemplateDialogIsOpen(true)}
-          disabled={isCreating}
-        >
-          {isCreating ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Creating...
-            </>
-          ) : (
-            <>
-              <Plus className="w-4 h-4 mr-2" />
-              Create New Form
-            </>
-          )}
-        </Button>
+        <div className="flex gap-2">
+          <AIPromptModal />
+          <Button
+            onClick={() => setTemplateDialogIsOpen(true)}
+            variant="outline"
+            disabled={isCreating}
+          >
+            {isCreating ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Creating...
+              </>
+            ) : (
+              <>
+                <Plus className="w-4 h-4 mr-2" />
+                Create Blank Form
+              </>
+            )}
+          </Button>
+        </div>
       </div>
 
       <Tabs defaultValue="forms" value={activeTab} onValueChange={setActiveTab}>
@@ -311,12 +316,14 @@ export default function DashboardPage() {
                   Create your first form to get started
                 </CardDescription>
               </CardHeader>
-              <CardFooter className="justify-center">
+              <CardFooter className="justify-center flex gap-4">
+                <AIPromptModal />
                 <Button
                   onClick={() => setTemplateDialogIsOpen(true)}
                   disabled={isCreating}
+                  variant="outline"
                 >
-                  Create Form
+                  Create Blank Form
                 </Button>
               </CardFooter>
             </Card>
