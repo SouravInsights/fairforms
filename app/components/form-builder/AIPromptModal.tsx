@@ -13,63 +13,66 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card } from "@/components/ui/card";
-import { Loader2, Sparkles, MessageSquare } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Loader2, Sparkles, MessageSquare, Search, Tag } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
-
-// Sample prompt templates to get users started. Cause most users don't know how to write good prompts..
-const PROMPT_TEMPLATES = [
-  {
-    id: "contact",
-    name: "Contact Form",
-    description: "Basic contact form with name, email, and message fields",
-    prompt:
-      "Create a contact form with fields for name, email, phone number, and a message box. Add validation for the email field.",
-  },
-  {
-    id: "event",
-    name: "Event Registration",
-    description:
-      "Form for registering for an event with personal and preference details",
-    prompt:
-      "Create an event registration form with name, email, phone number, dietary preferences dropdown (Vegetarian, Vegan, Non-vegetarian), and a checkbox for agreeing to terms and conditions.",
-  },
-  {
-    id: "feedback",
-    name: "Customer Feedback",
-    description: "Detailed feedback form with ratings and open comments",
-    prompt:
-      "Create a customer feedback form with multiple choice questions for rating product quality, customer service, and delivery speed from 1-5. Include a text field for additional comments.",
-  },
-  {
-    id: "job",
-    name: "Job Application",
-    description:
-      "Comprehensive job application form with work history and skills",
-    prompt:
-      "Create a job application form with fields for personal information (name, email, phone), work experience, education, skills, and an option to upload a resume.",
-  },
-  {
-    id: "survey",
-    name: "Market Research",
-    description: "Survey with diverse question types for market research",
-    prompt:
-      "Create a market research survey with demographic questions (age range, gender), multiple choice questions about product preferences, and rating scales for different features.",
-  },
-];
+import {
+  PROMPT_TEMPLATES,
+  searchPromptTemplates,
+  getPromptTemplatesByTags,
+} from "@/lib/ai/prompt-templates";
 
 export function AIPromptModal() {
   const [open, setOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [prompt, setPrompt] = useState("");
   const [activeTab, setActiveTab] = useState("write");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+
   const router = useRouter();
   const { toast } = useToast();
+
+  // Filter templates based on search and tags
+  const filteredTemplates = (() => {
+    let templates = [...PROMPT_TEMPLATES];
+
+    if (searchQuery) {
+      templates = searchPromptTemplates(searchQuery);
+    }
+
+    if (selectedTags.length > 0) {
+      templates = getPromptTemplatesByTags(selectedTags);
+    }
+
+    return templates;
+  })();
+
+  // Extract unique tags from all templates
+  const allTags = Array.from(
+    new Set(PROMPT_TEMPLATES.flatMap((template) => template.tags))
+  ).sort();
 
   const handleSelectTemplate = (templatePrompt: string) => {
     setPrompt(templatePrompt);
     setActiveTab("write");
+  };
+
+  const toggleTag = (tag: string) => {
+    setSelectedTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+    );
   };
 
   const handleGenerateForm = async () => {
@@ -129,7 +132,7 @@ export function AIPromptModal() {
           Create with AI
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-hidden flex flex-col">
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Create form with AI</DialogTitle>
           <DialogDescription>
@@ -155,7 +158,7 @@ export function AIPromptModal() {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="write" className="mt-4 flex flex-col h-[370px]">
+            <TabsContent value="write" className="mt-4 flex flex-col">
               <Textarea
                 placeholder="Describe the form you want to create in detail. For example: Create a customer feedback form with a 5-star rating system, fields for name, email, and comments."
                 className="flex-1 min-h-[250px] mb-4 resize-none"
@@ -184,19 +187,102 @@ export function AIPromptModal() {
             </TabsContent>
 
             <TabsContent value="templates" className="mt-4">
-              <div className="grid gap-4 h-[370px] overflow-y-auto pr-2">
-                {PROMPT_TEMPLATES.map((template) => (
-                  <Card
-                    key={template.id}
-                    className="p-4 cursor-pointer hover:border-primary transition-colors"
-                    onClick={() => handleSelectTemplate(template.prompt)}
-                  >
-                    <h3 className="font-medium">{template.name}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {template.description}
-                    </p>
-                  </Card>
-                ))}
+              <div className="space-y-4">
+                {/* Search and filter section */}
+                <div className="flex gap-4">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search templates..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-8"
+                    />
+                  </div>
+                </div>
+
+                {/* Tags filter */}
+                <div className="flex flex-wrap gap-2 items-center">
+                  <span className="text-sm text-muted-foreground flex items-center">
+                    <Tag className="h-4 w-4 mr-1" />
+                    Filter by:
+                  </span>
+                  {allTags.map((tag) => (
+                    <Badge
+                      key={tag}
+                      variant={
+                        selectedTags.includes(tag) ? "default" : "outline"
+                      }
+                      className="cursor-pointer"
+                      onClick={() => toggleTag(tag)}
+                    >
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+
+                {/* Templates grid */}
+                <ScrollArea className="h-[400px]">
+                  <div className="grid grid-cols-1 gap-4 pr-4">
+                    {filteredTemplates.length === 0 ? (
+                      <Card className="p-4 text-center">
+                        <CardContent className="pt-4">
+                          <p className="text-muted-foreground">
+                            No templates match your criteria
+                          </p>
+                        </CardContent>
+                      </Card>
+                    ) : (
+                      filteredTemplates.map((template) => (
+                        <Card
+                          key={template.id}
+                          className="cursor-pointer hover:border-primary hover:shadow-sm transition-all"
+                          onClick={() => handleSelectTemplate(template.prompt)}
+                        >
+                          <CardHeader className="pb-2">
+                            <div className="flex justify-between items-start">
+                              <CardTitle className="text-lg">
+                                {template.name}
+                              </CardTitle>
+                              <div className="flex gap-1 flex-wrap">
+                                {template.tags.map((tag) => (
+                                  <Badge
+                                    key={tag}
+                                    variant="secondary"
+                                    className="text-xs"
+                                  >
+                                    {tag}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                            <CardDescription>
+                              {template.description}
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            {template.previewFields && (
+                              <div className="flex flex-wrap gap-1">
+                                {template.previewFields.map((field) => (
+                                  <Badge
+                                    key={field}
+                                    variant="outline"
+                                    className="bg-muted"
+                                  >
+                                    {field}
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
+                          </CardContent>
+                          <CardFooter className="border-t pt-3 text-sm text-muted-foreground">
+                            Click to use this template
+                          </CardFooter>
+                        </Card>
+                      ))
+                    )}
+                  </div>
+                </ScrollArea>
               </div>
             </TabsContent>
           </Tabs>
