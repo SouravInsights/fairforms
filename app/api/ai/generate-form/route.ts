@@ -3,8 +3,7 @@ import { db } from "@/db";
 import { forms } from "@/db/schema";
 import { NextResponse } from "next/server";
 import { FormSettings } from "@/types/form";
-import { createFormFromPrompt } from "@/lib/ai/form-generator";
-// import { nanoid } from "nanoid";
+import { generateForm } from "@/lib/services/form-ai-generator";
 
 export async function POST(req: Request) {
   try {
@@ -23,8 +22,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // Generate form elements based on the prompt
-    const { title, description, elements } = await createFormFromPrompt(prompt);
+    const { title, description, elements } = await generateForm(prompt);
 
     // Default settings
     const defaultSettings: FormSettings = {
@@ -60,7 +58,6 @@ export async function POST(req: Request) {
       },
     };
 
-    // Create the form in the database
     const [form] = await db
       .insert(forms)
       .values({
