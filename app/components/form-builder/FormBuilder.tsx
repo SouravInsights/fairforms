@@ -11,7 +11,7 @@ import {
   UpdateFormData,
 } from "@/types/form";
 import { useToast } from "@/hooks/use-toast";
-import { Globe, EyeOff } from "lucide-react";
+import { Globe, EyeOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getDefaultProperties } from "./form-utils";
 import { FormPreview } from "./FormPreview";
@@ -33,6 +33,7 @@ export function FormBuilder({ formId }: { formId: string }) {
   const { state, dispatch } = useFormContext();
   const [isLoading, setIsLoading] = useState(true);
   const [isPublished, setIsPublished] = useState(false);
+  const [isUnpublshing, setIsUnpublishing] = useState(false);
   const [formData, setFormData] = useState<Form | null>(null);
   const { toast } = useToast();
   const { user } = useUser();
@@ -106,17 +107,8 @@ export function FormBuilder({ formId }: { formId: string }) {
   }, [formId]);
   // Helper function to unpublish a form
   const unpublishForm = async () => {
-    if (formId === "new") {
-      toast({
-        title: "Error",
-        description:
-          "Please save the form first before changing publish status.",
-        variant: "destructive",
-      });
-      return false;
-    }
-
     try {
+      setIsUnpublishing(true);
       const response = await fetch(`/api/forms/${formId}/publish`, {
         method: "PATCH",
         headers: {
@@ -141,7 +133,7 @@ export function FormBuilder({ formId }: { formId: string }) {
         title: "Form Unpublished",
         description: "Your form is now private",
       });
-
+      setIsUnpublishing(false);
       return true;
     } catch (error) {
       console.error("Error unpublishing form:", error);
@@ -451,8 +443,14 @@ export function FormBuilder({ formId }: { formId: string }) {
                   <Button
                     onClick={togglePublish}
                     variant={isPublished ? "outline" : "default"}
+                    disabled={isUnpublshing}
                   >
-                    {isPublished ? (
+                    {isUnpublshing ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Unpublishing
+                      </>
+                    ) : isPublished ? (
                       <>
                         <EyeOff className="w-4 h-4 mr-2" />
                         Unpublish
