@@ -104,7 +104,55 @@ export function FormBuilder({ formId }: { formId: string }) {
   useEffect(() => {
     loadFormData();
   }, [formId]);
+  // Helper function to unpublish a form
+  const unpublishForm = async () => {
+    if (formId === "new") {
+      toast({
+        title: "Error",
+        description:
+          "Please save the form first before changing publish status.",
+        variant: "destructive",
+      });
+      return false;
+    }
 
+    try {
+      const response = await fetch(`/api/forms/${formId}/publish`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          isPublished: false,
+          elements: state.elements,
+          title: state.title,
+          description: state.description,
+          settings: state.settings,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to unpublish form");
+      }
+
+      setIsPublished(false);
+
+      toast({
+        title: "Form Unpublished",
+        description: "Your form is now private",
+      });
+
+      return true;
+    } catch (error) {
+      console.error("Error unpublishing form:", error);
+      toast({
+        title: "Error",
+        description: "Failed to unpublish form",
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
   const saveFormChanges = async (formData: Partial<UpdateFormData>) => {
     if (formId === "new") return;
 
@@ -225,7 +273,10 @@ export function FormBuilder({ formId }: { formId: string }) {
 
       const updatedForm = await response.json();
       setIsPublished(updatedForm.isPublished);
-
+      dispatch({
+        type: "MARK_CLEAN",
+        payload: false,
+      });
       toast({
         title: updatedForm.isPublished ? "Form Published" : "Form Unpublished",
         description: updatedForm.isPublished
@@ -240,10 +291,14 @@ export function FormBuilder({ formId }: { formId: string }) {
       });
     }
   };
+  useEffect(() => {
+    if (isPublished && state.isDirty) {
+      unpublishForm();
+    }
+  }, [isPublished, state.isDirty, formId]);
 
   const handleFormUpdate = async (updates: Partial<Form>): Promise<void> => {
     try {
-      // Make the API call
       const updatedForm = await saveFormChanges(updates);
       console.log("Form updated successfully:", updatedForm);
 
