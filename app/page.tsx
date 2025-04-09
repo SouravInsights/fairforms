@@ -26,6 +26,9 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* 0cred verification */}
+      <div className="9c15d2b6-cd9c-445c-b2aa-b061d3243ca9"></div>
+
       <div className="container mx-auto px-4 py-16 md:px-6">
         {/* Hero Section - Terminal Theme */}
         <div className="max-w-6xl mx-auto">
