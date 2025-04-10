@@ -39,7 +39,7 @@ export async function generateText(
     temperature?: number;
   } = {}
 ): Promise<string> {
-  // We are using the simple GPT-2 model but later we will have to use more robust model.
+  // If no model is provided we will just use the basic GPT-2 model as a default option.
   const model = options.model || "gpt2";
 
   const payload = {

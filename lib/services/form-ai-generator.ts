@@ -1,6 +1,7 @@
 import { nanoid } from "nanoid";
 import { FormElement, FormElementType } from "@/types/form";
 import { getDefaultProperties } from "@/app/components/form-builder/form-utils";
+import { generateText } from "./huggingface";
 
 interface GeneratedForm {
   title: string;
@@ -8,263 +9,244 @@ interface GeneratedForm {
   elements: FormElement[];
 }
 
-/**
- * Core function to generate a form structure from a text description
- */
+interface FieldDefinition {
+  type: string;
+  question: string;
+  description?: string;
+  required: boolean;
+  options?: string[];
+}
+
+interface FormDefinition {
+  title: string;
+  description: string;
+  fields: FieldDefinition[];
+}
+
+// Generates a form structure using AI based on a text input by users
 export async function generateForm(prompt: string): Promise<GeneratedForm> {
   try {
-    // Analyze the prompt to determine form type and fields
-    const formType = determineFormType(prompt);
-    const formStructure = parsePromptToFormStructure(prompt, formType);
+    // understansd the prompt and generates a structured form definition
+    const formDefinition = await generateFormDefinitionWithAI(prompt);
+
+    // converts the structured definition to actual form elements
+    const elements = createFormElementsFromDefinition(formDefinition);
 
     return {
-      title: formStructure.title || "Generated Form",
-      description: formStructure.description || "",
-      elements: formStructure.elements,
+      title: formDefinition.title,
+      description: formDefinition.description,
+      elements,
     };
   } catch (error) {
-    console.error("Form generation error:", error);
-    // Fallback to basic form if generation fails
-    return createBasicForm(prompt);
+    console.error("AI Form generation error:", error);
+    // fall back to rule-based generation if AI fails
+    return generateFallbackForm(prompt);
   }
 }
 
-/**
- * Determine the type of form based on the prompt
- */
-function determineFormType(prompt: string): string {
+// function to generate a structured form definition from a prompt
+async function generateFormDefinitionWithAI(
+  prompt: string
+): Promise<FormDefinition> {
+  const aiPrompt = `
+You are a form-building assistant. Based on the following description, create a JSON structure that describes a form:
+
+"${prompt}"
+
+Your response should be a valid JSON object with the following structure:
+{
+  "title": "Form title here",
+  "description": "Brief description of the form",
+  "fields": [
+    {
+      "type": "ONE OF: SHORT_TEXT, LONG_TEXT, EMAIL, PHONE, CONTACT_INFO, MULTIPLE_CHOICE, DROPDOWN, DATE, NUMBER, FILE_UPLOAD, ADDRESS",
+      "question": "Question text",
+      "description": "Optional help text",
+      "required": true or false,
+      "options": ["Option 1", "Option 2"] 
+    }
+  ]
+}
+
+Keep the form design user-friendly: start with a welcome screen, include only relevant fields based on the description, and end with a thank you screen.
+
+Your response should be ONLY the JSON object, nothing else before or after.
+`;
+
+  try {
+    // Using Mistral-7B model because it's good at following structured output instructions
+    const response = await generateText(aiPrompt, {
+      model: "mistralai/Mistral-7B-Instruct-v0.2",
+      maxTokens: 1024,
+      temperature: 0.2,
+    });
+
+    // Extract and parse the JSON from the response
+    const jsonMatch = response.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error("Failed to extract JSON from AI response");
+    }
+
+    try {
+      const formDefinition = JSON.parse(jsonMatch[0]);
+      console.log("formDefinition:", formDefinition);
+
+      // Validate the structure
+      if (
+        !formDefinition.title ||
+        !formDefinition.description ||
+        !Array.isArray(formDefinition.fields)
+      ) {
+        throw new Error("Invalid form definition structure");
+      }
+
+      return formDefinition;
+    } catch (parseError) {
+      console.error("JSON parse error:", parseError);
+      console.log("Raw AI response:", response);
+      throw new Error("Failed to parse form definition from AI response");
+    }
+  } catch (error) {
+    console.error("AI generation error:", error);
+    throw error;
+  }
+}
+
+// Create form elements from the structured form definition
+function createFormElementsFromDefinition(
+  formDefinition: FormDefinition
+): FormElement[] {
+  // We sjould always prefer to add welcome screen element by default
+  const welcomeScreen = createWelcomeScreen(
+    formDefinition.title,
+    formDefinition.description
+  );
+
+  // Create form field elements (filtering out any null results)
+  const fieldElements = formDefinition.fields
+    .map((field, index) => createFormElementFromField(field, index + 1))
+    .filter((element): element is FormElement => element !== null);
+  console.log("fieldElements:", fieldElements);
+
+  const allElements = [welcomeScreen, ...fieldElements];
+  console.log("allElements:", allElements);
+
+  // 5. Set the correct order property for each element
+  return allElements.map((element, index) => ({
+    ...element,
+    order: index,
+  }));
+}
+
+// Create a form element using the field definition
+function createFormElementFromField(
+  field: FieldDefinition,
+  order: number
+): FormElement | null {
+  const id = `field-${nanoid(8)}`;
+  let elementType: FormElementType;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let properties: any;
+
+  // Map the field type to a form element type
+  switch (field.type.toUpperCase()) {
+    case "SHORT_TEXT":
+      elementType = FormElementType.SHORT_TEXT;
+      properties = getDefaultProperties(FormElementType.SHORT_TEXT);
+      break;
+    case "LONG_TEXT":
+      elementType = FormElementType.LONG_TEXT;
+      properties = getDefaultProperties(FormElementType.LONG_TEXT);
+      break;
+    case "EMAIL":
+      elementType = FormElementType.EMAIL;
+      properties = getDefaultProperties(FormElementType.EMAIL);
+      break;
+    case "PHONE":
+      elementType = FormElementType.PHONE;
+      properties = getDefaultProperties(FormElementType.PHONE);
+      break;
+    case "CONTACT_INFO":
+      elementType = FormElementType.CONTACT_INFO;
+      properties = getDefaultProperties(FormElementType.CONTACT_INFO);
+      break;
+    case "MULTIPLE_CHOICE":
+      elementType = FormElementType.MULTIPLE_CHOICE;
+      properties = getDefaultProperties(FormElementType.MULTIPLE_CHOICE);
+      // If options are provided, use them
+      if (field.options && Array.isArray(field.options)) {
+        properties.options = field.options.map((option, index) => ({
+          id: `option${index + 1}-${nanoid(4)}`,
+          text: option,
+        }));
+      }
+      break;
+    case "DROPDOWN":
+      elementType = FormElementType.DROPDOWN;
+      properties = getDefaultProperties(FormElementType.DROPDOWN);
+      // If options are provided, use them
+      if (field.options && Array.isArray(field.options)) {
+        properties.options = field.options.map((option, index) => ({
+          id: `option${index + 1}-${nanoid(4)}`,
+          text: option,
+        }));
+      }
+      break;
+    case "DATE":
+      elementType = FormElementType.DATE;
+      properties = getDefaultProperties(FormElementType.DATE);
+      break;
+    case "NUMBER":
+      elementType = FormElementType.NUMBER;
+      properties = getDefaultProperties(FormElementType.NUMBER);
+      break;
+    case "FILE_UPLOAD":
+      elementType = FormElementType.FILE_UPLOAD;
+      properties = getDefaultProperties(FormElementType.FILE_UPLOAD);
+      break;
+    case "ADDRESS":
+      elementType = FormElementType.ADDRESS;
+      properties = getDefaultProperties(FormElementType.ADDRESS);
+      break;
+    default:
+      // Skip unrecognized field types
+      console.warn(`Unrecognized field type: ${field.type}`);
+      return null;
+  }
+
+  return {
+    id,
+    type: elementType,
+    question: field.question || "Question",
+    description: field.description || "",
+    required: !!field.required,
+    order,
+    properties,
+  } as FormElement;
+}
+
+// Generate a fallback form for when AI generation fails
+function generateFallbackForm(prompt: string): GeneratedForm {
   const normalizedPrompt = prompt.toLowerCase();
 
-  if (
-    normalizedPrompt.includes("contact") ||
-    normalizedPrompt.includes("get in touch")
-  ) {
-    return "contact";
-  } else if (
-    normalizedPrompt.includes("feedback") ||
-    normalizedPrompt.includes("survey")
-  ) {
-    return "feedback";
-  } else if (
-    normalizedPrompt.includes("event") ||
-    normalizedPrompt.includes("registration")
-  ) {
-    return "event";
+  // Try to extract a form title from the prompt
+  let title = "Generated Form";
+  if (normalizedPrompt.includes("contact")) {
+    title = "Contact Form";
+  } else if (normalizedPrompt.includes("feedback")) {
+    title = "Feedback Form";
+  } else if (normalizedPrompt.includes("event")) {
+    title = "Event Registration";
   } else if (
     normalizedPrompt.includes("job") ||
     normalizedPrompt.includes("application")
   ) {
-    return "job";
-  } else if (
-    normalizedPrompt.includes("order") ||
-    normalizedPrompt.includes("purchase")
-  ) {
-    return "order";
+    title = "Job Application";
   }
 
-  // Default to contact if no match is founded. This needs to be updated later..
-  return "contact";
-}
+  const description = `${title} created from your description`;
 
-/**
- * Parse a prompt to extract form details and generate a form structure
- */
-function parsePromptToFormStructure(
-  prompt: string,
-  formType: string
-): {
-  title: string;
-  description: string;
-  elements: FormElement[];
-} {
-  const normalizedPrompt = prompt.toLowerCase();
-  const elements: FormElement[] = [];
-
-  // 1. Generate a title and description based on the form type
-  let title = "Form";
-  let description = "";
-
-  switch (formType) {
-    case "contact":
-      title = normalizedPrompt.includes("us") ? "Contact Us" : "Contact Form";
-      description = "Please fill out this form to get in touch with us";
-      break;
-    case "feedback":
-      title = "Feedback Form";
-      description = "Share your thoughts and help us improve";
-      if (normalizedPrompt.includes("customer")) {
-        title = "Customer Feedback";
-        description = "We value your feedback about our products and services";
-      }
-      break;
-    case "event":
-      title = "Event Registration";
-      description = "Sign up for our upcoming event";
-      break;
-    case "job":
-      title = "Job Application";
-      description = "Apply for a position with our company";
-      break;
-    case "order":
-      title = "Order Form";
-      description = "Complete your purchase";
-      break;
-  }
-
-  // 2. Add welcome screen
-  elements.push(createWelcomeScreen(title, description));
-
-  // 3. Add form fields based on form type
-  switch (formType) {
-    case "contact":
-      elements.push(createNameField());
-      elements.push(createEmailField());
-
-      if (normalizedPrompt.includes("phone")) {
-        elements.push(createPhoneField());
-      }
-
-      elements.push(createMessageField());
-      break;
-
-    case "feedback":
-      elements.push(createNameField());
-      elements.push(createEmailField());
-
-      if (
-        normalizedPrompt.includes("rating") ||
-        normalizedPrompt.includes("star")
-      ) {
-        elements.push(createRatingField());
-      }
-
-      if (
-        normalizedPrompt.includes("product") ||
-        normalizedPrompt.includes("service")
-      ) {
-        const options = [
-          "Product A",
-          "Product B",
-          "Service 1",
-          "Service 2",
-          "Other",
-        ];
-        elements.push(createMultipleChoiceField("What did you use?", options));
-      }
-
-      elements.push(
-        createLongTextField(
-          "Your feedback",
-          "Please share your thoughts with us"
-        )
-      );
-      break;
-
-    case "event":
-      elements.push(createNameField());
-      elements.push(createEmailField());
-
-      if (normalizedPrompt.includes("phone")) {
-        elements.push(createPhoneField());
-      }
-
-      elements.push(createDateField("Event Date", "When will you attend?"));
-
-      if (
-        normalizedPrompt.includes("diet") ||
-        normalizedPrompt.includes("food") ||
-        normalizedPrompt.includes("preference")
-      ) {
-        const options = [
-          "No restrictions",
-          "Vegetarian",
-          "Vegan",
-          "Gluten-free",
-          "Other",
-        ];
-        elements.push(
-          createMultipleChoiceField("Dietary Preferences", options)
-        );
-      }
-
-      elements.push(
-        createMultipleChoiceField("Will you attend?", ["Yes", "No", "Maybe"])
-      );
-      break;
-
-    case "job":
-      elements.push(createNameField());
-      elements.push(createEmailField());
-      elements.push(createPhoneField());
-      elements.push(
-        createLongTextField(
-          "Work Experience",
-          "Please describe your relevant work experience"
-        )
-      );
-      elements.push(
-        createLongTextField(
-          "Education",
-          "Please provide details of your education"
-        )
-      );
-      elements.push(
-        createFileUploadField("Resume/CV", "Please upload your resume or CV")
-      );
-      break;
-
-    case "order":
-      elements.push(createNameField());
-      elements.push(createEmailField());
-      elements.push(createAddressField());
-
-      if (normalizedPrompt.includes("product")) {
-        const options = ["Product A", "Product B", "Product C", "Custom Order"];
-        elements.push(createMultipleChoiceField("Product Selection", options));
-      }
-
-      elements.push(
-        createLongTextField(
-          "Special Instructions",
-          "Any special requests for your order?"
-        )
-      );
-      break;
-
-    default:
-      // Default to a simple contact form
-      elements.push(createNameField());
-      elements.push(createEmailField());
-      elements.push(createMessageField());
-  }
-
-  // 4. Add end screen
-  elements.push(createEndScreen());
-
-  // 5. Assign order numbers
-  elements.forEach((element, index) => {
-    element.order = index;
-  });
-
-  return { title, description, elements };
-}
-
-/**
- * Create a basic form (fallback if parsing fails)
- */
-function createBasicForm(prompt: string): GeneratedForm {
-  const formType = determineFormType(prompt);
-  let title = "Form";
-  let description = "Please fill out this form";
-
-  if (formType === "contact") {
-    title = "Contact Form";
-    description = "Please fill out this form to get in touch with us";
-  } else if (formType === "feedback") {
-    title = "Feedback Form";
-    description = "We appreciate your feedback";
-  }
-
+  // Create a basic form with common fields
   const elements: FormElement[] = [
     createWelcomeScreen(title, description),
     createNameField(),
@@ -285,7 +267,7 @@ function createBasicForm(prompt: string): GeneratedForm {
   };
 }
 
-// Helper functions to create form elements
+// Helper functions to create various form elements
 function createWelcomeScreen(title: string, description: string): FormElement {
   const id = `welcome-${nanoid(8)}`;
   const properties = getDefaultProperties(FormElementType.WELCOME_SCREEN);
@@ -354,36 +336,6 @@ function createEmailField(): FormElement {
   } as FormElement;
 }
 
-function createPhoneField(): FormElement {
-  const id = `phone-${nanoid(8)}`;
-  const properties = getDefaultProperties(FormElementType.PHONE);
-
-  return {
-    id,
-    type: FormElementType.PHONE,
-    question: "What is your phone number?",
-    description: "",
-    required: false,
-    order: 0,
-    properties,
-  } as FormElement;
-}
-
-function createAddressField(): FormElement {
-  const id = `address-${nanoid(8)}`;
-  const properties = getDefaultProperties(FormElementType.ADDRESS);
-
-  return {
-    id,
-    type: FormElementType.ADDRESS,
-    question: "What is your address?",
-    description: "Please provide your shipping address",
-    required: true,
-    order: 0,
-    properties,
-  } as FormElement;
-}
-
 function createMessageField(): FormElement {
   const id = `message-${nanoid(8)}`;
   const properties = getDefaultProperties(FormElementType.LONG_TEXT);
@@ -399,107 +351,5 @@ function createMessageField(): FormElement {
       ...properties,
       placeholder: "Enter your message here",
     },
-  } as FormElement;
-}
-
-function createLongTextField(
-  question: string,
-  description: string
-): FormElement {
-  const id = `text-${nanoid(8)}`;
-  const properties = getDefaultProperties(FormElementType.LONG_TEXT);
-
-  return {
-    id,
-    type: FormElementType.LONG_TEXT,
-    question,
-    description,
-    required: true,
-    order: 0,
-    properties: {
-      ...properties,
-      placeholder: "Enter your response here",
-    },
-  } as FormElement;
-}
-
-function createMultipleChoiceField(
-  question: string,
-  options: string[]
-): FormElement {
-  const id = `choice-${nanoid(8)}`;
-  const properties = getDefaultProperties(FormElementType.MULTIPLE_CHOICE);
-
-  return {
-    id,
-    type: FormElementType.MULTIPLE_CHOICE,
-    question,
-    description: "",
-    required: true,
-    order: 0,
-    properties: {
-      ...properties,
-      options: options.map((text, index) => ({
-        id: `option${index + 1}-${nanoid(4)}`,
-        text,
-      })),
-    },
-  } as FormElement;
-}
-
-function createRatingField(): FormElement {
-  const id = `rating-${nanoid(8)}`;
-  const properties = getDefaultProperties(FormElementType.MULTIPLE_CHOICE);
-
-  return {
-    id,
-    type: FormElementType.MULTIPLE_CHOICE,
-    question: "How would you rate your experience?",
-    description: "Please select a rating from 1 to 5",
-    required: true,
-    order: 0,
-    properties: {
-      ...properties,
-      options: [
-        { id: `rating1-${nanoid(4)}`, text: "1 - Poor" },
-        { id: `rating2-${nanoid(4)}`, text: "2 - Below Average" },
-        { id: `rating3-${nanoid(4)}`, text: "3 - Average" },
-        { id: `rating4-${nanoid(4)}`, text: "4 - Good" },
-        { id: `rating5-${nanoid(4)}`, text: "5 - Excellent" },
-      ],
-    },
-  } as FormElement;
-}
-
-function createFileUploadField(
-  question: string,
-  description: string
-): FormElement {
-  const id = `file-${nanoid(8)}`;
-  const properties = getDefaultProperties(FormElementType.FILE_UPLOAD);
-
-  return {
-    id,
-    type: FormElementType.FILE_UPLOAD,
-    question,
-    description,
-    required: false,
-    order: 0,
-    properties,
-  } as FormElement;
-}
-
-function createDateField(question: string, description: string): FormElement {
-  const id = `date-${nanoid(8)}`;
-  const properties = getDefaultProperties(FormElementType.DATE);
-
-  return {
-    id,
-    type: FormElementType.DATE,
-    question,
-    description,
-    required: true,
-    order: 0,
-    properties,
   } as FormElement;
 }
