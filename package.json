@@ -17,7 +17,6 @@
     "db:studio:prod": "DRIZZLE_ENV=production drizzle-kit studio"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.787.0",
     "@clerk/backend": "^1.21.2",
     "@clerk/nextjs": "^6.5.1",
     "@hello-pangea/dnd": "^17.0.0",

@@ -16,7 +16,7 @@ import { PictureChoice } from "./PictureChoice";
 import { TextArea } from "./TextArea";
 import { NumberInput } from "./NumberInput";
 import { DateInput } from "./DateInput";
-import { FileUpload, UploadedFile } from "./FileUpload";
+import { FileUpload } from "./FileUpload";
 import { WelcomeScreen } from "./WelcomeScreen";
 import { EndScreen } from "./EndScreen";
 import { ContactInfo } from "./ContactInfo";
@@ -145,7 +145,7 @@ export function FormElement({
       return (
         <FileUpload
           element={element}
-          value={value as UploadedFile[]}
+          value={value as File[]}
           onChange={onChange}
         />
       );
