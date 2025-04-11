@@ -1,3 +1,5 @@
+import { UploadedFile } from "@/app/components/forms/elements/FileUpload";
+
 export enum FormElementType {
   // Contact Info
   CONTACT_INFO = "contact_info",
@@ -180,7 +182,7 @@ export type FormElementValue =
   | string // For text, email, website inputs
   | number // For number input
   | Date // For date input
-  | File[] // For file upload
+  | UploadedFile[] // For file upload
   | string[] // For multiple choice/picture choice with multiple selections
   | { countryCode: string; number: string } // For phone
   | {
