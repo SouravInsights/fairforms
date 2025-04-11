@@ -17,6 +17,8 @@
     "db:studio:prod": "DRIZZLE_ENV=production drizzle-kit studio"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.787.0",
+    "@aws-sdk/s3-request-presigner": "^3.787.0",
     "@clerk/backend": "^1.21.2",
     "@clerk/nextjs": "^6.5.1",
     "@hello-pangea/dnd": "^17.0.0",
@@ -58,6 +60,7 @@
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
     "use-debounce": "^10.0.4",
+    "uuid": "^11.1.0",
     "viem": "2.x",
     "wagmi": "^2.13.4",
     "zod": "^3.23.8"

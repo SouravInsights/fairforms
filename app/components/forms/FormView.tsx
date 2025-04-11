@@ -18,8 +18,6 @@ interface FormViewProps {
 }
 
 export function FormView({ form, isPreview, className }: FormViewProps) {
-  const minTokenBalance = form.settings.web3.tokenGating.minTokenBalance;
-  console.log("minTokenBalance:", minTokenBalance);
   const [currentElementIndex, setCurrentElementIndex] = useState(0);
   const [responses, setResponses] = useState<Record<string, FormElementValue>>(
     {}
@@ -340,14 +338,6 @@ export function FormView({ form, isPreview, className }: FormViewProps) {
       }, 50);
     }
   };
-
-  console.log("Token Gate Debug:", {
-    web3Enabled: form.settings.web3?.enabled,
-    tokenGatingEnabled: form.settings.web3?.tokenGating.enabled,
-    hasAccess,
-    isConnected,
-    settings: form.settings.web3,
-  });
 
   // Safety check - if currentElement is undefined, show a fallback
   if (!currentElement) {
