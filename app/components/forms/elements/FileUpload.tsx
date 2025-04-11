@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState, useCallback } from "react";
@@ -5,7 +6,7 @@ import { FormElement, FormElementType } from "@/types/form";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { X, Upload, FileIcon } from "lucide-react";
+import { X, Upload, FileIcon, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 function isFileUploadElement(element: FormElement): element is FormElement & {
@@ -22,12 +23,14 @@ function isFileUploadElement(element: FormElement): element is FormElement & {
 interface FileUploadProps {
   element: FormElement;
   value: File[];
-  onChange: (files: File[]) => void;
+  onChange: (files: File[], uploadedFiles?: any[]) => void;
 }
 
 export function FileUpload({ element, value = [], onChange }: FileUploadProps) {
   const { toast } = useToast();
   const [isDragging, setIsDragging] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState<any[]>([]);
 
   const validateFile = useCallback(
     (file: File): boolean => {
@@ -75,7 +78,47 @@ export function FileUpload({ element, value = [], onChange }: FileUploadProps) {
     return null;
   }
 
-  const handleFileChange = (files: FileList | null) => {
+  const uploadFiles = async (files: File[]) => {
+    if (files.length === 0) return;
+
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      files.forEach((file) => {
+        formData.append("files", file);
+      });
+      const response = await fetch("/api/uploads", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to upload files");
+      }
+
+      console.log("responses=", response);
+      const result = await response.json();
+      setUploadedFiles((prev) => [...prev, ...result.files]);
+      onChange(files, [...uploadedFiles, ...result.files]);
+
+      toast({
+        title: "Files uploaded successfully",
+        variant: "default",
+      });
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast({
+        title: "Upload failed",
+        description: error instanceof Error ? error.message : "Unknown error",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleFileChange = async (files: FileList | null) => {
     if (!files) return;
 
     // Convert FileList to array and validate each file
@@ -97,8 +140,10 @@ export function FileUpload({ element, value = [], onChange }: FileUploadProps) {
 
     // Combine existing files with new ones
     const updatedFiles = [...value, ...validFiles];
-    console.log("Updating files:", updatedFiles); // Debug log
     onChange(updatedFiles);
+
+    // Upload the new files
+    await uploadFiles(validFiles);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -121,6 +166,13 @@ export function FileUpload({ element, value = [], onChange }: FileUploadProps) {
     const newFiles = [...(value || [])];
     newFiles.splice(index, 1);
     onChange(newFiles);
+
+    // Also remove from uploadedFiles if present
+    if (uploadedFiles[index]) {
+      const newUploadedFiles = [...uploadedFiles];
+      newUploadedFiles.splice(index, 1);
+      setUploadedFiles(newUploadedFiles);
+    }
   };
 
   const formatFileSize = (bytes: number): string => {
@@ -153,14 +205,24 @@ export function FileUpload({ element, value = [], onChange }: FileUploadProps) {
           multiple={element.properties.maxFiles > 1}
           accept={element.properties.allowedTypes.join(",")}
           id={`file-upload-${element.id}`}
+          disabled={isUploading}
         />
         <label
           htmlFor={`file-upload-${element.id}`}
-          className="cursor-pointer flex flex-col items-center gap-2"
+          className={cn(
+            "cursor-pointer flex flex-col items-center gap-2",
+            isUploading && "opacity-50 pointer-events-none"
+          )}
         >
-          <Upload className="h-8 w-8 text-muted-foreground" />
+          {isUploading ? (
+            <Loader2 className="h-8 w-8 text-muted-foreground animate-spin" />
+          ) : (
+            <Upload className="h-8 w-8 text-muted-foreground" />
+          )}
           <span className="text-sm text-muted-foreground">
-            Drag & drop files here or click to browse
+            {isUploading
+              ? "Uploading files..."
+              : "Drag & drop files here or click to browse"}
           </span>
           <span className="text-xs text-muted-foreground">
             Maximum size: {formatFileSize(element.properties.maxSize)}
@@ -187,6 +249,7 @@ export function FileUpload({ element, value = [], onChange }: FileUploadProps) {
               <button
                 onClick={() => removeFile(index)}
                 className="text-muted-foreground hover:text-destructive"
+                disabled={isUploading}
               >
                 <X className="h-4 w-4" />
               </button>
