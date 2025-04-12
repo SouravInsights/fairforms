@@ -24,11 +24,20 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, Sparkles, MessageSquare, Search, Tag } from "lucide-react";
+import {
+  Loader2,
+  Sparkles,
+  MessageSquare,
+  Search,
+  Tag,
+  ArrowRight,
+  CheckCircle2,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import {
   PROMPT_TEMPLATES,
+  PromptTemplate,
   searchPromptTemplates,
   getPromptTemplatesByTags,
 } from "@/lib/ai/prompt-templates";
@@ -40,6 +49,8 @@ export function AIPromptModal() {
   const [activeTab, setActiveTab] = useState("write");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedTemplate, setSelectedTemplate] =
+    useState<PromptTemplate | null>(null);
 
   const router = useRouter();
   const { toast } = useToast();
@@ -59,14 +70,22 @@ export function AIPromptModal() {
     return templates;
   })();
 
-  // Extract unique tags from all templates
+  // Extract unique tags from all templates and sort alphabetically
   const allTags = Array.from(
     new Set(PROMPT_TEMPLATES.flatMap((template) => template.tags))
   ).sort();
 
-  const handleSelectTemplate = (templatePrompt: string) => {
-    setPrompt(templatePrompt);
-    setActiveTab("write");
+  const handleSelectTemplate = (template: PromptTemplate) => {
+    setSelectedTemplate(template);
+    setPrompt(template.prompt);
+  };
+
+  const handleUseTemplate = () => {
+    if (selectedTemplate) {
+      setPrompt(selectedTemplate.prompt);
+      setActiveTab("write");
+      setSelectedTemplate(null);
+    }
   };
 
   const toggleTag = (tag: string) => {
@@ -124,6 +143,10 @@ export function AIPromptModal() {
     }
   };
 
+  const clearSelection = () => {
+    setSelectedTemplate(null);
+  };
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -132,7 +155,7 @@ export function AIPromptModal() {
           Create with AI
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="sm:max-w-[750px] max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Create form with AI</DialogTitle>
           <DialogDescription>
@@ -187,65 +210,155 @@ export function AIPromptModal() {
             </TabsContent>
 
             <TabsContent value="templates" className="mt-4">
-              <div className="space-y-4">
-                {/* Search and filter section */}
-                <div className="flex gap-4">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Search templates..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-8"
-                    />
-                  </div>
-                </div>
-
-                {/* Tags filter */}
-                <div className="flex flex-wrap gap-2 items-center">
-                  <span className="text-sm text-muted-foreground flex items-center">
-                    <Tag className="h-4 w-4 mr-1" />
-                    Filter by:
-                  </span>
-                  {allTags.map((tag) => (
-                    <Badge
-                      key={tag}
-                      variant={
-                        selectedTags.includes(tag) ? "default" : "outline"
-                      }
-                      className="cursor-pointer"
-                      onClick={() => toggleTag(tag)}
+              {selectedTemplate ? (
+                <div className="space-y-4 animate-in fade-in-50 duration-200">
+                  <div className="flex justify-between items-center">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={clearSelection}
                     >
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-
-                {/* Templates grid */}
-                <ScrollArea className="h-[400px]">
-                  <div className="grid grid-cols-1 gap-4 pr-4">
-                    {filteredTemplates.length === 0 ? (
-                      <Card className="p-4 text-center">
-                        <CardContent className="pt-4">
-                          <p className="text-muted-foreground">
-                            No templates match your criteria
-                          </p>
-                        </CardContent>
-                      </Card>
-                    ) : (
-                      filteredTemplates.map((template) => (
-                        <Card
-                          key={template.id}
-                          className="cursor-pointer hover:border-primary hover:shadow-sm transition-all"
-                          onClick={() => handleSelectTemplate(template.prompt)}
+                      Back to templates
+                    </Button>
+                    <div className="flex gap-1">
+                      {selectedTemplate.tags.map((tag) => (
+                        <Badge
+                          key={tag}
+                          variant="secondary"
+                          className="text-xs"
                         >
-                          <CardHeader className="pb-2">
-                            <div className="flex justify-between items-start">
-                              <CardTitle className="text-lg">
-                                {template.name}
-                              </CardTitle>
-                              <div className="flex gap-1 flex-wrap">
-                                {template.tags.map((tag) => (
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+
+                  <Card className="border-primary">
+                    <CardHeader>
+                      <CardTitle>{selectedTemplate.name}</CardTitle>
+                      <CardDescription>
+                        {selectedTemplate.description}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <div>
+                          <h4 className="text-sm font-medium mb-2">
+                            This template will create a form with:
+                          </h4>
+                          <div className="grid grid-cols-2 gap-2">
+                            {selectedTemplate.previewFields?.map((field) => (
+                              <div
+                                key={field}
+                                className="flex items-center gap-2"
+                              >
+                                <CheckCircle2 className="h-4 w-4 text-primary" />
+                                <span>{field}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div>
+                          <h4 className="text-sm font-medium mb-2">
+                            Template prompt:
+                          </h4>
+                          <div className="bg-muted rounded-md p-3 text-sm">
+                            {selectedTemplate.prompt}
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                    <CardFooter>
+                      <Button onClick={handleUseTemplate} className="w-full">
+                        Use This Template
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {/* Search and filter section */}
+                  <div className="flex gap-4">
+                    <div className="relative flex-1">
+                      <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search templates..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-8"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Tags filter */}
+                  <div className="flex flex-wrap gap-2 items-center">
+                    <span className="text-sm text-muted-foreground flex items-center">
+                      <Tag className="h-4 w-4 mr-1" />
+                      Filter by:
+                    </span>
+                    {allTags.map((tag) => (
+                      <Badge
+                        key={tag}
+                        variant={
+                          selectedTags.includes(tag) ? "default" : "outline"
+                        }
+                        className="cursor-pointer hover:bg-primary/10 transition-colors"
+                        onClick={() => toggleTag(tag)}
+                      >
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+
+                  {/* Templates grid */}
+                  <ScrollArea className="h-[400px]">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pr-4">
+                      {filteredTemplates.length === 0 ? (
+                        <Card className="p-4 text-center md:col-span-2">
+                          <CardContent className="pt-4">
+                            <p className="text-muted-foreground">
+                              No templates match your criteria
+                            </p>
+                          </CardContent>
+                        </Card>
+                      ) : (
+                        filteredTemplates.map((template) => (
+                          <Card
+                            key={template.id}
+                            className="cursor-pointer hover:border-primary hover:shadow-sm transition-all"
+                            onClick={() => handleSelectTemplate(template)}
+                          >
+                            <CardHeader className="pb-2">
+                              <div className="flex justify-between items-start">
+                                <CardTitle className="text-lg truncate">
+                                  {template.name}
+                                </CardTitle>
+                              </div>
+                              <CardDescription className="line-clamp-2">
+                                {template.description}
+                              </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                              {template.previewFields && (
+                                <div className="flex flex-wrap gap-1">
+                                  {template.previewFields.map((field) => (
+                                    <Badge
+                                      key={field}
+                                      variant="outline"
+                                      className="bg-muted"
+                                    >
+                                      {field}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              )}
+                            </CardContent>
+                            <CardFooter className="flex justify-between items-center border-t pt-3 text-sm text-muted-foreground">
+                              <span>Use template</span>
+                              <div className="flex gap-1">
+                                {template.tags.slice(0, 2).map((tag) => (
                                   <Badge
                                     key={tag}
                                     variant="secondary"
@@ -254,36 +367,23 @@ export function AIPromptModal() {
                                     {tag}
                                   </Badge>
                                 ))}
-                              </div>
-                            </div>
-                            <CardDescription>
-                              {template.description}
-                            </CardDescription>
-                          </CardHeader>
-                          <CardContent>
-                            {template.previewFields && (
-                              <div className="flex flex-wrap gap-1">
-                                {template.previewFields.map((field) => (
+                                {template.tags.length > 2 && (
                                   <Badge
-                                    key={field}
-                                    variant="outline"
-                                    className="bg-muted"
+                                    variant="secondary"
+                                    className="text-xs"
                                   >
-                                    {field}
+                                    +{template.tags.length - 2}
                                   </Badge>
-                                ))}
+                                )}
                               </div>
-                            )}
-                          </CardContent>
-                          <CardFooter className="border-t pt-3 text-sm text-muted-foreground">
-                            Click to use this template
-                          </CardFooter>
-                        </Card>
-                      ))
-                    )}
-                  </div>
-                </ScrollArea>
-              </div>
+                            </CardFooter>
+                          </Card>
+                        ))
+                      )}
+                    </div>
+                  </ScrollArea>
+                </div>
+              )}
             </TabsContent>
           </Tabs>
         </div>
