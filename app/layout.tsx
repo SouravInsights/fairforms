@@ -3,7 +3,6 @@ import { ClerkProvider } from "@clerk/nextjs";
 import localFont from "next/font/local";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
-import { Web3Provider } from "./components/providers/web3-provider";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -67,18 +66,16 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <Web3Provider>
-        <html lang="en">
-          <body
-            className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-          >
-            <main>
-              {children}
-              <Toaster />
-            </main>
-          </body>
-        </html>
-      </Web3Provider>
+      <html lang="en">
+        <body
+          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        >
+          <main>
+            {children}
+            <Toaster />
+          </main>
+        </body>
+      </html>
     </ClerkProvider>
   );
 }

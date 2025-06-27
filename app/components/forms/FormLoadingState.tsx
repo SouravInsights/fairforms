@@ -4,15 +4,11 @@ import { Loader2, CheckCircle2 } from "lucide-react";
 interface FormLoadingStateProps {
   isSubmitting: boolean;
   isSuccess: boolean;
-  isRewardPending: boolean;
-  showRewardSuccess: boolean;
 }
 
 export function FormLoadingState({
   isSubmitting,
   isSuccess,
-  isRewardPending,
-  showRewardSuccess,
 }: FormLoadingStateProps) {
   if (isSubmitting && !isSuccess) {
     return (
@@ -28,9 +24,7 @@ export function FormLoadingState({
         >
           <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
           <h3 className="text-2xl font-semibold">
-            {isRewardPending
-              ? "Processing reward..."
-              : "Submitting your response..."}
+            Submitting your response...
           </h3>
         </motion.div>
       </motion.div>
@@ -69,9 +63,7 @@ export function FormLoadingState({
           </motion.div>
           <h3 className="text-2xl font-semibold">Response submitted!</h3>
           <p className="text-muted-foreground mt-2">
-            {showRewardSuccess
-              ? "Your reward is being processed..."
-              : "Thank you for your time."}
+            Thank you for your time.
           </p>
         </motion.div>
       </motion.div>

@@ -25,11 +25,8 @@ interface FormContentProps {
   responses: Record<string, FormElementValue>;
   isSubmitting: boolean;
   isSuccess: boolean;
-  isRewardPending: boolean;
-  showRewardSuccess: boolean;
   height: string;
   isMobile: boolean;
-  chainId: number;
   handleNext: () => void;
   handlePrevious: () => void;
   handleSubmit: () => void;
@@ -48,11 +45,8 @@ export function FormContent({
   responses,
   isSubmitting,
   isSuccess,
-  isRewardPending,
-  showRewardSuccess,
   height,
   isMobile,
-  chainId,
   handleNext,
   handlePrevious,
   handleSubmit,
@@ -93,15 +87,11 @@ export function FormContent({
       <FormLoadingState
         isSubmitting={isSubmitting}
         isSuccess={isSuccess}
-        isRewardPending={isRewardPending}
-        showRewardSuccess={showRewardSuccess}
       />
 
       <FormSubmissionFeedback
         isSubmitting={isSubmitting}
         isSuccess={isSuccess}
-        isRewardPending={isRewardPending}
-        showRewardSuccess={showRewardSuccess}
       />
 
       <motion.div
@@ -189,8 +179,6 @@ export function FormContent({
                     isLastElement={isLastElement}
                     isMobile={isMobile}
                     isSubmitting={isSubmitting}
-                    isRewardPending={isRewardPending}
-                    chainId={chainId}
                     form={form}
                     onNext={handleNext}
                     onPrevious={handlePrevious}
