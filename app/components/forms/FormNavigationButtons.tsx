@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
 import { Form } from "@/types/form";
-import { baseSepolia } from "viem/chains";
 import { cn } from "@/lib/utils";
 
 interface FormNavigationButtonsProps {
@@ -9,14 +8,12 @@ interface FormNavigationButtonsProps {
   isLastElement: boolean;
   isMobile: boolean;
   isSubmitting: boolean;
-  isRewardPending: boolean;
-  chainId: number;
   form: Form;
   onNext: () => void;
   onPrevious: () => void;
   onSubmit: () => void;
   theme: Form["settings"]["theme"];
-  hasError?: boolean; // Add hasError prop
+  hasError?: boolean;
 }
 
 export function FormNavigationButtons({
@@ -24,9 +21,6 @@ export function FormNavigationButtons({
   isLastElement,
   isMobile,
   isSubmitting,
-  isRewardPending,
-  chainId,
-  form,
   onNext,
   onPrevious,
   onSubmit,
@@ -156,12 +150,12 @@ export function FormNavigationButtons({
           id="submit-button"
           className={cn(
             "ml-auto",
-            (isSubmitting || isRewardPending) && "opacity-70",
+            isSubmitting && "opacity-70",
             hasError && "animate-pulse"
           )}
           style={{
             ...errorButtonStyles,
-            ...(isSubmitting || isRewardPending
+            ...(isSubmitting
               ? {
                   backgroundColor: `${theme.primaryColor}99`,
                 }
@@ -169,18 +163,13 @@ export function FormNavigationButtons({
           }}
           onClick={handleSubmitClick}
           size="lg"
-          disabled={isSubmitting || isRewardPending}
+          disabled={isSubmitting}
         >
-          {isRewardPending
-            ? "Processing Reward..."
-            : isSubmitting
-              ? "Submitting..."
-              : chainId !== baseSepolia.id &&
-                  form.settings.web3?.rewards.enabled
-                ? "Switch Network & Submit"
-                : hasError
-                  ? "Please Fill Required Field"
-                  : "Submit"}
+          {isSubmitting
+            ? "Submitting..."
+            : hasError
+              ? "Please Fill Required Field"
+              : "Submit"}
         </Button>
       )}
     </div>

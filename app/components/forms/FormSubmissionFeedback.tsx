@@ -5,15 +5,11 @@ import { motion } from "motion/react";
 interface FormSubmissionFeedbackProps {
   isSubmitting: boolean;
   isSuccess: boolean;
-  isRewardPending: boolean;
-  showRewardSuccess: boolean;
 }
 
 export function FormSubmissionFeedback({
   isSubmitting,
   isSuccess,
-  isRewardPending,
-  showRewardSuccess,
 }: FormSubmissionFeedbackProps) {
   if (isSubmitting && !isSuccess) {
     return (
@@ -29,15 +25,8 @@ export function FormSubmissionFeedback({
         >
           <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
           <h3 className="text-2xl font-semibold">
-            {isRewardPending
-              ? "Sending reward..."
-              : "Submitting your response..."}
+            Submitting your response...
           </h3>
-          {isRewardPending && (
-            <p className="text-muted-foreground mt-2">
-              Please confirm the transaction in your wallet
-            </p>
-          )}
         </motion.div>
       </motion.div>
     );
@@ -75,9 +64,7 @@ export function FormSubmissionFeedback({
           </motion.div>
           <h3 className="text-2xl font-semibold">Response submitted!</h3>
           <p className="text-muted-foreground mt-2">
-            {showRewardSuccess
-              ? "Reward has been sent to your wallet."
-              : "Thank you for your time."}
+            Thank you for your time.
           </p>
         </motion.div>
       </motion.div>

@@ -26,7 +26,6 @@ import {
 } from "@/components/ui/breadcrumb";
 import { ChevronRight, Home } from "lucide-react";
 import { EditFormDialog } from "./EditFormDialog";
-import { Web3Dialog } from "../forms/Web3Dialog";
 import { ManageCollaboratorsDialog } from "./ManageCollaboratorsDialog";
 
 export function FormBuilder({ formId }: { formId: string }) {
@@ -337,25 +336,6 @@ export function FormBuilder({ formId }: { formId: string }) {
               )}
               {formId !== "new" && formData && (
                 <>
-                  <Web3Dialog
-                    form={{
-                      id: parseInt(formId),
-                      title: state.title,
-                      description: state.description,
-                      elements: state.elements,
-                      settings: state.settings,
-                      isPublished,
-                      userId: user?.id || "",
-                      createdAt: formData.createdAt,
-                      updatedAt: formData.updatedAt,
-                      customSlug: formData.customSlug,
-                      metaTitle: formData.metaTitle || state.title,
-                      metaDescription:
-                        formData.metaDescription || state.description,
-                      socialImageUrl: formData.socialImageUrl,
-                    }}
-                    onUpdate={handleFormUpdate}
-                  />
                   <ShareDialog
                     form={{
                       id: parseInt(formId),

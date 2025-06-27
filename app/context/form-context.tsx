@@ -1,12 +1,5 @@
-import {
-  createContext,
-  useContext,
-  useReducer,
-  ReactNode,
-  useEffect,
-} from "react";
+import { createContext, useContext, useReducer, ReactNode } from "react";
 import { Form, FormElement, FormElementProperties } from "@/types/form";
-import { useAccount } from "wagmi";
 import { FormTemplate } from "@/db/schema";
 
 /**
@@ -25,7 +18,6 @@ type FormState = {
   description: string | null;
   /** Form settings like theme, behavior, etc. */
   settings: Form["settings"];
-  connectedAddress?: string;
 };
 
 /**
@@ -68,11 +60,6 @@ type FormAction =
     }
   /** Updates form settings */
   | { type: "UPDATE_SETTINGS"; payload: Partial<Form["settings"]> }
-  | {
-      type: "UPDATE_WEB3_SETTINGS";
-      payload: NonNullable<Form["settings"]["web3"]>;
-    }
-  | { type: "SET_CONNECTED_ADDRESS"; payload: string | undefined }
   | { type: "CREATE_FROM_TEMPLATE"; payload: FormTemplate }
   | {
       type: "SAVE_AS_TEMPLATE";
@@ -209,21 +196,6 @@ function formReducer(state: FormState, action: FormAction): FormState {
         settings: { ...state.settings, ...action.payload },
       };
 
-    case "UPDATE_WEB3_SETTINGS":
-      return {
-        ...state,
-        settings: {
-          ...state.settings,
-          web3: action.payload,
-        },
-      };
-
-    case "SET_CONNECTED_ADDRESS":
-      return {
-        ...state,
-        connectedAddress: action.payload,
-      };
-
     case "CREATE_FROM_TEMPLATE":
       return {
         ...state,
@@ -258,11 +230,7 @@ const FormContext = createContext<{
 export function FormProvider({ children }: { children: ReactNode }) {
   // useReducer gives us the current state and a dispatch function to update it
   const [state, dispatch] = useReducer(formReducer, initialState);
-  const { address } = useAccount();
 
-  useEffect(() => {
-    dispatch({ type: "SET_CONNECTED_ADDRESS", payload: address });
-  }, [address]);
   return (
     <FormContext.Provider value={{ state, dispatch }}>
       {children}
