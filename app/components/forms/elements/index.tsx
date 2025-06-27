@@ -133,14 +133,29 @@ export function FormElement({
           onChange={onChange}
         />
       );
-    case FormElementType.DATE:
+    case FormElementType.DATE: {
+      let dateValue: Date | undefined;
+      try {
+        if (value instanceof Date) {
+          dateValue = value;
+        } else if (value && typeof value === 'string') {
+          const parsed = new Date(value);
+          dateValue = isNaN(parsed.getTime()) ? undefined : parsed;
+        } else {
+          dateValue = undefined;
+        }
+      } catch {
+        dateValue = undefined;
+      }
+      
       return (
         <DateInput
           element={element}
-          value={value as Date}
+          value={dateValue}
           onChange={onChange}
         />
       );
+    }
     case FormElementType.FILE_UPLOAD:
       return (
         <FileUpload
