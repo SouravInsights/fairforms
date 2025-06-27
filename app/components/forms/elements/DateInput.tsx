@@ -57,7 +57,13 @@ export function DateInput({ element, value, onChange }: DateInputProps) {
             )}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
-            {value ? format(value, element.properties.format) : "Pick a date"}
+            {value ? (() => {
+              try {
+                return format(value, element.properties.format);
+              } catch {
+                return format(value, "PPP"); // Fallback to a safe format
+              }
+            })() : "Pick a date"}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
@@ -75,7 +81,13 @@ export function DateInput({ element, value, onChange }: DateInputProps) {
         <input
           type="time"
           className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-          value={value ? format(value, "HH:mm") : ""}
+          value={value ? (() => {
+            try {
+              return format(value, "HH:mm");
+            } catch {
+              return "";
+            }
+          })() : ""}
           onChange={(e) => {
             if (value) {
               const [hours, minutes] = e.target.value.split(":").map(Number);
