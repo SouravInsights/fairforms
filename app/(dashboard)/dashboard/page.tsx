@@ -545,7 +545,7 @@ export default function DashboardPage() {
                       </Link>
                       {form.isPublished ? (
                         <Link href={`/forms/${form.customSlug || form.id}`}>
-                          <Button>
+                          <Button variant="gradient">
                             <Eye className="w-4 h-4 mr-2" />
                             View
                           </Button>
@@ -554,6 +554,7 @@ export default function DashboardPage() {
                         <Button
                           onClick={() => handlePublishForm(form.id)}
                           disabled={publishingFormId === form.id}
+                          variant="gradient"
                         >
                           {publishingFormId === form.id ? (
                             <>
@@ -670,6 +671,7 @@ export default function DashboardPage() {
                       <Button
                         className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
                         onClick={() => handleCreateForm(template.id)}
+                        variant="gradient"
                       >
                         Use Template
                       </Button>

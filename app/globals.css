@@ -14,25 +14,36 @@ body {
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84.2% 60.2%;
+    --background: 200 0% 96%; /* #F5F5F5 Off-white */
+    --foreground: 200 0% 20%; /* Dark Gray for text on off-white */
+
+    --muted: 200 0% 90%;
+    --muted-foreground: 200 0% 45%;
+
+    --popover: 200 0% 100%;
+    --popover-foreground: 200 0% 20%;
+
+    --card: 200 0% 100%; /* White for cards */
+    --card-foreground: 200 0% 20%;
+
+    --border: 200 0% 87%; /* Light Gray */
+    --input: 200 0% 93%; /* Slightly off-white for inputs */
+
+    --primary: 220 60% 48%; /* Darker Blue */
+    --primary-foreground: 0 0% 100%; /* White */
+    --primary-gradient-end: 220 55% 40%; /* Darker end for gradient */
+
+    --secondary: 200 0% 93%; /* Light Gray */
+    --secondary-foreground: 220 60% 30%; /* Darker Classic Blue */
+
+    --accent: 220 20% 95%; /* Subtle light blue-gray for hover states */
+    --accent-foreground: 220 60% 30%; /* Darker blue text on light background */
+
+    --destructive: 0 72% 51%; /* Default Red */
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
+
+    --ring: 220 60% 48%; /* Match new primary for focus rings */
+
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
@@ -40,26 +51,38 @@ body {
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
   }
+
   .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
+    --background: 210 30% 10%; /* Darker Blue-Gray */
+    --foreground: 200 0% 90%; /* Light Gray for text */
+
+    --muted: 210 30% 15%;
+    --muted-foreground: 200 0% 60%;
+
+    --popover: 210 30% 8%;
+    --popover-foreground: 200 0% 90%;
+
+    --card: 210 30% 15%; /* Darker base for cards in dark mode */
+    --card-foreground: 200 0% 90%;
+
+    --border: 210 30% 20%;
+    --input: 210 30% 18%;
+
+    --primary: 220 60% 55%; /* Dark Blue (slightly lighter for dark mode) */
+    --primary-foreground: 0 0% 100%; /* White */
+    --primary-gradient-end: 220 55% 45%; /* Darker end for gradient in dark mode */
+
+    --secondary: 210 30% 25%;
+    --secondary-foreground: 200 0% 90%;
+
+    --accent: 220 20% 20%; /* Subtle dark blue-gray for hover states */
+    --accent-foreground: 200 0% 85%; /* Light text on dark background */
+
+    --destructive: 0 63% 40%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
+
+    --ring: 220 60% 55%; /* Match new primary for dark focus rings */
+
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
@@ -74,15 +97,17 @@ body {
   }
   body {
     @apply bg-background text-foreground;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
 :root {
-  --primary-color: #0f172a;
-  --background-color: #ffffff;
-  --question-color: #0f172a;
-  --text-color: #374151;
-  --sidebar-color: #f8fafc;
+  --primary-color: hsl(220, 60%, 48%); /* Updated to match new primary */
+  --background-color: hsl(200, 0%, 100%); /* White background */
+  --question-color: hsl(200, 0%, 20%); /* Dark gray for questions */
+  --text-color: hsl(200, 0%, 35%); /* Medium gray for text */
+  --sidebar-color: hsl(200, 0%, 96%); /* Off-white for sidebar */
 }
 
 .form-themed {
