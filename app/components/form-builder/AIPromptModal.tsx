@@ -150,7 +150,7 @@ export function AIPromptModal() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="gap-2">
+        <Button className="gap-2" variant="gradient">
           <Sparkles className="h-4 w-4" />
           Create with AI
         </Button>
