@@ -396,7 +396,7 @@ export function FormBuilder({ formId }: { formId: string }) {
         </div>
 
         <div className="flex flex-1 overflow-hidden">
-          <ElementToolbar className="w-64 border-r" />
+          <ElementToolbar className="w-72 border-r" />
           <Canvas className="flex-1" />
           {state.activeElementId && <Properties className="w-80 border-l" />}
         </div>
