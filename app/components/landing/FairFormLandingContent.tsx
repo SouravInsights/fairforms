@@ -243,7 +243,7 @@ export default function FairFormsLanding() {
         </div>
       </section>
 
-      <footer className="max-w-6xl mx-auto mt-32 pb-8">
+      <footer className="max-w-6xl mx-auto mt-32 pb-8 px-4">
         <div className="relative group">
           {/* Top decorative wave */}
           <div className="absolute -top-8 left-0 w-full">
@@ -256,23 +256,24 @@ export default function FairFormsLanding() {
             </svg>
           </div>
 
-          <div className="relative bg-card/50 backdrop-blur-sm border border-primary/10 rounded-lg p-8 md:p-12 group hover:border-primary/20 transition-all duration-500">
+          <div className="relative bg-card/50 backdrop-blur-sm border border-primary/10 rounded-lg p-6 md:p-12 group hover:border-primary/20 transition-all duration-500">
             {/* Subtle blue hover gradient */}
             <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 rounded-lg sm:opacity-0 opacity-20 sm:group-hover:opacity-100 transition-opacity duration-500" />
 
-            <div className="flex items-center justify-between flex-wrap gap-6">
+            <div className="flex flex-col md:flex-row items-center md:items-center justify-between flex-wrap gap-6">
               {/* FairForms Logo */}
-              <div className="flex items-center gap-2">
+
+              <div className="hidden md:flex items-center gap-2">
                 <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
                   <Sparkles className="h-4 w-4 text-primary-foreground" />
                 </div>
                 <span className="font-bold text-xl">FairForms</span>
               </div>
 
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 flex-wrap justify-center">
                 {/* Animated coffee */}
                 <div className="relative group/coffee cursor-pointer">
-                  <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center transform sm:group-hover/coffee:scale-110 transition-transform duration-300">
+                  <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-primary/10 flex items-center justify-center transform sm:group-hover/coffee:scale-110 transition-transform duration-300">
                     <span className="text-xl">☕️</span>
                     <span className="absolute -top-3 -right-2 opacity-0 sm:group-hover/coffee:opacity-100 transition-opacity duration-300">
                       💭
@@ -298,7 +299,7 @@ export default function FairFormsLanding() {
                   <div className="absolute inset-0 rounded-xl hidden sm:block sm:group-hover/coffee:animate-ping bg-primary/5" />
                 </div>
 
-                <div>
+                <div className="text-center">
                   <p className="text-sm text-muted-foreground">Crafted by</p>
                   <a
                     href="https://souravinsights.com"
@@ -328,7 +329,7 @@ export default function FairFormsLanding() {
 
                 {/* QR animated block */}
                 <div className="relative group/qr">
-                  <div className="h-16 w-16 bg-card rounded-lg p-2 grid grid-cols-4 gap-1 transform sm:group-hover/qr:rotate-3 transition-transform duration-300">
+                  <div className="h-12 w-12 sm:h-16 sm:w-16 bg-card rounded-lg p-2 grid grid-cols-4 gap-1 transform sm:group-hover/qr:rotate-3 transition-transform duration-300">
                     {[...Array(16)].map((_, i) => (
                       <div
                         key={i}
