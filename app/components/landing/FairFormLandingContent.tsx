@@ -209,7 +209,7 @@ export default function FairFormsLanding() {
       <section className="py-24 bg-gradient-to-r from-primary/5 to-primary/10">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
-            <div className="mb-6">
+            <div className="mb-2 md:mb-6">
               <div className="relative inline-block">
                 {/* Subtle glow effect */}
                 <div className="absolute -inset-8 bg-gradient-to-br from-primary/20 to-primary/10 rounded-full blur-3xl opacity-40" />
@@ -218,7 +218,7 @@ export default function FairFormsLanding() {
                   alt="Happy person successfully completing a form"
                   width={200}
                   height={200}
-                  className="relative w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48"
+                  className="relative w-48 h-48 sm:w-52 sm:h-52 md:w-56 md:h-56"
                   priority={false}
                 />
               </div>
