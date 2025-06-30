@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     title: "FairForms – Beautiful, High-Converting Forms",
     description:
       "Stop losing responses to boring forms. FairForms helps you create AI-powered forms that people actually want to fill out, boosting completion rates and capturing better data effortlessly.",
-    url: "https://fairforms.xyz",
+    url: "https://www.fairforms.xyz",
     siteName: "FairForms",
     images: [
       {
@@ -31,6 +31,7 @@ export const metadata: Metadata = {
         width: 1200,
         height: 630,
         alt: "FairForms – Beautiful, High-Converting Forms",
+        type: "image/jpeg",
       },
     ],
     locale: "en_US",
