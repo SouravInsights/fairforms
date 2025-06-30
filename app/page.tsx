@@ -1,416 +1,343 @@
 /* eslint-disable react/no-unescaped-entities */
-import React from "react";
-import { SignInButton } from "@clerk/nextjs";
+"use client";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { WaitlistDialog } from "@/app/components/waitlist/WaitlistDialog";
-import {
-  Sparkles,
-  ArrowRight,
-  FileSpreadsheet,
-  Palette,
-  Users,
-  Coins,
-  Terminal,
-  BarChart2,
-} from "lucide-react";
-import { redirect } from "next/navigation";
-import { auth } from "@clerk/nextjs/server";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Sparkles, ArrowRight, Timer, Wand2, Zap } from "lucide-react";
+import { Marquee } from "@/components/ui/marquee";
+import { SignInButton } from "@clerk/nextjs";
+import { WaitlistDialog } from "./components/waitlist/WaitlistDialog";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
 
-export default async function HomePage() {
-  const { userId } = await auth();
-  console.log("userId:", userId);
+export default function FairFormsLanding() {
+  const { isSignedIn, isLoaded } = useAuth();
+  const router = useRouter();
 
-  if (userId) {
-    redirect("/dashboard");
-  }
+  useEffect(() => {
+    if (isLoaded && isSignedIn) {
+      router.push("/dashboard");
+    }
+  }, [isLoaded, isSignedIn, router]);
+
+  const [prompt, setPrompt] = useState("");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [currentPrompt, setCurrentPrompt] = useState(0);
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const examplePrompts = [
+    "Create a product feedback form that gets honest responses",
+    "Build a job application that attracts top talent",
+    "Design a customer survey people actually enjoy taking",
+    "Make a lead capture form that converts visitors",
+    "Generate an event registration with zero dropoffs",
+    "Create a user research form that sparks conversations",
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentPrompt((prev) => (prev + 1) % examplePrompts.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleGenerate = () => {
+    if (!prompt.trim()) return;
+    setIsGenerating(true);
+    setTimeout(() => {
+      setIsGenerating(false);
+      alert(`Generating: "${prompt}"`);
+    }, 2000);
+  };
 
   return (
     <div className="min-h-screen bg-background">
-      {/* 0cred verification */}
-      <div className="9c15d2b6-cd9c-445c-b2aa-b061d3243ca9"></div>
-
-      <div className="container mx-auto px-4 py-16 md:px-6">
-        {/* Hero Section - Terminal Theme */}
-        <div className="max-w-6xl mx-auto">
-          <div className="bg-card border border-primary/20 rounded-lg overflow-hidden">
-            <div className="bg-primary/10 p-2 flex items-center gap-2">
-              <div className="flex gap-2">
-                <div className="w-3 h-3 rounded-full bg-red-500/70" />
-                <div className="w-3 h-3 rounded-full bg-yellow-500/70" />
-                <div className="w-3 h-3 rounded-full bg-green-500/70" />
+      {/* Navigation */}
+      <nav className="border-b border-border/40 bg-background/80 backdrop-blur-sm sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
+                <Sparkles className="h-4 w-4 text-primary-foreground" />
               </div>
-              <div className="text-xs font-mono text-muted-foreground">
-                fairforms ~ main
-              </div>
+              <span className="font-bold text-xl">FairForms</span>
             </div>
+            <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
+              <SignInButton mode="modal">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="group w-full sm:w-auto"
+                >
+                  Sign In
+                  <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </SignInButton>
 
-            <div className="p-8 md:p-12 font-mono">
-              <div className="flex items-center gap-2 text-primary mb-4">
-                <Terminal className="h-4 w-4" />
-                <span className="text-sm typing-animation">
-                  initializing fairforms...
-                </span>
-              </div>
-
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <p className="text-sm">$ type fairforms</p>
-                  <h1 className="text-4xl md:text-6xl font-bold text-primary typing-animation">
-                    Forms that work for everyone.
-                  </h1>
-                </div>
-
-                <div className="space-y-2">
-                  <p className="text-sm">$ cat features.md</p>
-                  <div className="text-lg text-muted-foreground typing-animation-delay">
-                    Advanced builder • Team collaboration • Token gating • Rich
-                    analytics • Beautiful themes • Rewards system
-                  </div>
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <WaitlistDialog>
-                    <Button size="lg" className="group">
-                      <span className="flex items-center gap-2">
-                        Join Beta
-                        <Sparkles className="h-4 w-4 group-hover:animate-spin" />
-                      </span>
-                    </Button>
-                  </WaitlistDialog>
-
-                  <SignInButton mode="modal">
-                    <Button variant="outline" size="lg" className="group">
-                      Sign In
-                      <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                    </Button>
-                  </SignInButton>
-                </div>
+              <div className="hidden sm:block">
+                <WaitlistDialog>
+                  <Button size="lg" className="group">
+                    <span className="flex items-center gap-2">
+                      Join Early Access
+                      <Sparkles className="h-4 w-4 group-hover:animate-spin" />
+                    </span>
+                  </Button>
+                </WaitlistDialog>
               </div>
             </div>
           </div>
         </div>
+      </nav>
 
-        {/* Features Grid - Interactive Code Editor Theme */}
-        <div className="max-w-6xl mx-auto mt-32">
-          <div className="text-center mb-12">
-            <div className="font-mono text-sm text-primary mb-2">
-              $ cat features.md
-            </div>
-            <h2 className="text-3xl font-bold mb-4">Everything you need</h2>
-            <p className="text-muted-foreground">
-              Powerful features that respect both your users and your workflow.
+      {/* Hero Section */}
+      <section className="py-24 relative overflow-hidden">
+        {/* Grid Background */}
+        <div className="absolute inset-0 flex justify-center pointer-events-none">
+          <div
+            style={{
+              width: "60%",
+              maxWidth: "960px",
+              height: "100%",
+              backgroundImage: `
+                linear-gradient(rgba(0, 0, 0, 0.06) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 0, 0, 0.06) 1px, transparent 1px)
+              `,
+              backgroundSize: "80px 80px",
+              backgroundPosition: "center",
+              WebkitMaskImage: `
+                linear-gradient(to bottom, black 0%, black 50%, transparent 100%),
+                linear-gradient(to right, transparent 0%, black 20%, black 80%, transparent 100%)
+              `,
+              maskImage: `
+                linear-gradient(to bottom, black 0%, black 50%, transparent 100%),
+                linear-gradient(to right, transparent 0%, black 20%, black 80%, transparent 100%)
+              `,
+              WebkitMaskComposite: "destination-in",
+              maskComposite: "intersect",
+            }}
+          />
+        </div>
+
+        <div className="container mx-auto px-4 relative">
+          <div className="max-w-4xl mx-auto text-center">
+            <Badge variant="secondary" className="mb-6 px-4 py-2">
+              <Timer className="h-4 w-4 mr-2" />
+              Most forms are boring. Yours doesn't have to be.
+            </Badge>
+
+            <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
+              Stop losing responses to{" "}
+              <span className="bg-gradient-to-r from-primary to-primary-gradient-end bg-clip-text text-transparent">
+                boring forms
+              </span>
+            </h1>
+
+            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+              AI-powered forms that people actually want to fill out. Better
+              copy, smarter questions, higher completion rates.
             </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              {
-                icon: FileSpreadsheet,
-                title: "Advanced Form Builder",
-                description:
-                  "Drag-and-drop form builder with real-time preview, rich question types, and custom themes.",
-                code: [
-                  "# Form Structure",
-                  "├── Welcome Screen",
-                  "├── Question Types",
-                  "│   ├── Short/Long Text",
-                  "│   ├── Contact Fields",
-                  "│   ├── File Upload",
-                  "│   └── Choice Fields",
-                  "└── End Screen",
-                  "",
-                  "🎨 Live Preview Active",
-                ],
-                output: "14 question types available",
-              },
-              {
-                icon: Users,
-                title: "Team Collaboration",
-                description:
-                  "Invite team members with role-based access control and email invitations.",
-                code: [
-                  "# Team Access",
-                  "├── Roles",
-                  "│   ├── Editor ✏️",
-                  "│   └── Viewer 👀",
-                  "└── Status",
-                  "    ├── Pending",
-                  "    └── Active",
-                  "",
-                  "📧 Instant Email Invites",
-                ],
-                output: "team@company.com added as Editor",
-              },
-              {
-                icon: FileSpreadsheet,
-                title: "Template Gallery",
-                description:
-                  "Jumpstart your forms with ready-made templates or share your own designs with the community.",
-                code: [
-                  "# Template Library",
-                  "├── Categories",
-                  "│   └── Browse by type",
-                  "├── Visibility",
-                  "│   ├── Public 🌐",
-                  "│   └── Private 🔒",
-                  "└── Actions",
-                  "    ├── Preview",
-                  "    ├── Clone",
-                  "    └── Save as Template",
-                  "",
-                  "📋 Quick-start enabled",
-                ],
-                output: "10+ templates available",
-              },
-              {
-                icon: Coins,
-                title: "Web3 Integration",
-                description:
-                  "Gate your forms with tokens and reward participants for submissions.",
-                code: [
-                  "# Web3 Features",
-                  "├── Token Gating",
-                  "│   ├── NFT Access 🎫",
-                  "│   └── Min Balance Check",
-                  "└── Rewards System",
-                  "    ├── Auto-distribute 💰",
-                  "    └── Multiple Chains",
-                  "",
-                  "🔗 Wallet Connected",
-                ],
-                output: "Form gated & rewards enabled",
-              },
-              {
-                icon: Palette,
-                title: "Beautiful Themes",
-                description:
-                  "Beautiful themes for forms and delightful color schemes for public pages.",
-                code: [
-                  "# Design Options",
-                  "├── Form Themes",
-                  "│   ├── Light Mode",
-                  "│   │   ├── Rose Gold 🌸",
-                  "│   │   └── Ocean Breeze 🌊",
-                  "│   └── Dark Mode",
-                  "│       ├── Midnight 🌙",
-                  "│       └── Cherry Noir 🍷",
-                  "└── Public Pages",
-                  "    └── Color Schemes",
-                  "",
-                  "🎨 Live preview",
-                ],
-                output: "Theme changed: Midnight",
-              },
-              {
-                icon: BarChart2,
-                title: "Rich Response Analytics",
-                description:
-                  "Analyze responses with real-time insights, starring, and team collaboration features.",
-                code: [
-                  "# Response Dashboard",
-                  "├── Views",
-                  "│   ├── Table View 📋",
-                  "│   └── Analytics 📊",
-                  "├── Features",
-                  "│   ├── Star Responses ⭐️",
-                  "│   ├── Filter & Sort",
-                  "│   └── Demographics",
-                  "└── Insights",
-                  "    └── Data Visualization",
-                  "",
-                  "📱 Mobile optimized",
-                ],
-                output: "145 responses analyzed",
-              },
-            ].map((feature, index) => (
-              <div
-                key={index}
-                className="group bg-card border border-primary/20 rounded-lg overflow-hidden hover:border-primary/40 transition-all duration-300 hover:shadow-lg flex flex-col"
-              >
-                {/* Header */}
-                <div className="bg-primary/10 p-2 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <feature.icon className="h-4 w-4 text-primary" />
-                    <span className="text-xs font-medium">
-                      {feature.title}.js
+
+            {/* Main CTA */}
+            <div className="relative mb-12">
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="absolute -top-4 -left-4 h-32 w-32 bg-gradient-to-br from-primary/10 to-primary/5 rounded-3xl rotate-12 blur-sm" />
+                <div className="absolute -bottom-6 -right-6 h-40 w-40 bg-gradient-to-tl from-primary/8 to-primary/3 rounded-3xl -rotate-12 blur-sm" />
+              </div>
+
+              <div className="relative bg-background/80 backdrop-blur-sm border border-primary/20 rounded-3xl p-8 max-w-3xl mx-auto">
+                <div className="text-center mb-8">
+                  <div className="inline-flex items-center gap-2 bg-primary/10 rounded-full px-4 py-2 mb-4">
+                    <Sparkles className="h-4 w-4 text-primary animate-pulse" />
+                    <span className="text-sm font-medium text-primary">
+                      AI-Powered
                     </span>
                   </div>
-                  <div className="flex gap-2">
-                    <div className="h-2 w-2 rounded-full bg-primary/20 group-hover:bg-primary/40 transition-colors" />
-                    <div className="h-2 w-2 rounded-full bg-primary/20 group-hover:bg-primary/40 transition-colors" />
-                    <div className="h-2 w-2 rounded-full bg-primary/20 group-hover:bg-primary/40 transition-colors" />
-                  </div>
-                </div>
-
-                {/* Main Content */}
-                <div className="p-4 md:p-12 flex-1">
-                  <h3 className="font-bold mb-2">{feature.title}</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    {feature.description}
+                  <h2 className="text-3xl font-bold mb-3 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                    What form do you want to build?
+                  </h2>
+                  <p className="text-muted-foreground">
+                    Describe your form and watch AI create something that
+                    converts ✨
                   </p>
-
-                  {/* Code Area */}
-                  <div className="bg-primary/5 rounded-lg p-4 font-mono text-xs space-y-1">
-                    {feature.code.map((line, i) => (
-                      <div key={i} className="group/line flex">
-                        <span className="text-muted-foreground w-6 select-none group-hover/line:text-primary/60">
-                          {i + 1}
-                        </span>
-                        <span className="text-primary/80">{line}</span>
-                      </div>
-                    ))}
-                  </div>
                 </div>
 
-                {/* Output Bar */}
-                <div className="border-t border-primary/10 p-3 bg-primary/5">
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-                    <span className="font-mono">{feature.output}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Command Palette Style CTA */}
-        <div className="max-w-6xl mx-auto mt-32">
-          <div className="bg-card border border-primary/20 rounded-lg overflow-hidden shadow-2xl">
-            <div className="bg-primary/10 p-3">
-              <div className="flex items-center gap-2">
-                <Terminal className="h-4 w-4 text-primary" />
-                <span className="text-sm font-mono">Get Started</span>
-              </div>
-            </div>
-
-            <div className="p-8 md:p-12 space-y-4">
-              <div className="text-center space-y-2">
-                <h2 className="text-3xl font-bold">Build better forms today</h2>
-                <p className="text-muted-foreground">
-                  Join the early access and start creating
-                </p>
-              </div>
-
-              <div className="max-w-xl mx-auto bg-primary/5 rounded-lg p-4 space-y-4">
-                <div className="flex items-center gap-2 text-primary font-mono">
-                  <span>→</span>
-                  <span className="typing-animation">
-                    fairforms.join("early-access")
-                  </span>
-                </div>
-
-                {/* Early Access Button */}
-                <div className="pt-4 text-center">
-                  <WaitlistDialog>
-                    <Button size="lg" className="group font-mono">
-                      Get Early Access
-                      <Terminal className="ml-2 h-4 w-4 group-hover:text-primary transition-colors" />
-                    </Button>
-                  </WaitlistDialog>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <footer className="max-w-6xl mx-auto mt-32 pb-8">
-          <div className="relative group">
-            {/* Top decorative edge */}
-            <div className="absolute -top-8 left-0 w-full">
-              <div className="absolute inset-0 bg-gradient-to-b from-background via-transparent to-transparent h-16" />
-              <svg
-                viewBox="0 0 100 10"
-                className="w-full h-8 fill-background"
-                preserveAspectRatio="none"
-              >
-                <path d="M0 10 C 15 0, 35 10, 50 10 C 65 10, 85 0, 100 10 L 100 0 L 0 0 Z" />
-              </svg>
-            </div>
-
-            {/* Main content */}
-            <div className="relative bg-card/50 backdrop-blur-sm border border-primary/10 rounded-lg p-8 md:p-12 group hover:border-primary/20 transition-all duration-500">
-              {/* Background gradient - Mobile subtle persistent, Desktop on hover */}
-              <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 rounded-lg sm:opacity-0 opacity-20 sm:group-hover:opacity-100 transition-opacity duration-500 animate-gradient" />
-
-              {/* Receipt header */}
-              <div className="text-xs font-mono flex items-center justify-between mb-6 opacity-70">
-                <div className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-primary/50 animate-pulse" />
-                  <span className="sm:group-hover:animate-typing">
-                    SIGNATURE.LOG
-                  </span>
-                </div>
-                <span className="sm:group-hover:animate-pulse">
-                  {new Date().toLocaleDateString()}
-                </span>
-              </div>
-
-              {/* Main signature section */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  {/* Animated coffee cup */}
-                  <div className="relative group/coffee cursor-pointer">
-                    <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center transform sm:group-hover/coffee:scale-110 transition-transform duration-300">
-                      <span className="text-xl">☕️</span>
-                      {/* Thought bubble - Desktop: hover, Mobile: active/focus */}
-                      <span className="absolute -top-3 -right-2 opacity-0 sm:group-hover/coffee:opacity-100 active:opacity-100 focus:opacity-100 transition-opacity duration-300">
-                        💭
-                      </span>
-                      {/* Steam animation */}
-                      <div className="absolute -top-4 left-1/2 sm:opacity-0 opacity-30 sm:group-hover/coffee:opacity-100 transition-opacity duration-300">
-                        {[...Array(3)].map((_, i) => (
-                          <div
-                            key={i}
-                            className="absolute w-1.5 h-6 bottom-0"
-                            style={{
-                              left: `${(i - 1) * 6}px`,
-                              transform: "translateX(-50%)",
-                              animation: "steam 2s infinite",
-                              animationDelay: `${i * 0.3}s`,
-                            }}
-                          >
-                            <div className="w-full h-full bg-gradient-to-t from-primary/20 to-transparent rounded-full" />
-                          </div>
-                        ))}
-                      </div>
+                <div className="flex gap-3 mb-8">
+                  <div className="relative flex-1">
+                    <Input
+                      placeholder="Create a product survey form..."
+                      value={prompt}
+                      onChange={(e) => setPrompt(e.target.value)}
+                      className="text-lg py-6 pr-12 border-primary/20 focus:border-primary/40 bg-background/50"
+                      onKeyPress={(e) => e.key === "Enter" && handleGenerate()}
+                    />
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      <Wand2 className="h-5 w-5 text-muted-foreground" />
                     </div>
-                    {/* Coffee ripple effect - Desktop only */}
-                    <div className="absolute inset-0 rounded-xl hidden sm:block sm:group-hover/coffee:animate-ping bg-primary/5" />
                   </div>
-
-                  {/* Creator info */}
-                  <div>
-                    <p className="text-sm text-muted-foreground">Crafted by</p>
-                    <a
-                      href="https://souravinsights.com"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="relative inline-flex items-center group/link"
-                    >
-                      <span className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70 sm:group-hover/link:from-primary/70 sm:group-hover/link:to-primary transition-all duration-300">
-                        SouravInsights
-                      </span>
-                      {/* Sparkles - Mobile subtle, Desktop on hover */}
-                      <div className="absolute -top-1 -right-1 sm:opacity-0 opacity-30 sm:group-hover/link:opacity-100 transition-all duration-300 flex gap-1">
-                        {[...Array(3)].map((_, i) => (
-                          <span
-                            key={i}
-                            className="text-xs"
-                            style={{
-                              animation: "sparkle 1.5s infinite",
-                              animationDelay: `${i * 0.2}s`,
-                            }}
-                          >
-                            ✨
-                          </span>
-                        ))}
+                  <Button
+                    onClick={handleGenerate}
+                    disabled={!prompt.trim() || isGenerating}
+                    size="lg"
+                    className="px-8 py-6 bg-gradient-to-r from-primary to-primary-gradient-end hover:from-primary/90 hover:to-primary-gradient-end/90 shadow-lg hover:shadow-xl transition-all"
+                  >
+                    {isGenerating ? (
+                      <div className="flex items-center gap-2">
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                        Generating...
                       </div>
-                    </a>
-                  </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        Generate <Zap className="h-4 w-4" />
+                      </div>
+                    )}
+                  </Button>
                 </div>
 
-                {/* Decorative QR section */}
+                {/* Marquee */}
+                <div className="relative">
+                  <p className="text-sm text-muted-foreground mb-3 text-center">
+                    💡 Popular examples:
+                  </p>
+                  <Marquee speed={10} speedFactor={1} direction={1}>
+                    {examplePrompts.concat(examplePrompts).map((example, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setPrompt(example)}
+                        className="flex-shrink-0 px-6 py-3 bg-background/80 border border-border rounded-full text-sm font-medium hover:border-primary hover:bg-primary/5 hover:text-primary transition-all whitespace-nowrap shadow-sm hover:shadow-md"
+                      >
+                        {example}
+                      </button>
+                    ))}
+                  </Marquee>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-24 bg-gradient-to-r from-primary/5 to-primary/10">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-3xl font-bold mb-4">
+              Ready to create forms that convert?
+            </h2>
+            <p className="text-xl text-muted-foreground mb-8">
+              Join the early access and start building forms that people
+              actually want to fill out.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <WaitlistDialog>
+                <Button size="lg" className="px-8 py-4 text-lg">
+                  <Sparkles className="mr-2 h-5 w-5" />
+                  Get Early Access
+                </Button>
+              </WaitlistDialog>
+              <a
+                href="https://www.fairforms.xyz/forms/fullstack-dev-assessment"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="px-8 py-4 text-lg"
+                >
+                  See Live Example
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <footer className="max-w-6xl mx-auto mt-32 pb-8">
+        <div className="relative group">
+          {/* Top decorative wave */}
+          <div className="absolute -top-8 left-0 w-full">
+            <svg
+              viewBox="0 0 100 10"
+              className="w-full h-8 fill-background"
+              preserveAspectRatio="none"
+            >
+              <path d="M0 10 C 15 0, 35 10, 50 10 C 65 10, 85 0, 100 10 L 100 0 L 0 0 Z" />
+            </svg>
+          </div>
+
+          <div className="relative bg-card/50 backdrop-blur-sm border border-primary/10 rounded-lg p-8 md:p-12 group hover:border-primary/20 transition-all duration-500">
+            {/* Subtle blue hover gradient */}
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 rounded-lg sm:opacity-0 opacity-20 sm:group-hover:opacity-100 transition-opacity duration-500" />
+
+            <div className="flex items-center justify-between flex-wrap gap-6">
+              {/* FairForms Logo */}
+              <div className="flex items-center gap-2">
+                <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
+                  <Sparkles className="h-4 w-4 text-primary-foreground" />
+                </div>
+                <span className="font-bold text-xl">FairForms</span>
+              </div>
+
+              <div className="flex items-center gap-4">
+                {/* Animated coffee */}
+                <div className="relative group/coffee cursor-pointer">
+                  <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center transform sm:group-hover/coffee:scale-110 transition-transform duration-300">
+                    <span className="text-xl">☕️</span>
+                    <span className="absolute -top-3 -right-2 opacity-0 sm:group-hover/coffee:opacity-100 transition-opacity duration-300">
+                      💭
+                    </span>
+                    {/* Steam */}
+                    <div className="absolute -top-4 left-1/2 sm:opacity-0 opacity-30 sm:group-hover/coffee:opacity-100 transition-opacity duration-300">
+                      {[...Array(3)].map((_, i) => (
+                        <div
+                          key={i}
+                          className="absolute w-1.5 h-6 bottom-0"
+                          style={{
+                            left: `${(i - 1) * 6}px`,
+                            transform: "translateX(-50%)",
+                            animation: "steam 2s infinite",
+                            animationDelay: `${i * 0.3}s`,
+                          }}
+                        >
+                          <div className="w-full h-full bg-gradient-to-t from-primary/20 to-transparent rounded-full" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="absolute inset-0 rounded-xl hidden sm:block sm:group-hover/coffee:animate-ping bg-primary/5" />
+                </div>
+
+                <div>
+                  <p className="text-sm text-muted-foreground">Crafted by</p>
+                  <a
+                    href="https://souravinsights.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="relative inline-flex items-center group/link"
+                  >
+                    <span className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70 sm:group-hover/link:from-primary/70 sm:group-hover/link:to-primary transition-all duration-300">
+                      SouravInsights
+                    </span>
+                    <div className="absolute -top-1 -right-1 sm:opacity-0 opacity-30 sm:group-hover/link:opacity-100 transition-all duration-300 flex gap-1">
+                      {[...Array(3)].map((_, i) => (
+                        <span
+                          key={i}
+                          className="text-xs"
+                          style={{
+                            animation: "sparkle 1.5s infinite",
+                            animationDelay: `${i * 0.2}s`,
+                          }}
+                        >
+                          ✨
+                        </span>
+                      ))}
+                    </div>
+                  </a>
+                </div>
+
+                {/* QR animated block */}
                 <div className="relative group/qr">
                   <div className="h-16 w-16 bg-card rounded-lg p-2 grid grid-cols-4 gap-1 transform sm:group-hover/qr:rotate-3 transition-transform duration-300">
                     {[...Array(16)].map((_, i) => (
@@ -425,7 +352,6 @@ export default async function HomePage() {
                       />
                     ))}
                   </div>
-                  {/* Scan line effect - Mobile subtle, Desktop on hover */}
                   <div
                     className="absolute inset-0 bg-gradient-to-b from-primary/0 via-primary/10 to-primary/0 h-full sm:translate-y-full sm:group-hover/qr:translate-y-0 transition-transform duration-1000"
                     style={{ animation: "scan 2s linear infinite" }}
@@ -434,8 +360,8 @@ export default async function HomePage() {
               </div>
             </div>
           </div>
-        </footer>
-      </div>
+        </div>
+      </footer>
     </div>
   );
 }

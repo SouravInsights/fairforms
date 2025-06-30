@@ -16,13 +16,13 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "FairForms - Because forms should be fair",
+  title: "FairForms – Beautiful, High-Converting Forms",
   description:
-    "A fair form builder for everyone. No sneaky upsells, no predatory pricing, just honest, straightforward forms that work.",
+    "Stop losing responses to boring forms. FairForms helps you create AI-powered forms that people actually want to fill out, boosting completion rates and capturing better data effortlessly.",
   openGraph: {
-    title: "FairForms - Because forms should be fair",
+    title: "FairForms – Beautiful, High-Converting Forms",
     description:
-      "A fair form builder for everyone. No sneaky upsells, no predatory pricing, just honest, straightforward forms that work.",
+      "Stop losing responses to boring forms. FairForms helps you create AI-powered forms that people actually want to fill out, boosting completion rates and capturing better data effortlessly.",
     url: "https://fairforms.xyz",
     siteName: "FairForms",
     images: [
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
         url: "/og.png",
         width: 1200,
         height: 630,
-        alt: "FairForms - A fair form builder for everyone",
+        alt: "FairForms – Beautiful, High-Converting Forms",
       },
     ],
     locale: "en_US",
@@ -38,19 +38,20 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "FairForms - Because forms should be fair",
+    title: "FairForms – Beautiful, High-Converting Forms",
     description:
-      "A fair form builder for everyone. No sneaky upsells, no predatory pricing, just honest, straightforward forms that work.",
+      "Stop losing responses to boring forms. FairForms helps you create AI-powered forms that people actually want to fill out, boosting completion rates and capturing better data effortlessly.",
     images: ["/og.png"],
   },
-  // Adding basic SEO optimization
   keywords: [
     "form builder",
-    "fair pricing",
-    "forms",
+    "AI forms",
+    "high-conversion forms",
     "surveys",
     "feedback forms",
     "typeform alternative",
+    "lead capture",
+    "customer research forms",
   ],
   authors: [{ name: "SouravInsights" }],
   robots: {
