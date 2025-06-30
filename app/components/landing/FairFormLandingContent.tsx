@@ -151,7 +151,7 @@ export default function FairFormsLanding() {
                   </p>
                 </div>
 
-                <div className="flex gap-3 mb-8">
+                <div className="flex flex-col md:flex-row gap-3 mb-8">
                   <div className="relative flex-1">
                     <Input
                       placeholder="Create a product survey form..."
@@ -168,7 +168,7 @@ export default function FairFormsLanding() {
                     onClick={handleGenerate}
                     disabled={!prompt.trim() || isGenerating}
                     size="lg"
-                    className="px-8 py-6 bg-gradient-to-r from-primary to-primary-gradient-end hover:from-primary/90 hover:to-primary-gradient-end/90 shadow-lg hover:shadow-xl transition-all"
+                    className="w-full md:w-auto mt-3 md:mt-0 px-8 py-6 bg-gradient-to-r from-primary to-primary-gradient-end hover:from-primary/90 hover:to-primary-gradient-end/90 shadow-lg hover:shadow-xl transition-all"
                   >
                     {isGenerating ? (
                       <div className="flex items-center gap-2">
