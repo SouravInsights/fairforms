@@ -284,5 +284,3 @@ MIT
 ## 🙏 Credits
 
 Built with [shadcn/ui](https://ui.shadcn.com/) components and inspired by Typeform's UX (but not their pricing 😅)
-
-![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/SouravInsights/fairforms?utm_source=oss&utm_medium=github&utm_campaign=SouravInsights%2Ffairforms&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
