@@ -48,7 +48,7 @@
     "lucide-react": "^0.462.0",
     "motion": "^11.13.1",
     "nanoid": "^5.0.9",
-    "next": "14.2.16",
+    "next": "14.2.35",
     "react": "^18",
     "react-day-picker": "8.10.1",
     "react-dom": "^18",
